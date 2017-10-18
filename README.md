@@ -6,30 +6,20 @@ Sakamoto T. and J. M. Ortega
 
 ## Determining the Lowest Common Ancestor (LCA)
 
-LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common.
-Using phylogenetic methods, it is possible to estimate the date when an ancestor population has split apart and
-initiated the speciation process, but we could also take advantage of a hierarchical classification of species to
-verify how far the common ancestor of two or more species is. TaxOnTree uses this hierarchical classification to
-determine the LCA between the organisms of query and subjects proteins. The hierarchical classification used by
-TaxOnTree is taken from NCBI Taxonomy database. A short taxonomic lineage scheme from NCBI Taxonomy is represented
-in the Figure S1. Each species has a taxonomic lineage divided in several taxonomic ranks, like family, order, class,
-etc. To determine the LCA between two species we compare their taxonomic lineage and look for the lowest taxonomic
-rank that both species share a common taxon. For example, LCA between human and mouse is superorder (Euarchontoglires),
-while the LCA between human and frog is subphylum (Craniata). This simple comparison gives us information that LCA between
-human and mouse is more recent than LCA between human and frog. 
+LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common. Using phylogenetic methods, it is possible to estimate the date when an ancestor population has split apart and initiated the speciation process, but we could also take advantage of a hierarchical classification of species to verify how far the common ancestor of two or more species is. TaxOnTree uses this hierarchical classification to determine the LCA between the organisms of query and subjects proteins. The hierarchical classification used by TaxOnTree is taken from NCBI Taxonomy database. A short taxonomic lineage scheme from NCBI Taxonomy is represented in the **Figure S1**. Each species has a taxonomic lineage divided in several taxonomic ranks, like family, order, class, etc. To determine the LCA between two species we compare their taxonomic lineage and look for the lowest taxonomic rank that both species share a common taxon. For example, LCA between human and mouse is superorder (Euarchontoglires), while the LCA between human and frog is subphylum (Craniata). This simple comparison gives us information that LCA between human and mouse is more recent than LCA between human and frog. 
 
 ## Taxonomic lineages and ranks
 
 TaxOnTree also retrieves the taxonomic lineage of each taxon comprising the phylogenetic tree and uses this information to color the tree according to a taxonomic rank (See Coloring branches by a taxonomic rank). By using this resource, users can rapidly identify, for instance, the different families comprising the phylogenetic tree. However, two issues have to be considered whenever we use the taxonomic rank information from NCBI Taxonomy:
 
-* Some taxonomic ranks are absent in a taxonomic lineage. For example, in the human lineage, there is no taxon for subclass, superclass, and subphylum (Figure S2A);
-* Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa arereferred as “no rank”. For example, in the human lineage, Theria, Eutheria, Boroeutheria and others are taxa without rank (Figure S2A).
+* Some taxonomic ranks are absent in a taxonomic lineage. For example, in the human lineage, there is no taxon for subclass, superclass, and subphylum (**Figure S2A**);
+* Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa arereferred as “no rank”. For example, in the human lineage, Theria, Eutheria, Boroeutheria and others are taxa without rank (**Figure S2A**).
 
-To handle these issues, we opted in using the Taxallnomy, a taxonomic database which provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy (http://biodados.icb.ufmg.br/taxallnomy). Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy in which each hierarchical level corresponds to a taxonomic rank. Figure S2B shows the human taxonomic lineage retrieved from Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data. 
+To handle these issues, we opted in using the Taxallnomy, a taxonomic database which provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy (http://biodados.icb.ufmg.br/taxallnomy). Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy in which each hierarchical level corresponds to a taxonomic rank. **Figure S2B** shows the human taxonomic lineage retrieved from Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data. 
 
 <img src="/img/taxontree_taxsimple.png" width=700px/>
 
-Figure S2: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
+**Figure S2**: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
 
 ## Opening and exploring the tree generated by TaxOnTree
 
