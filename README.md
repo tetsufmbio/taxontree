@@ -35,6 +35,15 @@ You can also color the tree according to some taxonomic rank. Take the following
 1.	Click on “Colour by”, and choose a taxonomic rank to be used to color the branches. By choosing “12-family”, for example (Figure S4), the tree will be colored according to the family rank. You can setup the branch colors by clicking in Colours;
 1.	Branch color will change immediately. To make the color legend concordant to the branch color, go to Legend in the FigTree side menu and, in Attribute, set the same taxonomic rank that you selected to color the tree (Figure S5).
 
+## Other features
+
+### Changing the labels of the tree
+
+The tip labels in the tree can also be changed to evidence the taxon in which taxonomic rank 
+
+### Evidencing duplication nodes
+
+### Check branch statistic support value
 
 ## Sample tree images
 
