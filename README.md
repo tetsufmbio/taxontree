@@ -35,7 +35,88 @@ To determine it, TaxOnTree takes advantage of the hierarchical structure from NC
 
 ## Command-line version
 
+Here we describe how to execute TaxOnTree in a local machine.
+
+### Prerequisites:
+
+* Unix Platform;
+* PERL;
+* Internet connection and/or TaxOnTree MySQL database;
+* PERL module IO::Socket::SSL (only for accessing info from NCBI via internet);
+* [FigTree](http://tree.bio.ed.ac.uk/software/figtree/)
+* Third-party software (only for phylogenetic pipeline).
+
 ### Installation
+
+Download the compressed file of TaxOnTree source code from our [sourceforge page](https://sourceforge.net/projects/taxontree/) in a UNIX platform. Then, decompress the file by the following command:
+
+```bash
+tar -zxf TaxOnTree.XXX.tgz
+```
+
+TaxOnTree is ready to use  in  most  of  Unix  Platform. If you enter the TaxOnTree folder and execute it by the following command: 
+
+```
+cd taxontree
+./taxontree
+```
+It should display a message like this:
+
+```
+        TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
+        This program comes with ABSOLUTELY NO WARRANTY.
+        This is free software, and you are welcome to redistribute it under
+        certain conditions. See GNU general public license v.3 for details.
+
+ERROR: No input was provided.
+Usage:
+    ./taxontree -singleID <sequence_ID>
+
+    ./taxontree -seqFile <FASTA_file>
+
+    ./taxontree -listFile <list_file>
+
+    ./taxontree -treeFile <tree_file> -queryID <query_id>
+
+    Inputs:
+        [-seqFile FASTA_file] [-listFile list_file] [-singleID sequence_ID]
+        [-treeFile tree_file] [-blastFile blast_file] [-mfastaFile
+        mfasta_file] [-alignFile align_file]
+
+    Blast options:
+        [-db database_name] [-evalue] [-threshold] [-maxTarget int_value]
+        [-maxTargetBlast int_value]
+
+    Alignment options:
+        [-aligner] [-trimming]
+
+    Tree options:
+        [-treeProg] [-treeTable table_file] [-printLeaves] [-treeRoot]
+        [-leafFmt]
+
+    Filter options:
+        [-showIsoform] [lcaLimit] [taxFilter] [taxFilterCat] [restrictTax]
+
+    Other parameters:
+        [-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap
+        tax_id] [-position] [-delimiter] [-numThreads] [-mysql]
+        [-taxRepFormat] [-forceNoTxid] [-version]
+
+    Help:
+        [-help] [-man]
+
+        Use -man for a detailed help.
+```
+
+But it only works if the folders lib/ and bin/ that follow this script are  in  the same location. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
+	
+ ```bash
+	> echo "export PATH=$PATH:/path/to/program/taxontree/" >> ~/.bash_profile
+	> source ~/.bash_profile
+```
+### PERL module [IO::Socket::SSL](http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod)
+
+This module is required only if you are using accession from NCBI and if TaxOnTree needs to retrieve the accession info from NCBI server. The simple way to install this module is to use the CPAN. 
 
 ### MySQL database configuration
 
@@ -43,7 +124,9 @@ To determine it, TaxOnTree takes advantage of the hierarchical structure from NC
 
 ### Third-party software
 
-### TaxOnTree parameters
+### Parameters
+
+### Outputs
 
 ## Opening and exploring the Nexus tree on FigTree
 
