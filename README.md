@@ -35,32 +35,40 @@ To determine it, TaxOnTree takes advantage of the hierarchical structure from NC
 
 ## Command-line version
 
-Here we describe how to execute TaxOnTree in a local machine.
+Here we describe how to install and execute TaxOnTree in a local machine.
 
 ### Prerequisites:
 
-* Unix Platform;
-* PERL;
-* Internet connection and/or TaxOnTree MySQL database;
-* PERL module IO::Socket::SSL (only for accessing info from NCBI via internet);
+#### Unix Platform
+
+TaxOnTree was tested on CentOS and on MacOS, but it should work on any Unix platform.
+
+#### Perl
+
+Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v inside a command shell. If not, follow the instructions on [Perl website](https://www.perl.org/get.html) for its installation.
+
+#### Internet connection and/or TaxOnTree MySQL database;
+
+TaxOnTree can retrieve taxonomic information of an accession by two ways: via REST request from NCBI or Uniprot server (require internet connection) or via MySQL database. Retrieving information from MySQL database is certainly faster than requesting them from the web. 
+
+
+
+#### PERL module IO::Socket::SSL (only for accessing info from NCBI via internet);
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/)
 * Third-party software (only for phylogenetic pipeline).
 
-### Installation
+### Installation:
 
-Download the compressed file of TaxOnTree source code from our [sourceforge page](https://sourceforge.net/projects/taxontree/) in a UNIX platform. Then, decompress the file by the following command:
+Use the following commands to download, decompress and test TaxOnTree in a local machine:
 
 ```bash
+wget https://downloads.sourceforge.net/project/taxontree/TaxOnTree.tgz
 tar -zxf TaxOnTree.XXX.tgz
-```
-
-TaxOnTree is ready to use  in  most  of  Unix  Platform. If you enter the TaxOnTree folder and execute it by the following command: 
-
-```
 cd taxontree
 ./taxontree
 ```
-It should display a message like this:
+
+After those commands, it should display a message like this:
 
 ```
         TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
@@ -108,12 +116,13 @@ Usage:
         Use -man for a detailed help.
 ```
 
-But it only works if the folders lib/ and bin/ that follow this script are  in  the same location. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
+TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if the folders lib/ and bin/ that follow this script are  in  the same location. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
 	
  ```bash
 	> echo "export PATH=$PATH:/path/to/program/taxontree/" >> ~/.bash_profile
 	> source ~/.bash_profile
 ```
+
 ### PERL module [IO::Socket::SSL](http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod)
 
 This module is required only if you are using accession from NCBI and if TaxOnTree needs to retrieve the accession info from NCBI server. The simple way to install this module is to use the CPAN. 
