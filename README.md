@@ -97,8 +97,8 @@ The third-party software required by TaxOnTree are those software that will comp
 
 * Blast search - this is performed exclusively by [Blast+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download);
 * Sequence aligner - software that perform sequence alignment. Must have Multi-FASTA file as input and output, e.g. MUSCLE, Clustal Omega, Kalign;
-* Sequence trimmer - software that trim a sequence alignment according to the quality of the alignment. Must have Multi-FASTA file as input and output, e.g. trimAl;
-* Tree reconstructor - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output, e.g. FastTree.
+* Sequence trimmer - software that trim a sequence alignment according to its quality. Must have Multi-FASTA file as input and output, e.g. trimAl;
+* Tree reconstructor - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output, e.g. [FastTree](http://www.microbesonline.org/fasttree/#Install).
 
 ### Installation:
 
