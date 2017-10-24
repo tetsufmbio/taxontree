@@ -87,7 +87,7 @@ This should install IO::Socket::SSL module and all its dependencies.
 
 [FigTree](http://tree.bio.ed.ac.uk/software/figtree/) is a free graphical viewer of phylogenetic trees developed in Java by Andrew Rambaut group. TaxOnTree output is made to be visualized in this software. In its website, there are versions for Mac, UNIX and Windows. Pick one that is more convenient for you.
 
-#### 3.1.6. Third-party software.
+#### 3.1.6. Third-party software
 
 *This requirement is only necessary if TaxOnTree phylogenetic pipeline is required*. 
 
