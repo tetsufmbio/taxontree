@@ -35,7 +35,7 @@ To determine it, TaxOnTree takes advantage of the hierarchical structure from NC
 
 ## 3. Command-line version
 
-We provide the source code of TaxOnTree to enable you executing it in a local machine. Here we describe how to install TaxOnTree.
+We provide TaxOnTree source code so you can run it in a local machine. Here we describe its installation steps.
 
 ### 3.1. Prerequisites:
 
@@ -83,7 +83,7 @@ cpan> exit
 
 This should install IO::Socket::SSL module and all its dependencies.
 
-#### 3.1.5. [FigTree](http://tree.bio.ed.ac.uk/software/figtree/)
+#### 3.1.5. FigTree
 
 [FigTree](http://tree.bio.ed.ac.uk/software/figtree/) is a free graphical viewer of phylogenetic trees developed in Java by Andrew Rambaut group. TaxOnTree output is made to be visualized in this software. In its website, there are versions for Mac, UNIX and Windows. Pick one that is more convenient for you.
 
@@ -100,26 +100,23 @@ The third-party software required by TaxOnTree are those software that will comp
 * *Sequence trimmer* - software that trim a sequence alignment according to its quality. Must have Multi-FASTA file as input and as output, e.g. trimAl;
 * *Tree reconstructor* - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output, e.g. [FastTree](http://www.microbesonline.org/fasttree/#Install).
 
-All third-party software have to be installed in your system. Alternatively, you can compile the software in your system and move the executables to the bin folder that accompanies TaxOnTree package.
+Third-party software that met the conditions above can be incorporated in TaxOnTree phylogenetic pipeline. For TaxOnTree find those software, they have to be installed in your system or, alternatively, you can compile them and move their executables to the bin folder that accompanies TaxOnTree package. Furthermore, parameters and command lines that TaxOnTree executes for each third-party software have to be listed in CONFIG.xml file that accompanies TaxOnTree package. The original CONFIG.xml file has some third-party software with their default parameters configured. They are listed on table X.
 
-Parameters and command lines that TaxOnTree executes for each third-party software are listed in CONFIG.xml file that accompanies TaxOnTree package. The original CONFIG.xml file has some third-party software already configured that are listed on table X.
+Table X: Third-party software in CONFIG.xml.
 
-Table X: Third-party software in CONFIG.xml. Software for Blast search are not listed as it is performed exclusively by Blast+.
+| third-party software | executable name | phylogenetic pipeline step | link |
+|-----------|-----------|-----------|-----------|
+| Blast+ | blastp and blastdbcmd | blast search | https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download |
+| MUSCLE | muscle | sequence aligner | http://www.drive5.com/muscle/ |
+| Clustal Omega | clustalo | sequence aligner | http://www.clustal.org/omega/ |
+| Kalign | kalign | sequence aligner | http://msa.sbc.su.se/cgi-bin/msa.cgi |
+| trimAl | trimal | sequence trimmer | http://trimal.cgenomics.org/ |
+| Gblocks | Gblocks | sequence trimmer | http://molevol.cmima.csic.es/castresana/Gblocks.html |
+| FastTree | fasttree | tree reconstructor | http://www.microbesonline.org/fasttree/ |
 
-| third-party software | executable name | phylogenetic pipeline step |
-|-----------|-----------|-----------|
-| MUSCLE | muscle | sequence aligner |
-| Clustal Omega | clustalo | sequence aligner |
-| Kalign | kalign | sequence aligner |
-| trimAl | trimal | sequence trimmer |
-| Gblocks | Gblocks | sequence trimmer |
-| FastTree | fasttree | tree reconstructor |
-
-
+See the section 3.8 to find out more details on how to configure a third-party software to be part of TaxOnTree phylogenetic pipeline.
 
 > **Note**: The requirement of software of each type depends on the input provided by the user. For instance, if an aligned Multi-FASTA sequence is provided as input, TaxOnTree will require only a software for tree reconstruction. In the other hand, if a single accession from NCBI is provided, TaxOnTree will require software of all four types to perform the analysis.
-
-
 
 ### 3.2. Installation:
 
@@ -198,7 +195,7 @@ TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if th
 
 ### 3.7. Making your own sequence database
 
-### 3.8. Add other third-party software in the pipeline
+### 3.8. Adding third-party software in the pipeline
 
 ## 4. Opening and exploring the Nexus tree on FigTree
 
