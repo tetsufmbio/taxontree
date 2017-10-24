@@ -114,7 +114,7 @@ Table X: Third-party software in CONFIG.xml.
 | Gblocks | Gblocks | sequence trimmer | http://molevol.cmima.csic.es/castresana/Gblocks.html |
 | FastTree | fasttree | tree reconstructor | http://www.microbesonline.org/fasttree/ |
 
-See the section 3.8 to find out more details on how to configure a third-party software to be part of TaxOnTree phylogenetic pipeline.
+See the section [3.8](#38-adding-third-party-software-in-the-pipeline) to find out more details on how to configure a third-party software to be part of TaxOnTree phylogenetic pipeline.
 
 > **Note**: The requirement of software of each type depends on the input provided by the user. For instance, if an aligned Multi-FASTA sequence is provided as input, TaxOnTree will require only a software for tree reconstruction. In the other hand, if a single accession from NCBI is provided, TaxOnTree will require software of all four types to perform the analysis.
 
