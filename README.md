@@ -46,7 +46,6 @@ Some prerequisites are required to run TaxOnTree. They are:
 * Internet connection and/or TaxOnTree databases;
 * Perl module IO::Socket::SSL (only for accessing info from NCBI via internet);
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/);
-* Sequence database (only for phylogenetic pipeline);
 * Third-party software (only for phylogenetic pipeline).
 
 #### Unix Platform
@@ -59,7 +58,7 @@ Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v in
 
 #### Internet connection and/or TaxOnTree databases;
 
-TaxOnTree can retrieve sequence and taxonomic information of an accession by two ways: via REST request from NCBI or Uniprot servers (require internet connection) and/or via MySQL database. TaxOnTree preferentially retrieves information from a local database because it is certainly faster than requesting them from the web. However, if there is no local database installed, or if there is a local database but some accessions are missing on it, if the machine is connected to internet, TaxOnTree will consult the NCBI or Uniprot servers to fill the missing data.  
+TaxOnTree can retrieve sequence and taxonomic information of an accession by two ways: via REST request from NCBI or Uniprot servers (require internet connection) and/or by consulting local databases. TaxOnTree preferentially retrieves information from local databases because it is certainly faster than requesting them from the web. However, if there is no local databases installed, or if there is local databases but some accessions are missing on it, TaxOnTree can retrieve these data from the NCBI or Uniprot servers, if the machine is connected to internet.  
 
 There are two databases that TaxOnTree consults locally:
 
@@ -68,7 +67,7 @@ There are two databases that TaxOnTree consults locally:
 
 In MySQL database, TaxOnTree can find relational tables where associates all accessions found in NCBI and Uniprot database to taxonomic information. TaxOnTree MySQL database can be downloaded in our [Sourceforge page]() and loaded to MySQL. The database provided in Sourceforge is monthly updated, but we also provide a [Perl script]() that downloads all necessary data from NCBI and Uniprot servers and generates the TaxOnTree MySQL tables. To enable TaxOnTree to consult the local MySQL, see [Configuring MySQL database]().
 
-The sequence databases consulted by TaxOnTree is a BLAST-formatted sequence databases. They were generated using *makeblastdb* from [Standalone-BLAST+ suite](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download). Sequece databases used in our web server can be downloaded in our [Sourceforge page](), but you can also make your own database using protein sequences from NCBI or Uniprot.
+TaxOnTree also consults sequence databases to obtain sequence data that are required in some steps of the pipeline. These databases are BLAST-formatted sequence databases generated using *makeblastdb* from [Standalone-BLAST+ suite](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download). Sequece databases used in our web server can be downloaded in our [Sourceforge page](), but you can also make your own database using protein sequences from NCBI or Uniprot (See [Making your own sequence database]()).
 
 > **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate if it is worth having a local database installed or if only web requests should be enough.
 
@@ -91,6 +90,15 @@ This should install IO::Socket::SSL module and all its dependencies.
 #### Third-party software.
 
 *This requirement is only necessary if you are going to use the TaxOnTree phylogenetic pipeline*. 
+
+If your input is a tree file in Newick format, than no third-party software are necessary for your analysis.
+
+The third-party software required by TaxOnTree are those software that will comprise the phylogenetic pipeline. Those software are divide in the following types:
+
+* Blast search - this is performed exclusively by [Blast+](ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/);
+* Sequence aligner - software that perform sequence alignment. Must have Multi-FASTA file as input and output, e.g. MUSCLE, Clustal Omega, Kalign;
+* Sequence trimmer - software that trim a sequence alignment according to the quality of the alignment. Must have Multi-FASTA file as input and output, e.g. trimAl;
+* Tree reconstructor - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output, e.g. FastTree.
 
 ### Installation:
 
@@ -158,19 +166,18 @@ TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if th
 	> source ~/.bash_profile
 ```
 
-### PERL module [IO::Socket::SSL](http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod)
 
-This module is required only if you are using accession from NCBI and if TaxOnTree needs to retrieve the accession info from NCBI server. The simple way to install this module is to use the CPAN. 
-
-### MySQL database configuration
-
-### Blast sequence database
-
-### Third-party software
+### Inputs
 
 ### Parameters
 
 ### Outputs
+
+### Configuring a local MySQL database
+
+### Making your own sequence database
+
+### Add other third-party software in the pipeline
 
 ## Opening and exploring the Nexus tree on FigTree
 
