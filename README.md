@@ -118,16 +118,31 @@ See the section [3.8](#38-adding-third-party-software-in-the-pipeline) to find o
 
 ### 3.2. Installation:
 
-Use the following commands to download, decompress and test TaxOnTree in a local machine:
+#### 3.2.1. Downloading TaxOnTree
+
+Use the following commands to download TaxOnTree in a local machine:
 
 ```bash
-wget https://downloads.sourceforge.net/project/taxontree/TaxOnTree.tgz
-tar -zxf TaxOnTree.tgz
+git clone 
 cd taxontree
+```
+#### 3.2.2. Configuring your email address
+
+Set your email address to allow TaxOnTree to perform HTTP request to NCBI and/or Uniprot servers. For this, edit the file CONFIG.xml that accompanies this package and set your email address between <email> tags.
+
+```
+<email>your email goes here</email>
+```
+
+#### 3.2.3. Testing TaxOnTree
+
+Finally, test TaxOnTree by running the following command:
+
+```
 ./taxontree
 ```
 
-After those commands, it should display a message like this:
+If all goes well, it should display the following message.
 
 ```
         TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
@@ -175,7 +190,7 @@ Usage:
         Use -man for a detailed help.
 ```
 
-TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if the folders lib/ and bin/ that follow this script are  in  the same location. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
+TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if the folders lib/ that follow this script are  in  the same location of execution. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
 	
  ```bash
 	> echo "export PATH=$PATH:/path/to/program/taxontree/" >> ~/.bash_profile
@@ -365,6 +380,10 @@ Protein accession or name in the list or tree to be considered as query. It work
 
 Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
 be assigned with the taxonomy ID of root (txid:1). It works on all inputs.
+
+* **-forceNoInternet
+
+Force TaxOnTree to not retrieve data from internet. It works on all inputs.
 
 * **-out <file_name> Default: Input name
 
