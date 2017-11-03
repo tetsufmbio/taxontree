@@ -241,11 +241,11 @@ name in your tree, use the option -printLeaves.
 
 * **-db <database_name> Default: refseq_protein**
 
-BLAST-formatted database name. Work on -seqFile, -singleID, -blastFile and -listFile.
+BLAST-formatted database name. It works on -seqFile, -singleID, -blastFile and -listFile.
 
 For Standalone protein BLAST search, provide the address and the name (without extension) of the database. 
 Example: /home/user/taxontree/db, where db is the name of BLAST-formatted database. This option will
-only work if the database was generated using protein sequences from GenBank or Uniprot (using its 
+only work if the database was generated using sequences from GenBank or Uniprot (using its 
 FASTA-header pattern) and the option -parse_seqids on makeblastdb command (See details on README).
 
 To request the BLAST search from NCBI server, you may choose one of these databases: 
@@ -253,49 +253,46 @@ nr or refseq_protein.
 
 * **-evalue <real_value> Default: 10e-5**
 
-Expect value threshold for BLAST search. Work on -seqFile and -singleID.
+Expect value threshold for BLAST search. It works on -seqFile and -singleID.
 
 * **-threshold <int_value> Default: 50**
 
-Protein identity threshold. For each subject, TaxOnTree calculate its identity with the query after
+Protein identity threshold. For each subject, TaxOnTree calculates its identity with the query sequence after
 removing overlapping HSPs and considering the length of the query sequence. Threshold may vary between 0-100.
-Work on -seqFile, -blastFile and -singleID.
+It works on -seqFile, -blastFile and -singleID.
 
 * **-maxTarget <int_value> Default: 200**
 
-Max target sequence to be used for phylogenetic analysis. Work on -seqFile, -blastFile and -singleID.
+Max target sequences to be used for phylogenetic analysis. It works on -seqFile, -blastFile and -singleID.
 
 * **-maxTargetBlast <int_value>**
 
-Max target sequence to be retrieved by BLAST. Work on -seqFile and -singleID.
+Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID.
 
 #### 3.4.2 Alignment option
 
 * **-aligner <aligner_software> Default: muscle
 
-Software for sequence alignment procedure. Configured options in CONFIG.xml are "muscle", "prank", 
-"clustalo" and "kalign". Work on -seqFile, -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. 
+Software for sequence alignment step. It works on -seqFile, -blastFile, -listFile, -mfastaFile and -singleID. 
 To add more aligners, see CONFIG.xml.
 
 * **-trimming <trimming_software> Default: trimal
 
-Software for alignment trimming. The only configured option in CONFIG.xml is "trimal". 
-You can set "false" to skip this step. Work on -seqFile, -blastFile, -listFile, -mfastaFile, 
+Software for alignment trimming step. You can set "false" to skip this step. It works on -seqFile, -blastFile, -listFile, -mfastaFile, 
 -alignFile and -singleID. To add more alignment trimming software, see CONFIG.xml.
 
 #### 3.4.3. Tree option
 
 * **-treeProg <tree_reconstruction_software> Default: FastTree
 
-Software for tree reconstruction. The only configured option in CONFIG.xml is "FastTree". 
-Work on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
+Software for tree reconstruction. It works on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
 reconstruction software, see CONFIG.xml.
 
 * **-treeTable <table_file>
 
-A table containing the leaves of the input file in the first column and the correspondent taxonomy
-ID in the second. Use this option if the input tree does not contain an identifier from NCBI or Uniprot
-in its leaves. To obtain a list of leaves name in your tree, use the option -printLeaves. Work on -treeFile.
+A table containing the leaf names of the input tree file in the first column and the correspondent taxonomy
+ID in the second. Use this option if the input tree does not contain an accession from NCBI or Uniprot
+in its leaves. To obtain a list of leaf names in your tree, use the option -printLeaves. It works on -treeFile.
 
 Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
 
@@ -305,88 +302,89 @@ Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-de
 
 * **-printLeaves
 
-Print the leaves comprising your tree and exit. Use this to help you making the tree table file. Work on -treeFile.
+Print the leaf names comprising your tree and exit. Use this to help you making the tree table file. It works on -treeFile.
 
 * **-treeRoot Default: 1
 
-Define tree rooting mode. Use 0 to skip this step and 1 to root at midpoint. Work on all input.
+Define tree rooting mode. Use 0 to skip this step, 1 to root at midpoint or 2 to use taxonomic information do define a root. It works on all input.
 
 * **-leafFmt Default: "lcaN;id;geneName;species;rankcode(family,order,class)"
 
-Leaf name format displayed in the tree. Data type available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName,
-rankcode, rankname. Use semicolons to separate the different data type. For "rankcode" and "rankname", include the taxonomic ranks that 
-you want to display separated with comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum,
-superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
+Leaf name format displayed in the tree. It works on all input. Data available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName, rankcode, rankname. Use semicolons to separate the different data type. 
+
+For "rankcode" and "rankname", include the taxonomic ranks that you want to display separated with comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
 
 #### 3.4.4 Filter option
 
 * **-showIsoform
 
-TaxOnTree can automatically link the RefSeq or Uniprot protein to a GeneID and discards its isoforms 
-from further analysis. Use this option to allow isoforms in the tree. Work on all inputs.
+TaxOnTree automatically links the RefSeq or Uniprot protein to a GeneID and discards its isoforms 
+from further analysis. Use this option to allow isoforms in the tree. It works on all inputs.
 
 * **-lcaLimit <int_value>
 
 Exclude all sequences from organisms which the LCA with the query organism is below the provided level. 
-Work on all inputs.
+It works on all inputs.
 
 * **-taxFilterCat
 
-Filter sequences by category which could be a taxonomic rank or by LCA. If "kingdom" is provided, it'll leave 
-sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. Work on all inputs.
+Filter sequences by category which could be a taxonomic rank or LCA. If "kingdom" is provided, it'll leave 
+sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. It works on all inputs.
 
 Categories allowed: lca, superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, 
 superfamily, family, subfamily, genus, subgenus, species, subspecies.
 
 * **-taxFilter <int_value>
 
-Filter sequences by category which could be a taxonomic rank or by LCA. If 2 is provided, it'll leave 
+Filter sequences by category which could be a taxonomic rank or LCA. If 2 is provided, it'll leave 
 sequences from 2 organisms in each category found in the tree. Use -taxFilterCat to define the category. 
-Work on all inputs.
+It works on all inputs.
 
 * **-restrictTax <list_file>
 
 Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms which 
-have their taxonomy ID listed in the file. Work on all inputs.
+have their taxonomy ID listed in the file. It works on all inputs.
 
 #### 3.4.5. Other parameters
 
 * **-txidMap <taxonomy_id>
 
 Force TaxOnTree to consider the taxonomy ID provided by this option to be mapped in the tree. Example: "9606"
-for human. Work on all inputs. 
+for human. It works on all inputs. 
 
 * **-queryTax <taxonomy_id>
 
-NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. Works only in -seqFile. 
+NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. It works only in -seqFile. 
 
 * **-queryID <query_id>
 
-Protein accession or name in the list or tree to be considered as query. Work on -blastFile, -listFile, -mfastaFile
+Protein accession or name in the list or tree to be considered as query. It works on -blastFile, -listFile, -mfastaFile
 -alignFile and -treeFile. 
 
 * **-forceNoTxid
 
 Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
-be assigned with the taxonomy ID of root (txid:1). Work on all inputs.
+be assigned with the taxonomy ID of root (txid:1). It works on all inputs.
 
 * **-out <file_name> Default: Input name
 
-Prefix for output files.
+Prefix for output files. It works on all inputs.
 
 * **-mysql
 
-Use a local MySQL database to retrieve required TaxOnTree data (See README for details).
+Use a local MySQL database to retrieve required TaxOnTree data (See README for details). It works on all inputs.
 
 * **-numThreads Defalut: 1
 
-Number of processors to be used for programs that can handle multi-threading.
+Number of processors to be used for programs that can handle multi-threading. It works on all inputs.
 
 * **-version
 
 Print TaxOnTree version.
 
 ### 3.5. Outputs
+
+
 
 ### 3.6. Configuring a local MySQL database
 
