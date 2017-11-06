@@ -165,7 +165,7 @@ function compile_netssleay {
 	echo testing $software... | tee -a $LOG
 	perl -e 'use Net::SSLeay' >> $LOG 2>&1;
 	testval = $?
-	if [ testval -eq 0 ]
+	if [ $testval -eq 0 ]
 	then
 		echo Perl module $software is installed. Nothing to do.  | tee -a $LOG
 	else
