@@ -159,6 +159,34 @@ function compile_kalign {
 	return $makeval
 }
 
+# compiling perl module Net::SSLeay
+function compile_netssleay {
+	software="Net::SSLeay"
+	echo testing $software... | tee -a $LOG
+	perl -e 'use Net::SSLeay' >> $LOG 2>&1;
+	testval = $?
+	if [ testval -eq 0 ]
+	then
+		echo Perl module $software is installed. Nothing to do.  | tee -a $LOG
+	else
+		echo Perl module $software not installed. Trying to install it.  | tee -a $LOG
+		cd $SRC/perl_module/Net-SSLeay-1.82
+		make clean  >> /dev/null 2>&1;
+		echo "n" | perl Makefile.PL PREFIX=$DIR >> $LOG 2>&1;
+		make >> $LOG 2>&1;
+		make install >> $LOG 2>&1;
+		cd $DIR/lib
+		if [ -d $DIR/lib64 ]
+		then
+			cp -r ../lib64/perl5 .
+			rm -rf $DIR/lib64
+		fi
+		cp -r ../share .
+		rm -rf $DIR/share
+		
+	fi
+}
+
 compile_trimal
 echo | tee -a $LOG
 compile_muscle
@@ -168,4 +196,6 @@ echo | tee -a $LOG
 compile_clustalo
 echo | tee -a $LOG
 compile_kalign
+echo | tee -a $LOG
+compile_netssleay
 echo | tee -a $LOG
