@@ -1,0 +1,22 @@
+=head2 Sun Dec 20 20:17:46 2015: C<Module> L<Digest::SHA::PurePerl|Digest::SHA::PurePerl>
+
+=over 4
+
+=item *
+
+C<installed into: /home/tetsu/taxontreelite/lib/share/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 5.95>
+
+=item *
+
+C<EXE_FILES: shasum>
+
+=back
+
