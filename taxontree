@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-#	TaxOnTree Version: 1.8
+#	TaxOnTree Version: 1.9
 
 #############################################################################
 #                                                                           #
@@ -55,7 +55,8 @@ print "
 	certain conditions. See GNU general public license v.3 for details.\n\n";
 	
 use FindBin qw($Bin);
-use lib "$Bin/lib/perl5";
+use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+use Mail::RFC822::Address qw(valid);
 use URI::Escape;
 use HTTP::Tiny;
 use XML::Simple qw(XMLin);
@@ -72,7 +73,7 @@ use Bio::Tree::NodeI;
 	
 use strict;
 
-my $TaxOnTreeVersion = "TaxOnTree v.1.8";
+my $TaxOnTreeVersion = "TaxOnTree v.1.9";
 
 $| = (@ARGV > 0); 
 
@@ -103,7 +104,7 @@ my $pid;
 my $showIsoform;
 my $noTrimal;
 my $database 	= "refseq_protein";
-my $program 	= "blastp";
+my $blastProgram 	= "blastp";
 my $aligner 	= "muscle";
 my $leafNameFormat 	= "lcaN;id;geneName;species;rankcode(family,order,class)";
 my $taxRepFormat 	= "1..12";
@@ -126,6 +127,9 @@ my $taxFilter = 0;
 my $taxFilterCat = "species";
 my $restrictTax;
 my $forceNoTxid;
+my $forceNoInternet;
+my $email;
+
 GetOptions(
     'seqFile=s'=> \$querySeqFile,
     'listFile=s'    => \$queryList,
@@ -140,7 +144,7 @@ GetOptions(
     'queryTax=s'    => \$queryTax,
     'txidMap=s'    => \$txidMap,
     'db=s' 			=> \$database,
-	'program=s' 	=> \$program,
+	'blastProg=s' 	=> \$blastProgram,
 	'aligner=s' 	=> \$aligner,
 	'trimming=s' 	=> \$trimProg,
 	'treeProg=s' 	=> \$treeProg,
@@ -169,6 +173,7 @@ GetOptions(
 	'taxFilterCat=s'		=> \$taxFilterCat,
 	'restrictTax=s'		=> \$restrictTax,
 	'forceNoTxid!'		=> \$forceNoTxid,
+	'forceNoInternet!'		=> \$forceNoInternet,
 ) or pod2usage(-verbose => 99, 
             -sections => [ qw(NAME SYNOPSIS) ] );
 
@@ -206,7 +211,7 @@ if (scalar @inputFiles == 0){
 	}
 }
 
-my $configFile = "$Bin/CONFIG.xml";
+my $configFile = $ENV{'HOME'}."/.taxontree/CONFIG.xml";
 my $searchGeneralPath;
 my @searchGeneralPath;
 my %programs;
@@ -215,9 +220,23 @@ my %paths;
 my $local = 0;
 my $wire;
 
+# check internet connection
+
+my $internetConnection = 1;
+my $url_test = "http://www.msftncsi.com/ncsi.txt";
+my $response_test = HTTP::Tiny->new->get($url_test);
+
+if ($response_test->{content} !~ m/Microsoft NCSI/){
+	$internetConnection = 0;
+}
+
+if ($forceNoInternet){
+	$internetConnection = 0;
+}
+
 if (!(-e $configFile)){
-	if (!$treeFile or $localMySQL){
-		die "\nERROR: Could not locate CONFIG.xml in the TaxOnTree directory.\n";
+	if (!$treeFile or $localMySQL or $internetConnection){
+		die "\nERROR: Could not locate $configFile.\n";
 	}
 } else {
 	
@@ -231,6 +250,18 @@ if (!(-e $configFile)){
 		$searchGeneralPath = "";
 	}
 
+	# check email
+	if ($internetConnection){
+		if ($doc->{"email"}){
+			$email = $doc->{"email"};
+		} 
+		if (!$email){
+			die "\nERROR: No email address provided. Please set an email address in CONFIG.xml.\n";
+		} elsif (!valid($email)){
+			die "\nERROR: Email set at CONFIG.xml is not valid. Please check it.\n";
+		}
+	}
+	
 	if (-e $Bin."/bin"){
 		$searchGeneralPath .= ":".$Bin."/bin";
 	}
@@ -273,17 +304,17 @@ if (!(-e $configFile)){
 		if ($local == 1){
 			# Check blastp
 			if ($querySeqFile or $querySingleID){
-				if (exists $programs{"blastSearch"}{"blastp"}){
+				if (exists $programs{"blastSearch"}{$blastProgram}){
 					my $paths2verify = "";
-					if ($programs{"blastSearch"}{"blastp"}{"path"}){
-						$programs{"blastSearch"}{"blastp"}{"path"} =~ s/\/$//;
-						$paths2verify .= $programs{"blastSearch"}{"blastp"}{"path"};
+					if ($programs{"blastSearch"}{$blastProgram}{"path"}){
+						$programs{"blastSearch"}{$blastProgram}{"path"} =~ s/\/$//;
+						$paths2verify .= $programs{"blastSearch"}{$blastProgram}{"path"};
 					}
 					$paths2verify .= ":".$searchGeneralPath;
 					$paths2verify =~ s/:$//;
-					$programs{"blastSearch"}{"blastp"}{"path"} = checkSoftware("blastp", $paths2verify);		
+					$programs{"blastSearch"}{$blastProgram}{"path"} = checkSoftware($blastProgram, $paths2verify);		
 				} else {
-					die "\nERROR: blastp is not configured in CONFIG.xml.\n";
+					die "\nERROR: $blastProgram is not configured in CONFIG.xml.\n";
 				}
 			}
 			
@@ -399,18 +430,6 @@ if (!(-e $configFile)){
 	}
 } 
 	
-
-
-# check internet connection
-
-my $internetConnection = 1;
-my $url_test = "http://www.msftncsi.com/ncsi.txt";
-my $response_test = HTTP::Tiny->new->get($url_test);
-
-if ($response_test->{content} !~ m/Microsoft NCSI/){
-	$internetConnection = 0;
-}
-
 if (!$mysqlInfo{"connection"} and $internetConnection == 0){
 	die "\nERROR: You need at least an internet connection or a local database to perform the job.\n       Please, refer to README.txt.\n";
 }
@@ -2264,7 +2283,7 @@ sub retrieveQueryInfo {
 	if ($retrieveWeb == 1){
 		my $url_fetch_seq;
 		if ($queryType =~ m/uniprot/){
-			my $http = HTTP::Tiny->new(agent => 'libwww-perl tetsufmbio@gmail.com');
+			my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
 			if ($queryType eq "uniprot_ac"){
 				$url_fetch_seq = "http://www.uniprot.org/uniprot/".$id.".fasta";
 			} elsif ($queryType eq "uniprot_id"){
@@ -2284,7 +2303,7 @@ sub retrieveQueryInfo {
 			
 		} elsif ($queryType eq "ncbi_gi" or $queryType eq "ncbi_ac"){
 		
-			my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&db=protein&retmode=xml&rettype=fasta&id=".$id;
+			my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".$id;
 			my $fetch_lineage;
 			my $errorCount = -1;
 			do {
@@ -2350,7 +2369,7 @@ sub retrieveInfoUniprot {
 	my $fetch_fasta;
 	
 	if ($type eq "accession" or $type eq "mnemonic"){
-		my $http = HTTP::Tiny->new(agent => 'libwww-perl tetsufmbio@gmail.com');
+		my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
 		my $n = -1;
 		my $m = -50;
 		do {
@@ -2364,7 +2383,7 @@ sub retrieveInfoUniprot {
 		} while ($n < $#uniprotlist);
 		
 	} elsif ($type eq "accessioniso") {
-		my $http = HTTP::Tiny->new(agent => 'libwww-perl tetsufmbio@gmail.com');
+		my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
 		foreach my $id (@uniprotlist){
 			my $url_fetch_seq = "http://www.uniprot.org/uniprot/$id".".fasta";
 			my $response = $http->get($url_fetch_seq);
@@ -2407,7 +2426,7 @@ sub retrieveInfoNCBI {
 		$m = $m + 50;
 		$n = $#refseqlist if ($n > $#refseqlist);
 		
-		my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&db=protein&retmode=xml&rettype=fasta&id=".join(",",@refseqlist[$m .. $n]);
+		my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@refseqlist[$m .. $n]);
 		my $fetch_lineage;
 		my $errorCount = -1;
 		do {
@@ -2453,7 +2472,7 @@ sub executeBlast {
 		}
 		my $encoded_query = uri_escape(">".$queryInfo{"name"}."\n".$queryInfo{"seq"});
 		print "Executing BLAST search on NCBI server...\n  Database: $database\n  BLAST evalue: $evalue\n";
-		$blast_result = webBLAST($program, $database, $maxTargetBlast, $encoded_query, $evalue);
+		$blast_result = webBLAST($blastProgram, $database, $maxTargetBlast, $encoded_query, $evalue);
 		print "  OK!\n";
 	} else {
 		open(OUT, "> ".$pid."_seq.fasta") or die "\nERROR: Can't create a query file.\n";
@@ -2461,7 +2480,7 @@ sub executeBlast {
 		close OUT;
 		my $queryBlastInput = $pid."_seq.fasta";
 		print "Executing local BLAST search...\n  Database: $database\n  BLAST evalue: $evalue\n";
-		$blast_result = localBlast($program, $database, $maxTargetBlast, $queryBlastInput, $evalue);
+		$blast_result = localBlast($blastProgram, $database, $maxTargetBlast, $queryBlastInput, $evalue);
 		print "  OK!\n";
 	}
 	return $blast_result;
@@ -2479,7 +2498,7 @@ sub webBLAST {
 	my $ua = HTTP::Tiny->new;
 	
 	# build the request
-	my $args = "CMD=Put&TOOL=taxontree&EMAIL=tetsufmbio\@gmail.com&PROGRAM=$program&DATABASE=$database&HITLIST_SIZE=$defMaxTarget&EXPECT=$evalue&QUERY=" . $encoded_query;
+	my $args = "CMD=Put&TOOL=taxontree&EMAIL=$email&PROGRAM=$blastProgram&DATABASE=$database&HITLIST_SIZE=$defMaxTarget&EXPECT=$evalue&QUERY=" . $encoded_query;
 	my $url = 'https://www.ncbi.nlm.nih.gov/blast/Blast.cgi';
 	
 	# get the response
@@ -2502,7 +2521,7 @@ sub webBLAST {
 	    {
 	    sleep 5;
 
-		$response = $ua->request('GET', "https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&TOOL=taxontree&EMAIL=tetsufmbio\@gmail.com&FORMAT_OBJECT=SearchInfo&RID=$rid");
+		$response = $ua->request('GET', "https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&TOOL=taxontree&EMAIL=$email&FORMAT_OBJECT=SearchInfo&RID=$rid");
 		
 	    if ($response->{content} =~ /\s+Status=WAITING/m)
 	        {
@@ -2542,7 +2561,7 @@ sub webBLAST {
 	    } # end poll loop
 
 	# retrieve and display results
-	$response = $ua->request('GET', "https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&TOOL=taxontree&EMAIL=tetsufmbio\@gmail.com&DESCRIPTIONS=$defMaxTarget&FORMAT_OBJECT=Alignment&ALIGNMENT_VIEW=Tabular&FORMAT_TYPE=Text&RID=$rid");
+	$response = $ua->request('GET', "https://www.ncbi.nlm.nih.gov/blast/Blast.cgi?CMD=Get&TOOL=taxontree&EMAIL=$email&DESCRIPTIONS=$defMaxTarget&FORMAT_OBJECT=Alignment&ALIGNMENT_VIEW=Tabular&FORMAT_TYPE=Text&RID=$rid");
 	my $blast_result = $response->{content};
 	my $blastFileName = $pid."_blast.txt";
 	open (BLAST, "> $blastFileName") or die;
@@ -2561,9 +2580,9 @@ sub localBlast {
 	
 	my $inputBlast = $queryBlastInput;
 	my $outputBlast = $pid."_blast.txt";
-	my $defOutputBlast = $programs{"blastSearch"}{"blastp"}{"outName"};
+	my $defOutputBlast = $programs{"blastSearch"}{$blastProgram}{"outName"};
 	
-	my $blastCommand = 	$programs{"blastSearch"}{"blastp"}{"path"}." ".$programs{"blastSearch"}{"blastp"}{"command"};
+	my $blastCommand = 	$programs{"blastSearch"}{$blastProgram}{"path"}." ".$programs{"blastSearch"}{$blastProgram}{"command"};
 	$blastCommand =~ s/#INPUT/$inputBlast/g;
 	$blastCommand =~ s/#OUTPUT/$outputBlast/g;
 	$blastCommand =~ s/#DB/$database/g;
@@ -2571,7 +2590,7 @@ sub localBlast {
 	$blastCommand =~ s/#EVALUE/$evalue/g;
 	$blastCommand =~ s/#MAXTARGET/$defMaxTarget/g;
 	$blastCommand =~ s/#NUMTHREADS/$numThreads/g;
-	print "  Software: blastp\n  BLAST max target sequences set to: $defMaxTarget\n  parameters: ".$programs{"blastSearch"}{"blastp"}{"command"}."\n";
+	print "  Software: $blastProgram\n  BLAST max target sequences set to: $defMaxTarget\n  parameters: ".$programs{"blastSearch"}{$blastProgram}{"command"}."\n";
 	system($blastCommand);
 	#my $maxTarget2 = 10*$maxTarget;
 	#my $blast_result = `$program -query $queryBlastInput -db $database -max_target_seqs $maxTarget2 -evalue $evalue -outfmt 6 -num_threads 8`;
@@ -3198,7 +3217,7 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
-					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&db=protein&retmode=xml&rettype=fasta&id=".join(",",@allRefseqAccession[$m .. $n]);
+					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@allRefseqAccession[$m .. $n]);
 					my $fetch_lineage;
 					my $errorCount = -1;
 					do {
@@ -3206,13 +3225,12 @@ sub defineIdSubject {
 						$fetch_lineage = $response->{content};
 						$errorCount++;
 						sleep 1;
-					} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
+					} while ($fetch_lineage =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
 					if ($errorCount > 4){
 						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
 					}
 					my $xs2 = XML::Simple->new();
 					my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
-					
 					my @linkSet = @{$doc_lineage->{"TSeq"}};
 					
 					foreach my $link(@linkSet){
@@ -3375,7 +3393,7 @@ sub retrieveGeneNCBI {
 			$m = $m + 50;
 			$n = $#gilist if ($n > $#gilist);
 			
-			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&dbfrom=protein&db=gene&id=".join("&id=",@gilist[$m .. $n]);
+			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=taxontree&email=$email&dbfrom=protein&db=gene&id=".join("&id=",@gilist[$m .. $n]);
 			my $response = HTTP::Tiny->new->get($url_fetch_seq);
 			my $link_xml;
 			my $errorCount = -1;
@@ -3434,7 +3452,7 @@ sub retrieveGeneNCBI {
 			$m = $m + 25;
 			$n = $#giObsolete if ($n > $#giObsolete);
 			
-			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&db=protein&retmode=xml&rettype=gp&id=".join("&id=",@giObsolete[$m .. $n]);
+			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=gp&id=".join("&id=",@giObsolete[$m .. $n]);
 			my $response = HTTP::Tiny->new->get($url_fetch_seq);
 			my $link_xml;
 			my $errorCount = -1;
@@ -6189,7 +6207,7 @@ Max target sequence to be retrieved by BLAST. Work on -seqFile and -singleID.
 
 =back
 
-############ Alingment option: ############
+############ Alignment option: ############
 
 =over 8
 
