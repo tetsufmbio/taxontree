@@ -307,6 +307,7 @@ compile_kalign
 echo | tee -a $LOG
 
 cp -rf $BIN $TOT
+rm -rf $BIN
 cp -rf $LIBS $TOT
 
 if [ -d $TOT/libs/lib64 ]
@@ -319,7 +320,7 @@ ln -s $TOT/libs/lib $TOT/libs/lib64
 compile_netssleay
 echo | tee -a $LOG
 
-echo "NOTE: Dependencies installed are in $TOT"
+echo "NOTE: All installed dependencies are in $TOT"
 echo | tee -a $LOG
 
 if [ ${#MISSING[@]} -gt 0 ]
