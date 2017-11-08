@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	In this XML file you can configure the third-party softwares
+	and the MySQL account data that will be used by TaxOnTree.	
+-->
+<taxontree>
+	<email>your email goes here</email>
+	<!--
+	To configure the MySQL account:
+		Go to "mysql" tag in this file and set the correct
+		user name and password. Change the other parameters if 
+		necessary.
+	-->
+	<mysql>
+		<user>username</user>
+		<password>userpass</password>
+		<host>localhost</host>
+		<port>3306</port>
+		<database>taxontree</database>
+		<tables>
+			<table name="geneID2geneName">geneID2geneName_up</table>
+			<table name="refseq_idmapping">refseq_idmapping_up</table>
+			<table name="uniprot_idmapping">uniprot_idmapping_up</table>
+			<table name="taxallnomy_lin">taxallnomy_lin_up</table>
+			<table name="taxallnomy_rank">taxallnomy_rank_up</table>
+			<table name="taxonomy">taxonomy_up</table>
+			<table name="refseq_ipg_up">refseq_ipg_up</table>
+		</tables>
+	</mysql>
+	<!--
+	To configure the third-party softwares:
+	
+		In "generalPath" tag, set the path where TaxOnTree should
+		look for the third-party softwares. You can leave it blank 
+		if the software is installed in a folder contained in your 
+		system PATH. More than one PATH can be specified by separating 
+		them with ":". 
+	-->
+	<generalPath>/home/tot/taxontree/bin</generalPath>
+	<!--
+		The softwares are divided in:
+			- blastSearch			NCBI Blast search;
+			- aligners			Softwares for sequence alignment;
+			- alignRefinement		Softwares for alignment refinement;
+			- treeReconstruction		Softwares for generating phylogenetic 
+									tree;
+		
+		Each software is enclosed by "program" tags and contains the 
+		following tags:
+			- name  	the name of the software. Make sure that the
+						installed software have the same name as one
+						set here;
+			- path  	path to the software (only the directory. 
+						Leave it in blank if the software is installed 
+						in a folder contained in your PATH);
+			- command 	parameters used after the software command. Use
+						#INPUT and #OUTPUT codes to refer to the input 
+						and output files. Other variables can be set using
+						command line parameters and are specified below:
+						#DB - BLAST database name (set using -db);
+						#MAXTARGET - max target to retrieve in a BLAST 
+								search (set using -maxTarget);
+						#EVALUE - evalue threshold in a BLAST search
+								(set using -evalue);
+						#NUMTHREADS - number of threads to be used
+								(set using -numThreads).
+			- outName 	name of the output file. Place #OUTPUT if the 
+						name of the output file will be the same as the
+						name set in the command tag. Some softwares (e.g. 
+						prank) add an extension in the name of the output. 
+			
+		You can also add a software of your interest in the pipeline, just
+		add a "program" tag in one of the software type tag (e.g. aligners)
+		and configure the name, the path, the command and the output file 
+		name in the corresponding tags. 
+	-->
+	<programs>
+		<blastSearch>
+			<!-- 
+				BLAST search can be configured here.
+				
+				NOTE: Do not change the first four parameters (-query, -out, 
+				-db and -outfmt) as it would cause a program error. The output
+				file is a BLAST result in tab-delimited file.
+			-->
+			<program>
+				<name>blastp</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
+				<path></path>
+				<command>-query #INPUT -out #OUTPUT -db #DB -outfmt 6 -max_target_seqs #MAXTARGET -evalue #EVALUE -num_threads #NUMTHREADS</command>
+				<outName>#OUTPUT</outName>
+			</program>
+			
+			<!-- Please, do not modify the blastdbcmd command or outName tags -->
+			<program>
+				<name>blastdbcmd</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
+				<path></path>
+				<command>-entry_batch #INPUT -db #DB -out #OUTPUT -get_dups -outfmt "%g|%a|%s"</command>
+				<outName>#OUTPUT</outName>
+			</program>
+			
+			<program> <!-- makeblastdb is used only for updating the local sequence database -->
+				<name>makeblastdb</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
+				<path></path>
+				<command></command>
+				<outName></outName>
+			</program>
+			<program> <!-- blastdb_aliastool is used only for updating the local sequence database -->
+				<name>blastdb_aliastool</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
+				<path></path>
+				<command></command>
+				<outName></outName>
+			</program>
+			<program> <!-- update_blastdb.pl is used only for updating the local sequence database -->
+				<name>update_blastdb.pl</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
+				<path></path>
+				<command></command>
+				<outName></outName>
+			</program>
+		</blastSearch>
+		
+		<aligners>
+			<!-- 
+				All software for sequence alignment can be configured here.
+				
+				NOTE: The output of the software must be in Multi-
+				FASTA format and the sequence header must be preserved
+				(except for the description after a space).
+			-->
+			<program>
+				<name>muscle</name> <!--http://www.drive5.com/muscle/downloads.htm-->
+				<path></path>
+				<command>-in #INPUT -out #OUTPUT -quiet</command>
+				<outName>#OUTPUT</outName>
+			</program>
+			<program>
+				<name>kalign</name> <!--http://msa.sbc.su.se/cgi-bin/msa.cgi-->
+				<path></path>
+				<command>-i #INPUT -o #OUTPUT -q</command>
+				<outName>#OUTPUT</outName>
+			</program>
+			<program>
+				<name>prank</name> <!--http://wasabiapp.org/download/prank/-->
+				<path></path>
+				<command>-d=#INPUT -o=#OUTPUT -quiet</command>
+				<outName>#OUTPUT.best.fas</outName>
+			</program>
+			<program>
+				<name>clustalo</name> <!--http://www.clustal.org/omega/-->
+				<path></path>
+				<command>-i #INPUT -o #OUTPUT --force --threads #NUMTHREADS</command>
+				<outName>#OUTPUT</outName>
+			</program>
+		</aligners>
+		
+		<trimming>
+			<!-- 
+				All software for alignment trimming can be configured here.
+				
+				NOTE: The output of the software must be in Multi-
+				FASTA format and the sequence header must be preserved
+				(except for the description after a space).
+			-->
+			<program>
+				<name>trimal</name> <!--http://trimal.cgenomics.org/downloads-->
+				<path></path>
+				<command>-in #INPUT -out #OUTPUT -fasta -automated1</command>
+				<outName>#OUTPUT</outName>
+			</program>
+                        <program>
+                                <name>Gblocks</name> <!--http://molevol.cmima.csic.es/castresana/Gblocks.html-->
+                                <path></path>
+                                <command>#INPUT -t=p > /dev/null || mv #INPUT-gb #OUTPUT</command>
+                                <outName>#OUTPUT</outName>
+                        </program>
+		</trimming>
+		
+		<treeReconstruction>
+			<!-- 
+				All software for tree reconstruction can be configured here.
+				
+				NOTE: The output of the software must be in NEWICK
+				format and the leaf name must be preserved.
+			-->
+			<program>
+				<name>FastTree</name> <!--http://meta.microbesonline.org/fasttree/-->
+				<path></path>
+				<command>-quiet -nopr #INPUT > #OUTPUT</command>
+				<outName>#OUTPUT</outName>
+			</program>
+		</treeReconstruction>
+	</programs>
+</taxontree>

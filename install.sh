@@ -3,6 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $DIR
+find . -exec touch {} \;
 LOG=$DIR/log.txt
 
 if [ -e $LOG ]
@@ -164,7 +165,7 @@ function compile_netssleay {
 	software="Net::SSLeay"
 	echo testing $software... | tee -a $LOG
 	perl -e 'use Net::SSLeay' >> $LOG 2>&1;
-	testval = $?
+	testval=$?
 	if [ $testval -eq 0 ]
 	then
 		echo Perl module $software is installed. Nothing to do.  | tee -a $LOG
@@ -172,19 +173,23 @@ function compile_netssleay {
 		echo Perl module $software not installed. Trying to install it.  | tee -a $LOG
 		cd $SRC/perl_module/Net-SSLeay-1.82
 		make clean  >> /dev/null 2>&1;
-		echo "n" | perl Makefile.PL PREFIX=$DIR >> $LOG 2>&1;
-		make >> $LOG 2>&1;
-		make install >> $LOG 2>&1;
-		cd $DIR/lib
-		if [ -d $DIR/lib64 ]
+		( echo "n" | perl Makefile.PL PREFIX=$DIR && make && make install ) >> $LOG 2>&1;
+		testval=$?
+		if [ $testval -eq 0 ]
 		then
-			cp -r ../lib64/perl5 .
-			rm -rf $DIR/lib64
-		fi
-		cp -r ../share .
-		rm -rf $DIR/share
-		
+			cd $DIR/lib
+			if [ -d $DIR/lib64 ]
+			then
+				cp -r ../lib64/perl5 .
+				rm -rf $DIR/lib64
+			fi
+			cp -r ../share .
+			rm -rf $DIR/share
+		else
+			echo Can't install Perl module $software. Probably OpenSSL is missing.
+		fi		
 	fi
+	return $testval
 }
 
 compile_trimal
