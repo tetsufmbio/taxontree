@@ -27,8 +27,9 @@ data on the tips, branches or nodes.
                 # if you want to configure TaxOnTree to access a local MySQL
 ```
 
-This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder. This 
-will also install some third-party software that are in src folder. This includes:
+This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder. and create 
+an executable named taxontree. This will also install some third-party software that 
+are in src folder. This includes:
 
 * MUSCLE;
 * Clustal Omega;
