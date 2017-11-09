@@ -279,7 +279,7 @@ function compile_netssleay {
 		then
 			echo "  ERROR: Can't install Perl module $software. Probably OpenSSL is missing."  | tee -a $LOG
 			echo "         Verify if the package openssl-devel is installed in your machine."  | tee -a $LOG
-			echo "         If so, try to run this script again after installing openssl-devel."  | tee -a $LOG
+			echo "         If not, try to run this script again after installing openssl-devel."  | tee -a $LOG
 			echo "         For more info about OpenSSL, see https://www.openssl.org/"  | tee -a $LOG
 		else
 			echo "  $software installed."  | tee -a $LOG
