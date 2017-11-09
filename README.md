@@ -17,7 +17,6 @@ data on the tips, branches or nodes.
 * Internet connection;
 * [OpenSSL](https://www.openssl.org/);
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/);
-* Standalone Blast+ (optional).
 
 ## Installation
 
@@ -58,8 +57,8 @@ For more details, please refer to the manual in docs folder.
 > NOTE: A valid email address is required for TaxOnTree execution to request data from
 other servers like NCBI and UniProt. The email address is a way to the admin of those
 servers to communicate with you when necessary. This could happen if you are using 
-TaxOnTree excessively. See manual in docs folder to see how you can run TaxOnTree without
-internet connection.
+TaxOnTree excessively. To run TaxOnTree without internet connection, refer to the
+manual in docs folder.
 
 ## Contact
 
