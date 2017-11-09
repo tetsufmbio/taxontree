@@ -13,10 +13,24 @@ data on the tips, branches or nodes.
 ## Prerequisites
 
 * Unix Platform;
+
+TaxOnTree was tested on CentOS and on MacOS, but it should work on any Unix platforms.
+
 * Perl;
+
+Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v inside a command shell. If not, follow the instructions on [Perl website](https://www.perl.org/get.html) for its installation.
+
 * Internet connection;
+
+This is required to allow TaxOnTree to retrieve sequence and taxonomic information via REST request from NCBI or Uniprot servers.  
+
 * [OpenSSL](https://www.openssl.org/);
-* [FigTree](http://tree.bio.ed.ac.uk/software/figtree/);
+
+[OpenSSL](https://www.openssl.org/) package is required by TaxOnTree to communicate with NCBI server which uses HTTPS communication protocol. This can be installed using the installation tool of your Unix distribution (libssl-dev for Debian and openssl-dev for RPM based distribution).
+
+* [FigTree](http://tree.bio.ed.ac.uk/software/figtree/).
+
+A free graphical phylogenetic trees viewer developed in Java by Andrew Rambaut group. TaxOnTree output is made to be visualized in this software. There are versions for MacOS, Linux and Windows. Pick the one that is more convenient for you.
 
 ## Installation
 
@@ -68,8 +82,8 @@ If you have troubles or suggestions to improve our work, please contact us by th
 * tetsufmbio@gmail.com (Tetsu Sakamoto)
 * miguel@ufmg.br (J. Miguel Ortega)
 
-_**Laboratório de Biodados**  
-Instituto de Ciências Biológicas (ICB)  
+_**LaboratÃ³rio de Biodados**  
+Instituto de CiÃªncias BiolÃ³gicas (ICB)  
 Universidade Federal de Minas Gerais (UFMG)  
 Belo Horizonte - Minas Gerais - BRAZIL  
 Zip code: 31270-010_
