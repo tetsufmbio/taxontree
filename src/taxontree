@@ -1,0 +1,509 @@
+#!/usr/bin/perl -w
+
+#	TaxOnTree Version: 1.10
+
+#############################################################################
+#                                                                           #
+#   Copyright (C) 2015-2017  Tetsu Sakamoto                                 #
+#                                                                           #
+#   This program is free software: you can redistribute it and/or modify    #
+#   it under the terms of the GNU General Public License as published by    #
+#   the Free Software Foundation, either version 3 of the License, or       #
+#   (at your option) any later version.                                     #
+#                                                                           #
+#   This program is distributed in the hope that it will be useful,         #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of          #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           #
+#   GNU General Public License for more details.                            #
+#                                                                           #
+#   You should have received a copy of the GNU General Public License       #
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.   #
+#                                                                           #
+#############################################################################
+
+#############################################################################
+#                                                                           #
+#   This program uses NCBI eutilities service to retrieve biological        #
+#   data. NCBI's Disclaimer and Copyright notice are available at           #
+#   <www.ncbi.nlm.nih.gov/About/disclaimer.html>.                           #
+#                                                                           #
+#############################################################################
+
+#############################################################################
+#                                                                           #
+#   Author contact: tetsufmbio@gmail.com or miguel@icb.ufmg.br              #
+#                                                                           #
+#############################################################################
+
+#############################################################################
+#                                                                           #
+#   Major update:                                                           #
+#   - TaxOnTree is using now the Taxallnomy database                        #
+#   	(biodados.icb.ufmg.br/taxallnomy);                                  #
+#   - NCBI accession is now the primary identifier;                         #
+#   - TaxOnTree accept a table containing other info to embeded in the tree;#
+#   - Taxonomic filter added;                                               #
+#   - TaxOnTree deals with redundant leaf name;                             #
+#   - TaxOnTree deals with taxonomy updates;                                #
+#                                                                           #
+#############################################################################
+
+print "
+	TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
+	This program comes with ABSOLUTELY NO WARRANTY.
+	This is free software, and you are welcome to redistribute it under
+	certain conditions. See GNU general public license v.3 for details.\n\n";
+	
+use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+use taxontree;
+use Getopt::Long;
+use Pod::Usage;
+use Data::Dumper;
+use strict;
+
+my $TaxOnTreeVersion = "TaxOnTree v.1.10";
+
+$| = (@ARGV > 0); 
+
+# setup my defaults
+my %inputs;
+$inputs{"querySeqFile"} = undef;
+$inputs{"queryList"} = undef;
+$inputs{"querySingleID"} = undef;
+$inputs{"queryBlastFile"} = undef;
+$inputs{"treeFile"} = undef;
+$inputs{"queryAlignmentFile"} = undef;
+$inputs{"queryMFastaFile"} = undef;
+$inputs{"queryID"} = undef;
+$inputs{"treeTable"} = undef;
+$inputs{"otherTable"} = undef;
+$inputs{"treeProg"} = "FastTree";
+$inputs{"trimProg"} = "trimal";
+$inputs{"treeFormat"}	= "newick";
+$inputs{"queryTax"} = undef;
+$inputs{"queryKO"} = "NULL";
+$inputs{"queryUEKO"} = "NULL";
+$inputs{"queryGeneName"} = "NULL";
+$inputs{"queryGene"} = "NULL";
+$inputs{"delimiter"} = '|';
+$inputs{"position"} = 1;
+$inputs{"posTax"} = undef;
+$inputs{"txidMap"} = undef;
+$inputs{"pid"} = undef;
+$inputs{"showIsoform"} = undef;
+$inputs{"noTrimal"} = undef;
+$inputs{"database"} 	= "refseq_protein";
+$inputs{"blastProgram"} 	= "blastp";
+$inputs{"aligner"} 	= "muscle";
+$inputs{"leafNameFormat"} 	= "lcaN;id;geneName;species;rankcode(family,order,class)";
+$inputs{"taxRepFormat"} 	= "1..12";
+$inputs{"lcaLimit"} 	= 0;
+$inputs{"tpident_cut"} = 50;
+$inputs{"maxTarget"} = undef;
+$inputs{"maxTargetBlast"} = undef;
+$inputs{"taxSimple"} 	= 0;
+$inputs{"treeRoot"}	= 1;
+$inputs{"printLeaves"} = undef;
+$inputs{"evalue"}		= 10e-5;
+$inputs{"numThreads"}	= 1;
+$inputs{"localMySQL"} = undef;
+$inputs{"webBlastDelimiter"} = quotemeta('|');
+$inputs{"webBlastPosition"} = 3;
+$inputs{"taxFilter"} = 0;
+$inputs{"taxFilterCat"} = "species";
+$inputs{"restrictTax"} = undef;
+$inputs{"forceNoTxid"} = undef;
+$inputs{"forceNoInternet"} = undef;
+my $help		= 0;
+my $man			= 0;
+my $version = undef;
+
+GetOptions(
+    'seqFile=s'=> \$inputs{"querySeqFile"},
+    'listFile=s'    => \$inputs{"queryList"},
+    'singleID=s'    => \$inputs{"querySingleID"},
+    'blastFile=s'    => \$inputs{"queryBlastFile"},
+    'alignFile=s'    => \$inputs{"queryAlignmentFile"},
+    'mfastaFile=s'    => \$inputs{"queryMFastaFile"},
+    'queryID=s'    => \$inputs{"queryID"},
+    'treeFile=s'    => \$inputs{"treeFile"},
+    'treeTable=s'    => \$inputs{"treeTable"},
+    'otherTable=s'    => \$inputs{"otherTable"},
+    'queryTax=s'    => \$inputs{"queryTax"},
+    'txidMap=s'    => \$inputs{"txidMap"},
+    'db=s' 			=> \$inputs{"database"},
+	'blastProg=s' 	=> \$inputs{"blastProgram"},
+	'aligner=s' 	=> \$inputs{"aligner"},
+	'trimming=s' 	=> \$inputs{"trimProg"},
+	'treeProg=s' 	=> \$inputs{"treeProg"},
+	'maxTarget=i'	=> \$inputs{"maxTarget"},
+	'maxTargetBlast=i'	=> \$inputs{"maxTargetBlast"},
+	'threshold=i'	=> \$inputs{"tpident_cut"},
+	'out=s'			=> \$inputs{"pid"},
+	'leafFmt=s'			=> \$inputs{"leafNameFormat"},
+	'taxRepFmt=s'			=> \$inputs{"taxRepFormat"},
+	'treeFormat=s'			=> \$inputs{"treeFormat"},
+	'showIsoform!'			=> \$inputs{"showIsoform"},
+	'taxSimple!' 	=> \$inputs{"taxSimple"},
+	'treeRoot=i' 		=> \$inputs{"treeRoot"},
+	'lcaLimit=i' 		=> \$inputs{"lcaLimit"},
+	'printLeaves!' 		=> \$inputs{"printLeaves"},
+    'help!'     	=> \$help,
+	'version!'		=> \$version,
+	'man!'			=> \$man,
+	'evalue=f'		=> \$inputs{"evalue"},
+	'delimiter=s'		=> \$inputs{"delimiter"},
+	'position=i'		=> \$inputs{"position"},
+	'posTax=i'		=> \$inputs{"posTax"},
+	'numThreads=i'		=> \$inputs{"numThreads"},
+	'mysql!'		=> \$inputs{"localMySQL"},
+	'taxFilter=i'		=> \$inputs{"taxFilter"},
+	'taxFilterCat=s'		=> \$inputs{"taxFilterCat"},
+	'restrictTax=s'		=> \$inputs{"restrictTax"},
+	'forceNoTxid!'		=> \$inputs{"forceNoTxid"},
+	'forceNoInternet!'		=> \$inputs{"forceNoInternet"},
+) or pod2usage(-verbose => 99, 
+            -sections => [ qw(NAME SYNOPSIS) ] );
+
+pod2usage(0) if $man;
+pod2usage(2) if $help;
+if ($version){
+	print $TaxOnTreeVersion."\n";
+	exit;
+}
+# Check input;
+my @inputs = qw(querySeqFile queryList querySingleID queryBlastFile treeFile queryMFastaFile queryAlignmentFile);
+my $inputType;
+my $input;
+my @inputFiles;
+
+foreach my $inputType2(@inputs){
+	if ($inputs{$inputType2}){
+		if (!$input){
+			$inputType = $inputType2;
+			$input = $inputs{$inputType2};
+		} else {
+			print "ERROR: More than one input was provided. Please, provide only one of them.\n";
+			pod2usage(2);
+		}
+	}
+}
+
+if (!$input){
+	print "ERROR: No input was provided.\n";
+	pod2usage(2);
+} else {
+	if (!($inputs{"pid"})){
+		if ($inputType ne "querySingleID"){
+			my $pid = $input;
+			$pid = substr($pid, rindex($pid, "\/") + 1) if ($pid =~ m/\//);
+			$pid = substr($pid, 0, rindex($pid, ".")) if ($pid =~ m/\./);
+			$inputs{"pid"} = $pid;
+		} else {
+			$inputs{"pid"} = $input;
+		}
+	}
+}
+
+inputs(\%inputs, $TaxOnTreeVersion);
+check();
+main($input, $inputType);
+
+=head1 NAME
+
+TaxOnTree - Including taxonomic information in your phylogenetic tree
+
+=head1 SYNOPSIS
+
+./taxontree -singleID <sequence_ID>
+
+./taxontree -seqFile <FASTA_file>
+
+./taxontree -listFile <list_file>
+
+./taxontree -treeFile <tree_file> -queryID <query_id>
+
+
+=item B<Inputs>:
+
+[-seqFile FASTA_file] [-listFile list_file] [-singleID sequence_ID] [-treeFile tree_file] [-blastFile blast_file] [-mfastaFile mfasta_file] [-alignFile align_file] 
+
+=item B<Blast options>:
+
+[-db database_name] [-evalue] [-threshold] [-maxTarget int_value] [-maxTargetBlast int_value]
+
+=item B<Alignment options>:
+
+[-aligner] [-trimming]
+
+=item B<Tree options>:
+
+[-treeProg] [-treeTable table_file] [-printLeaves] [-treeRoot] [-leafFmt]
+
+=item B<Filter options>:
+
+[-showIsoform] [lcaLimit] [taxFilter] [taxFilterCat] [restrictTax]
+
+=item B<Other parameters>:
+
+[-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap tax_id] [-position] [-delimiter] [-numThreads] [-mysql] [-taxRepFormat] [-forceNoTxid]  [-version]
+	
+=item B<Help>:
+
+[-help] [-man]
+
+Use -man for a detailed help.
+
+=head1 OPTIONS
+
+############ Inputs: ############
+
+=over 8
+
+=item B<-singleID> <sequence_ID>
+
+Single protein accession number from NCBI (GI or accession number) or UniprotKB (accession number 
+or entry name). Example: "P04156" or "4757876" or "PRIO_HUMAN".
+
+=item B<-seqFile> <FASTA_file>
+
+A file containing a single sequence in FASTA format. You may provide the taxonomy ID of your sequence
+by using the parameter -queryTax <taxonomy_id> in the command line, or else, TaxOnTree will attribute
+the taxonomy ID of the Blast best hit as its taxonomy ID.
+
+Example:
+
+>Human_Prion
+MANLGCWMLVLFVATWSDLGLCKKRPKPGGWNTGGSRYPGQGSPGGNRYPPQGGGGWGQP
+HGGGWGQPHGGGWGQPHGGGWGQPHGGGWGQGGGTHSQWNKPSKPKTNMKHMAGAAAAGA
+VVGGLGGYMLGSAMSRPIIHFGSDYEDRYYRENMHRYPNQVYYRPMDEYSNQNNFVHDCV
+NITIKQHTVTTTTKGENFTETDVKMMERVVEQMCITQYERESQAYYQRGSSMVLFSSPPV
+ILLISFLIFLIVG
+
+=item B<-blastFile> <blast_file>
+
+File generated by Standalone BLAST+ in tabular format (-outfmt 6). You may provide a protein accession 
+from the result to be considered as query using -queryID, or else, TaxOnTree will consider the protein 
+in the first column or, if it is not an identifier from NCBI or Uniprot, the best hit subject as query.
+
+=item B<-listFile> <list_file>
+
+A file containing a list of protein identifiers from NCBI (GI or accession number) or UniprotKB 
+(accession number or entry name) separated by new line. You may provide a protein accession from 
+the list to be considered as query using -queryID, or else, TaxOnTree will consider the first entry 
+in the list as query. 
+
+=item B<-mfastaFile> <mfasta_file>
+
+A Multi-FASTA file containing ortholog sequences. You may provide a protein accession from the file to be 
+considered as query using -queryID, or else, TaxOnTree will consider the first entry in the file as query.
+
+=item B<-alignFile> <align_file>
+
+An Aligned Multi-FASTA file. You may provide a protein accession from the list to be considered as 
+query using -queryID, or else, TaxOnTree will consider the first entry in the file as query.
+
+=item B<-treeFile> <tree_file>
+
+A tree file in NEWICK format. You must provide the protein in the tree to be considered as query by
+using -queryID. If all or most of leaves contain a protein accession from RefSeq or Uniprot, you can use
+-delimiter and -position to allow TaxOnTree extract the accession and retrieve the taxonomy ID of each
+proteins. Alternatively, you can provide a table containing the leaves (first column) and their
+corresponding taxonomy id (second column) using the option -treetable. To generate a file with all leaves
+name in your tree, use the option -printLeaves. 
+
+=back
+
+############ Blast option: ############
+
+=over 8
+
+=item B<-db> <database_name> Default: refseq_protein
+
+BLAST-formatted database name. Work on -seqFile, -singleID, -blastFile and -listFile.
+
+For Standalone protein BLAST search, provide the address and the name (without extension) of the database. 
+Example: /home/user/taxontree/db, where db is the name of BLAST-formatted database. This option will
+only work if the database was generated using protein sequences from GenBank or Uniprot (using its 
+FASTA-header pattern) and the option -parse_seqids on makeblastdb command (See details on README).
+
+To request the BLAST search from NCBI server, you may choose one of these databases: 
+nr or refseq_protein. 
+
+=item B<-evalue> <real_value> Default: 10e-5
+
+Expect value threshold for BLAST search. Work on -seqFile and -singleID.
+
+=item B<-threshold> <int_value> Default: 50
+
+Protein identity threshold. For each subject, TaxOnTree calculate its identity with the query after
+removing overlapping HSPs and considering the length of the query sequence. Threshold may vary between 0-100.
+Work on -seqFile, -blastFile and -singleID.
+
+=item B<-maxTarget> <int_value> Default: 200
+
+Max target sequence to be used for phylogenetic analysis. Work on -seqFile, -blastFile and -singleID.
+
+item B<-maxTargetBlast> <int_value>
+
+Max target sequence to be retrieved by BLAST. Work on -seqFile and -singleID.
+
+=back
+
+############ Alignment option: ############
+
+=over 8
+
+=item B<-aligner> <aligner_software> Default: muscle
+
+Software for sequence alignment procedure. Configured options in CONFIG.xml are "muscle", "prank", 
+"clustalo" and "kalign". Work on -seqFile, -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. 
+To add more aligners, see CONFIG.xml.
+
+=item B<-trimming> <trimming_software> Default: trimal
+
+Software for alignment trimming. The only configured option in CONFIG.xml is "trimal". 
+You can set "false" to skip this step. Work on -seqFile, -blastFile, -listFile, -mfastaFile, 
+-alignFile and -singleID. To add more alignment trimming software, see CONFIG.xml.
+
+=back
+
+############ Tree option: ############
+
+=over 8
+
+=item B<-treeProg> <tree reconstruction software> Default: FastTree
+
+Software for tree reconstruction. The only configured option in CONFIG.xml is "FastTree". 
+Work on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
+reconstruction software, see CONFIG.xml.
+
+=item B<-treeTable> <table_name>
+
+A table containing the leaves of the input file in the first column and the correspondent taxonomy
+ID in the second. Use this option if the input tree does not contain an identifier from NCBI or Uniprot
+in its leaves. To obtain a list of leaves name in your tree, use the option -printLeaves. Work on -treeFile.
+
+Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
+
+=over 4
+
+	human	9606
+	chimp	9598
+	gorilla	9595
+
+=back
+
+=item B<-printLeaves>
+
+Print the leaves comprising your tree and exit. Use this to help you making the tree table file. Work on -treeFile.
+
+=item B<-treeRoot> Default: 1
+
+Define tree rooting mode. Use 0 to skip this step and 1 to root at midpoint. Work on all input.
+
+=item B<-leafFmt> Default: "lcaN;id;geneName;species;rankcode(family,order,class)"
+
+Leaf name format displayed in the tree. Data type available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName,
+rankcode, rankname. Use semicolons to separate the different data type. For "rankcode" and "rankname", include the taxonomic ranks that 
+you want to display separated with comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum,
+superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
+
+=back
+
+############ Filter option: ############
+
+=over 8
+
+=item B<-showIsoform>
+
+TaxOnTree can automatically link the RefSeq or Uniprot protein to a GeneID and discards its isoforms 
+from further analysis. Use this option to allow isoforms in the tree. Work on all inputs.
+
+=item B<-lcaLimit> <int_value>
+
+Exclude all sequences from organisms which the LCA with the query organism is below the provided level. 
+Work on all inputs.
+
+=item B<-taxFilterCat>
+
+Filter sequences by category which could be a taxonomic rank or by LCA. If "kingdom" is provided, it'll leave 
+sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. Work on all inputs.
+
+Categories allowed: lca, superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, 
+superfamily, family, subfamily, genus, subgenus, species, subspecies.
+
+=item B<-taxFilter> <int_value>
+
+Filter sequences by category which could be a taxonomic rank or by LCA. If 2 is provided, it'll leave 
+sequences from 2 organisms in each category found in the tree. Use -taxFilterCat to define the category. 
+Work on all inputs.
+
+=item B<-restrictTax> <list_file>
+
+Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms which 
+have their taxonomy ID listed in the file. Work on all inputs.
+
+=back
+
+############ Other parameters: ############
+
+=over 8
+
+=item B<-txidMap> <taxonomy_id>
+
+Force TaxOnTree to consider the taxonomy ID provided by this option to be mapped in the tree. Example: "9606"
+for human. Work on all inputs. 
+
+=item B<-queryTax> <taxonomy_id>
+
+NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. Works only in -seqFile. 
+
+=item B<-queryID> <query_id>
+
+Protein accession or name in the list or tree to be considered as query. Work on -blastFile, -listFile, -mfastaFile
+-alignFile and -treeFile. 
+
+=item B<-forceNoTxid>
+
+Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
+be assigned with the taxonomy ID of root (txid:1). Work on all inputs.
+
+=item B<-out> <file_name> Default: Input name
+
+Prefix for output files.
+
+=item B<-mysql>
+
+Use a local MySQL database to retrieve required TaxOnTree data (See README for details).
+
+=item B<-numThreads> Defalut: 1
+
+Number of processors to be used for programs that can handle multi-threading.
+
+=item B<-version>
+
+Print TaxOnTree version.
+
+=back
+
+############ Help: ############
+
+=over 8
+
+=item B<-help>
+
+Print a brief help message and exits.
+
+=item B<-man>
+
+Prints the manual page and exits.
+
+=back
+
+=head1 DESCRIPTION
+
+B<TaxOnTree> is a script that includes taxonomic information of your samples and their taxonomic relationship
+in a phylogenetic tree. 
+
+=cut
