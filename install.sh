@@ -192,6 +192,8 @@ function compile_argtable2 {
 
 # compiling clustal omega
 function compile_clustalo {
+	cd $SRC
+	tar -zxf clustal-omega-1.2.4.tar.gz
 	cd $SRC/clustal-omega-1.2.4;
 	software=clustalo
 	echo "# compiling $software..." | tee -a $LOG
