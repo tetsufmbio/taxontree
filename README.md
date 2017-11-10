@@ -20,7 +20,7 @@ data on the tips, branches or nodes.
 * Perl;
 
   Almost all Unix platforms have Perl 5 installed. To verify that, type `perl -v` 
-  inside a command shell. If not, follow the instructions on [Perl website]
+  in a command shell. If not, follow the instructions on [Perl website]
   (https://www.perl.org/get.html) for its installation.
 
 * Internet connection;
@@ -53,13 +53,13 @@ data on the tips, branches or nodes.
 ```
 
 > NOTE: A **valid email address** is required for TaxOnTree execution to request data from
-other servers like NCBI and UniProt. The email address is requested by the admin of those
-servers to contact you when necessary. This could happen if you are using TaxOnTree excessively.
+other servers like NCBI and UniProt. The email address is requested by those servers admin
+to contact you when necessary. This could happen if you are using TaxOnTree excessively.
 To run TaxOnTree without internet connection, refer to the manual in docs folder.
 
 This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
-some third-party software that are in src folder. This includes:
+some third-party software that is in src folder. This includes:
 
 * [MUSCLE](https://www.drive5.com/muscle/);
 * [Clustal Omega](http://www.clustal.org/omega/);
@@ -69,8 +69,8 @@ some third-party software that are in src folder. This includes:
 
 If some of them could not be installed, you can try to install them manually.
 
-> NOTE: Third-party software are only required when using TaxOnTree phylogenetic pipeline.
-If your input is a tree in Newick format, no third-party software are necessary.
+> NOTE: Third-party software is only required when using TaxOnTree phylogenetic pipeline.
+If your input is a tree in Newick format, no third-party software is necessary.
 
 If the installation goes well, it should create an executable called *taxontree* and display
 the following message after the command `./taxontree -version`.
