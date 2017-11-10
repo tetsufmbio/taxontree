@@ -94,7 +94,7 @@ A sample Newick file is also provided for test in sample folder. Try the followi
 > ./taxontree -treefile sample/test.nwk -queryid 544509544
 ```
 
-This should generate a file called *test_seq_tree.nex*. Open this file on FigTree.
+This should generate a file called *test_seq_tree.nex*. Open this file on **FigTree**.
 
 For more details on TaxOnTree command line usage, type the command `./taxontree -man` or 
 refer to the manual in docs folder.
