@@ -192,7 +192,7 @@ function compile_argtable2 {
 
 # compiling clustal omega
 function compile_clustalo {
-	cd $SRC/clustal-omega-1.2.1;
+	cd $SRC/clustal-omega-1.2.4;
 	software=clustalo
 	echo "# compiling $software..." | tee -a $LOG
 	make clean > /dev/null 2>&1;
