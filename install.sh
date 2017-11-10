@@ -327,6 +327,12 @@ else
 	echo "All dependencies were installed successfully!"
 fi
 
+cp -f $SRC/taxontree $DIR
+echo | tee -a $LOG
+echo "# taxontree executable created in $DIR"
+echo "# Try executing ./taxontree -version"
+
 echo | tee -a $LOG
 echo "Installation finished!" | tee -a $LOG
 echo | tee -a $LOG
+echo
