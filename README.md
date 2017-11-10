@@ -72,6 +72,8 @@ If some of them could not be installed, you can try to install them manually.
 > NOTE: Third-party software is only required when using TaxOnTree phylogenetic pipeline.
 If your input is a tree in Newick format, no third-party software is necessary.
 
+## Testing
+
 If the installation goes well, it should create an executable called *taxontree* and display
 the following message after the command `./taxontree -version`.
 
@@ -85,6 +87,14 @@ the following message after the command `./taxontree -version`.
 
 TaxOnTree v.1.10
 ```
+
+A sample Newick file is also provided for test in sample folder. Try the following command:
+
+```bash
+> ./taxontree -treefile sample/test.nwk -queryid 544509544
+```
+
+This should generate a file called *test_seq_tree.nex*. Open this file on FigTree.
 
 For more details on TaxOnTree command line usage, type the command `./taxontree -man` or 
 refer to the manual in docs folder.
