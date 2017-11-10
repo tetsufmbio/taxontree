@@ -186,11 +186,6 @@ function compile_argtable2 {
 		echo "  ERROR: Could not compile $software." | tee -a $LOG
 	fi
 
-	if [ $makeval -ne 0 ]
-	then
-		MISSING[${#MISSING[@]}]=$software
-	fi
-
 	return $makeval
 }
 
@@ -220,12 +215,8 @@ function compile_clustalo {
 			compile_argtable2
 		else
 			echo "  ERROR: Could not compile $software." | tee -a $LOG
+			MISSING[${#MISSING[@]}]=$software
 		fi
-	fi
-
-	if [ $makeval -ne 0 ]
-	then
-		MISSING[${#MISSING[@]}]=$software
 	fi
 
 	return $makeval
