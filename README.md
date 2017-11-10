@@ -19,7 +19,7 @@ data on the tips, branches or nodes.
 
 * Perl;
 
-  Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v 
+  Almost all Unix platforms have Perl 5 installed. To verify that, type `perl -v` 
   inside a command shell. If not, follow the instructions on [Perl website]
   (https://www.perl.org/get.html) for its installation.
 
@@ -31,9 +31,10 @@ data on the tips, branches or nodes.
 * [OpenSSL](https://www.openssl.org/);
 
   [OpenSSL](https://www.openssl.org/) package is required by TaxOnTree to communicate 
-  with NCBI server which uses HTTPS communication protocol. This can be installed using 
-  the installation tool of your Unix distribution (*sudo apt-get install libssl-dev* for 
-  Debian or *sudo yum install openssl-dev* for RPM based distribution).
+  with NCBI server which uses HTTPS communication protocol. Run the command `openssl version`
+  to verify if it is installed in your system. This can be installed using the installation 
+  tool of your Unix distribution (`sudo apt-get install libssl-dev` for Debian or 
+  `sudo yum install openssl-dev` for RPM based distribution).
 
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/).
 
@@ -46,32 +47,36 @@ data on the tips, branches or nodes.
 ```bash
 > git clone https://github.com/tetsufmbio/taxontree.git
 > cd taxontree
-> ./install.sh  # here you'll be asked for your email address and
+> ./install.sh  # Here you'll be asked for your email address and
                 # if you want to configure TaxOnTree to access a local MySQL.
                 # MySQL configuration can be done lately.
 ```
 
 > NOTE: A **valid email address** is required for TaxOnTree execution to request data from
-other servers like NCBI and UniProt. The email address is a way for the admin of those
-servers to contact with you when necessary. This could happen if you are using 
-TaxOnTree excessively. To run TaxOnTree without internet connection, refer to the
-manual in docs folder.
+other servers like NCBI and UniProt. The email address is requested by the admin of those
+servers to contact you when necessary. This could happen if you are using TaxOnTree excessively.
+To run TaxOnTree without internet connection, refer to the manual in docs folder.
 
-This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder. and create 
+This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
 some third-party software that are in src folder. This includes:
 
-* [MUSCLE]();
-* [Clustal Omega]();
-* [Kalign]();
-* [trimAl]();
-* [FastTree]().
+* [MUSCLE](https://www.drive5.com/muscle/);
+* [Clustal Omega](http://www.clustal.org/omega/);
+* [Kalign](http://msa.sbc.su.se/cgi-bin/msa.cgi);
+* [trimAl](http://trimal.cgenomics.org/);
+* [FastTree](http://www.microbesonline.org/fasttree/).
+
+If some of them could not be installed, you can try to install them manually.
+
+> NOTE: Third-party software are only required when using TaxOnTree phylogenetic pipeline.
+If your input is a tree in Newick format, no third-party software are necessary.
 
 If the installation goes well, it should create an executable called *taxontree* and display
-the following message after the command *./taxontree -version*.
+the following message after the command `./taxontree -version`.
 
 ```
-> ./taxontree
+> ./taxontree -version
 
         TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
         This program comes with ABSOLUTELY NO WARRANTY.
@@ -81,11 +86,13 @@ the following message after the command *./taxontree -version*.
 TaxOnTree v.1.10
 ```
 
-For more details, please refer to the manual in docs folder.
+For more details on TaxOnTree command line usage, type the command `./taxontree -man` or 
+refer to the manual in docs folder.
 
 ## Contact
 
-If you have troubles or suggestions to improve our work, please contact us by the following email address:
+If you have troubles installing TaxOnTree or suggestions to improve our work, please contact
+us by the following email address:
 
 * tetsufmbio@gmail.com (Tetsu Sakamoto)
 * miguel@ufmg.br (J. Miguel Ortega)
