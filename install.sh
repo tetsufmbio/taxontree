@@ -184,6 +184,7 @@ function compile_argtable2 {
 		compile_clustalo $param1 $param2
 	else
 		echo "  ERROR: Could not compile $software." | tee -a $LOG
+		MISSING[${#MISSING[@]}]=clustalo
 	fi
 
 	return $makeval
