@@ -5,10 +5,7 @@
 [TaxOnTree](http://biodados.icb.ufmg.br/taxontree) is a bioinformatics
 tool that embeds taxonomic information from [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)
  into phylogenetic trees. TaxOnTree generates trees that allow users to 
-easily access the taxonomic information of all entities comprising a tree. 
-This could be performed either by colorizing the tree according to a 
-taxonomic data or by adding/changing labels to evidence a taxonomic 
-data on the tips, branches or nodes.
+easily access the taxonomic information of all entities comprising the tree. 
 
 ## Prerequisites
 
