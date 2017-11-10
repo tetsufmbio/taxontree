@@ -14,6 +14,8 @@ This document is a guide for users to understand TaxOnTree features and to explo
 
 TaxOnTree has a simple phylogenetic pipeline implemented on it that allows several input format. Phylogenetic steps are schematized in Figure X.
 
+<img src="/img/taxontree_MM5.png" width=650px/>
+
 ### 2.2. Determining the lowest common ancestor (LCA)
 
 LCA of two or more organisms represents the most recent ancestor that all organisms in a set have in common. Determining LCA is a way to measure the taxonomic relationship among the organisms in the analysis. 
