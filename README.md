@@ -14,23 +14,32 @@ data on the tips, branches or nodes.
 
 * Unix Platform;
 
-TaxOnTree was tested on CentOS and on MacOS, but it should work on any Unix platforms.
+  TaxOnTree was tested on Ubuntu, CentOS and MacOS, but it should work on
+  any Unix platforms.
 
 * Perl;
 
-Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v inside a command shell. If not, follow the instructions on [Perl website](https://www.perl.org/get.html) for its installation.
+  Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v 
+  inside a command shell. If not, follow the instructions on [Perl website]
+  (https://www.perl.org/get.html) for its installation.
 
 * Internet connection;
 
-This is required to allow TaxOnTree to retrieve sequence and taxonomic information via REST request from NCBI or Uniprot servers.  
+  This is required to allow TaxOnTree to retrieve sequence and taxonomic information
+  via REST request from NCBI or Uniprot servers.  
 
 * [OpenSSL](https://www.openssl.org/);
 
-[OpenSSL](https://www.openssl.org/) package is required by TaxOnTree to communicate with NCBI server which uses HTTPS communication protocol. This can be installed using the installation tool of your Unix distribution (libssl-dev for Debian and openssl-dev for RPM based distribution).
+  [OpenSSL](https://www.openssl.org/) package is required by TaxOnTree to communicate 
+  with NCBI server which uses HTTPS communication protocol. This can be installed using 
+  the installation tool of your Unix distribution (*sudo apt-get install libssl-dev* for 
+  Debian or *sudo yum install openssl-dev* for RPM based distribution).
 
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/).
 
-A free graphical phylogenetic trees viewer developed in Java by Andrew Rambaut group. TaxOnTree output is made to be visualized in this software. There are versions for MacOS, Linux and Windows. Pick the one that is more convenient for you.
+  A free graphical phylogenetic trees viewer developed in Java by Andrew Rambaut group. 
+  TaxOnTree output is made to be visualized in this software. There are versions for MacOS, 
+  Linux and Windows. Pick the one that is more convenient for you.
 
 ## Installation
 
@@ -38,20 +47,28 @@ A free graphical phylogenetic trees viewer developed in Java by Andrew Rambaut g
 > git clone https://github.com/tetsufmbio/taxontree.git
 > cd taxontree
 > ./install.sh  # here you'll be asked for your email address and
-                # if you want to configure TaxOnTree to access a local MySQL
+                # if you want to configure TaxOnTree to access a local MySQL.
+                # MySQL configuration can be done lately.
 ```
 
+> NOTE: A **valid email address** is required for TaxOnTree execution to request data from
+other servers like NCBI and UniProt. The email address is a way for the admin of those
+servers to contact with you when necessary. This could happen if you are using 
+TaxOnTree excessively. To run TaxOnTree without internet connection, refer to the
+manual in docs folder.
+
 This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder. and create 
-an executable named taxontree. This will also install some third-party software that 
-are in src folder. This includes:
+an executable named taxontree. The installation process will also attempt to install 
+some third-party software that are in src folder. This includes:
 
-* MUSCLE;
-* Clustal Omega;
-* Kalign;
-* trimAl;
-* FastTree.
+* [MUSCLE]();
+* [Clustal Omega]();
+* [Kalign]();
+* [trimAl]();
+* [FastTree]().
 
-If all goes well, it should display the following message after the command ./taxontree.
+If the installation goes well, it should create an executable called *taxontree* and display
+the following message after the command *./taxontree -version*.
 
 ```
 > ./taxontree
@@ -61,19 +78,10 @@ If all goes well, it should display the following message after the command ./ta
         This is free software, and you are welcome to redistribute it under
         certain conditions. See GNU general public license v.3 for details.
 
-ERROR: No input was provided.
-Usage:
-    ./taxontree -singleID <sequence_ID>
-...
+TaxOnTree v.1.10
 ```
 
 For more details, please refer to the manual in docs folder.
-
-> NOTE: A valid email address is required for TaxOnTree execution to request data from
-other servers like NCBI and UniProt. The email address is a way to the admin of those
-servers to communicate with you when necessary. This could happen if you are using 
-TaxOnTree excessively. To run TaxOnTree without internet connection, refer to the
-manual in docs folder.
 
 ## Contact
 
