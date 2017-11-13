@@ -185,6 +185,7 @@ are additional prerequisites. They are:
   password at the *user* and *password* tags, respectively, like below and save the file.
   
   ```xml
+  ...
   <mysql>
     <user>tot</user>
     <password>xxxxxxx</password>
@@ -193,11 +194,12 @@ are additional prerequisites. They are:
     <database>taxontree</database>
     ...
   </mysql>
+  ...
   ```
   
 * TaxOnTree tables
   
-  The last step is to populate the taxontree database with TaxOnTree tables. TaxOnTree tables are provided at its
+  The last step is to populate the taxontree database with TaxOnTree tables. The tables are available at its
   [SourceForge page](https://sourceforge.net/projects/taxontree/files/db/). Download the file taxontree.sql.tgz and type
   the following commands:
   
@@ -206,56 +208,30 @@ are additional prerequisites. They are:
   > cd taxontree_sql
   > mysql -u <username> -p < taxontree.sql
   ```
+  
+  The last command should take some time. 
+  
+> **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate if it is worth having a local databases installed or if only web requests should be enough for your analysis.
 
-### 3.1. Prerequisites:
-
-Some prerequisites are required to run TaxOnTree. They are:
-
-* Unix Platform;
-* Perl;
-* Internet connection and/or TaxOnTree databases;
-* Perl module IO::Socket::SSL (only for accessing info from NCBI via internet);
-* [FigTree](http://tree.bio.ed.ac.uk/software/figtree/);
-* Third-party software (only for phylogenetic pipeline).
-
-#### 3.1.1 Unix Platform
-
-TaxOnTree was tested on CentOS and on MacOS, but it should work on any Unix platforms.
-
-#### 3.1.2. Perl
-
-Almost all Unix platforms have Perl 5 installed. To verify that, type perl -v inside a command shell. If not, follow the instructions on [Perl website](https://www.perl.org/get.html) for its installation.
-
-#### 3.1.3. Internet connection and/or TaxOnTree databases;
-
-TaxOnTree can retrieve sequence and taxonomic information of accessions by two ways: via REST request from NCBI or Uniprot servers (require internet connection) and/or by consulting local databases. TaxOnTree preferentially retrieves information from local databases because it is certainly faster than requesting them from the web. However, if there is no local databases installed, or if there is local databases but some accessions are missing on them, TaxOnTree can retrieve these data from the NCBI or Uniprot servers, if the machine is connected to internet.  
-
-There are two databases that TaxOnTree consults locally:
-
-* MySQL database;
-* Sequence database;
-
-TaxOnTre MySQL database has relational tables that associate all accessions found in NCBI and Uniprot database to taxonomic information. This database can be downloaded in our [Sourceforge page]() and loaded to a local MySQL. The database provided in Sourceforge is monthly updated, but we also provide a [Perl script]() that downloads all necessary data from NCBI and Uniprot servers and generates the TaxOnTree MySQL tables. To enable TaxOnTree to consult the local MySQL, see [Configuring MySQL database]().
-
-TaxOnTree also consults sequence databases to obtain sequence data that are required in some steps of the phylogenetic pipeline. These databases are BLAST-formatted sequence databases generated using *makeblastdb* from [Standalone-BLAST+ suite](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download). Sequence databases used in our web server can be downloaded in our [Sourceforge page](), but you can also make your own database using protein sequences from NCBI or Uniprot (See [Making your own sequence database]()).
-
-> **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate if it is worth having a local database installed or if only web requests should be enough for your analysis.
-
-#### 3.1.4. PERL module IO::Socket::SSL
-
-Because NCBI server uses HTTPS to communicate, an additional Perl module ([IO::Socket::SSL](http://search.cpan.org/~sullr/IO-Socket-SSL-2.052/lib/IO/Socket/SSL.pod)) is necessary for TaxOnTree to request information to this server via REST. This module can be easily installed in your machine using [CPAN](http://www.cpan.org/modules/INSTALL.html) by typing the following commands in the terminal:
+After fullfilling those requisites, you can now run TaxOnTree independently of internet connection. To tell TaxOnTree
+to access the MySQL database, add the parameter `-mysql` on the command line as below:
 
 ```bash
-> cpan
-cpan> install IO::Socket::SSL
-cpan> exit
+> ./taxontree -treefile sample/test.nwk -queryid 544509544 -mysql
 ```
 
-This should install IO::Socket::SSL module and all its dependencies.
+If the sequence database are requested by TaxOnTree, you can provide its location to TaxOnTree using 
+the `-db` parameter as below: 
 
-#### 3.1.5. FigTree
+```bash
+> ./taxontree -singleid 4757876 -db /path/to/seq_database -mysql
+```
 
-[FigTree](http://tree.bio.ed.ac.uk/software/figtree/) is a free graphical viewer of phylogenetic trees developed in Java by Andrew Rambaut group. TaxOnTree output is made to be visualized in this software. In its website, there are versions for MacOS, Linux and Windows. Pick the one that is more convenient for you.
+If some data are not available in the local database, TaxOnTree will try to retrieve them on NCBI or UniProt
+servers through internet. If your server has internet connection but you don't want TaxOnTree to retrieve data from 
+those servers, add the parameter `-forceNoInternet` in the command line 
+(e.g. `./taxontree -singleid 4757876 -db /path/to/seq_database -mysql -forceNoInternet`).
+
 
 #### 3.1.6. Third-party software
 
