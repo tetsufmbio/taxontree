@@ -149,7 +149,7 @@ function compile_fasttree {
 		rm FastTree;	
 	fi
 
-	gcc -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
+	gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
 	makeval=$?
 	if [ $makeval -eq 0 ]
 	then
