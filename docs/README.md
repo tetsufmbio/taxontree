@@ -100,13 +100,17 @@ To run TaxOnTree without internet connection, refer to the manual in docs folder
 
 This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
-some third-party software that is in src folder. This includes:
+some third-party software that is in src folder (Table X).
 
-* [MUSCLE](https://www.drive5.com/muscle/);
-* [Clustal Omega](http://www.clustal.org/omega/);
-* [Kalign](http://msa.sbc.su.se/cgi-bin/msa.cgi);
-* [trimAl](http://trimal.cgenomics.org/);
-* [FastTree](http://www.microbesonline.org/fasttree/).
+Table X: Third-party software compiled durint TaxOnTree installation.
+
+| third-party software | phylogenetic pipeline step |                    link                 |
+|----------------------|----------------------------|-----------------------------------------|
+| MUSCLE               | sequence aligner           | http://www.drive5.com/muscle/           |
+| Clustal Omega        | sequence aligner           | http://www.clustal.org/omega/           |
+| Kalign               | sequence aligner           | http://msa.sbc.su.se/cgi-bin/msa.cgi    |
+| trimAl               | sequence trimmer           | http://trimal.cgenomics.org/            |
+| FastTree             | tree reconstructor         | http://www.microbesonline.org/fasttree/ |
 
 If some of them could not be installed, you can try to install them manually on your system.
 
@@ -248,61 +252,72 @@ Third-party software that met the conditions above can be incorporated in TaxOnT
 To make these software viewable by TaxOnTree, they have to be installed in your system or, alternatively,
 you can compile them and move their executables to the `~/.taxontree/bin` folder. Furthermore, parameters and
 command lines that TaxOnTree executes for each third-party software have to be set in CONFIG.xml located 
-in `~/.taxontree` folder. The original CONFIG.xml file has some third-party software that is compiled during
-TaxOnTree installation with their default parameters already configured. They are listed on table X.
-
-Table X: Third-party software in CONFIG.xml.
-
-| third-party software | executable name | phylogenetic pipeline step |                       link                               |
-|----------------------|-----------------|----------------------------|----------------------------------------------------------|
-| Blast+ | blastp and blastdbcmd | blast search | https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download |
-| MUSCLE | muscle | sequence aligner | http://www.drive5.com/muscle/ |
-| Clustal Omega | clustalo | sequence aligner | http://www.clustal.org/omega/ |
-| Kalign | kalign | sequence aligner | http://msa.sbc.su.se/cgi-bin/msa.cgi |
-| trimAl | trimal | sequence trimmer | http://trimal.cgenomics.org/ |
-| Gblocks | Gblocks | sequence trimmer | http://molevol.cmima.csic.es/castresana/Gblocks.html |
-| FastTree | fasttree | tree reconstructor | http://www.microbesonline.org/fasttree/ |
+in `~/.taxontree` folder. Third-party software that is compiled during TaxOnTree installation is already 
+configured in the original CONFIG.xml.
 
 In the next section, it will be discussed how to add a third-party software to TaxOnTree phylogenetic pipeline.
 
 #### 4.1. Adding third-party software in the pipeline
 
-In this section, let consider that you want to add the software **Gblocks**, a software that
-trims multiple sequence alignment. To do that, you have to first compile and install it in your system (for this
-check Gblocks installation insctruction) or move its executable to the folder `~/.taxontree/bin`. Any one of these
-procedures will make Gblocks viewable by TaxOnTree. Let consider also that Gblocks executable name is also **Gblocks**.
+In this section, let consider that you want to add the software **MAFFT**, another largely used sequen aligner. 
+To do that, you have to first compile and install it in your system (for this
+check MAFFT installation insctruction) or move its executable to the folder `~/.taxontree/bin`. Any one of these
+procedures will make Gblocks viewable by TaxOnTree.
 
-After that, you have to include Gblocks in the TaxOnTree phylogenetic pipeline and set the command 
-line that you want to execute when TaxOnTree calls Gblocks. This is performed in the CONFIG.xml file that is located at
-`~/.taxontree/` folder. So, open the CONFIG.xml in the preferred text editor.
+After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command 
+line that you want to execute when TaxOnTree calls it. This is performed in the CONFIG.xml file that is located at
+`~/.taxontree/` folder. So, open the CONFIG.xml in the text editor of your preference.
 
-In the CONFIG.xml file, you'll find the *program* tag from the line 77. Inside the *program* tag, there are four 
+In the CONFIG.xml file, you'll find the *programs* tag from the line 77. Inside *programs* tag, there are four 
 other tags corresponding to each step of the phylogenetic pipeline. They are:
 
-* blastsearch
-* aligners
-* trimming
-* treeReconstruction
+```xml
+<programs> <!--third party software used in... -->
+  <blastsearch>...</blastsearch> <!-- blast search step... -->
+  <aligners>...</aligners>       <!-- sequence alignment step -->
+  <trimming>...</trimming>       <!-- sequence alignment trimming step -->
+  <treeReconstruction>...</treeReconstruction> <!-- tree reconstruction step -->
+</programs>
+```
 
-Inside each tag corresponding to phylogenetic pipeline step, you'll see that there are several *program* tags. 
+Inside each tag of phylogenetic pipeline step, you'll see that there are several *program* tags. 
 Each *program* tag has the configuration of one software included in this step of the phylogenetic pipeline.
 Inside the *program* tag, we have four more other tags:
 
-* *name*    - name of the executable.
-* *path*    - path to the software. You can leave it blank if the executable is in the folder `~/.taxontree/bin` or 
-	      in a folder contained in your PATH;
-* *command* - parameters used after software call. Use the #INPUT and #OUTPUT codes to refer to the input and
-              output files. You can also use #NUMTHREADS to refer to the number of threads to be used (this is
-	      set using the parameter -numthreads).
-* *outName* - name of the output file. Place #OUTPUT if the name of the output file will be the same as the name
-              set in the *command* tag. If a software, for instance, add the extension .fas in the name of the output
-	      place #OUTPUT.fas here.
+```xml
+<programs>
+  <blastsearch>...</blastsearch>
+  <aligners> <!-- third-party software configuration for alignment step...-->
+    <program>
+      <name>...</name>       <!--name of the software executable.-->
+      <path>...</path>       <!--path to the software executable. Leave it blank if the executable is in the folder 
+	                         `~/.taxontree/bin` or in a folder contained in your PATH-->
+      <command>...</command> <!--parameters used after software call. Use the #INPUT and #OUTPUT codes to refer to the 
+                                 input and output files. Use #NUMTHREADS to refer to the number of threads to be used 
+                                 (this is set by the parameter -numthreads).-->
+      <outName>...</outName> <!--name of the output file. Place #OUTPUT if the name of the output file will be the same 
+                                 as the name set in the *command* tag. If a software, for instance, add the extension .fas
+                                  in the name of the output place #OUTPUT.fas here.-->
+    </program>
+  </aligners>
+  <trimming>...</trimming>
+  <treeReconstruction>...</treeReconstruction>
+</programs>
+```
 
 So, to add a software to the phylogenetic pipeline, just add the *program* tag to the correspondent phylogenetic
 pipeline step.
 
-Since Gblocks is a software for trimming, we will add the Gblocks *program* tag inside the *trimming* tag. The 
-original CONFIG.xml file has only the software trimal configured as below:
+###################
+
+Since Gblocks is a software for trimming multiple alignment, we will add the Gblocks *program* tag inside the 
+*trimming* tag. The command line to run Gblocks is:
+
+```bash
+> ./Gblocks <input_file> -t=p
+```
+
+The original CONFIG.xml file has only the software trimal configured as below:
 
 ```xml
 <trimming>
