@@ -4193,6 +4193,7 @@ sub align{
 	$alignmentCommand =~ s/#INPUT/$inputAlignment/g;
 	$alignmentCommand =~ s/#OUTPUT/$outputAlignment/g;
 	$defOutputAlignment =~ s/#OUTPUT/$outputAlignment/g;
+	$defOutputAlignment =~ s/#INPUT/$inputAlignment/g;
 	$alignmentCommand =~ s/#NUMTHREADS/$numThreads/g;
 	print "  Software: $aligner2\n  Parameters: ".$programs{"aligners"}{$aligner2}{"command"}."\n";
 	system($alignmentCommand);
@@ -4216,6 +4217,7 @@ sub trimal{
 	$alignmentCommand =~ s/#OUTPUT/$outputAlignment/g;
 	$alignmentCommand =~ s/#NUMTHREADS/$numThreads/g;
 	$defOutputAlignment =~ s/#OUTPUT/$outputAlignment/g;
+	$defOutputAlignment =~ s/#INPUT/$inputAlignment/g;
 	
 	print "Trimming sequence...\n";
 	print "  Software: $trimProg\n  Parameters: ".$programs{"trimming"}{$trimProg}{"command"}."\n";
@@ -4242,6 +4244,7 @@ sub generateTree {
 	$treeCommand =~ s/#OUTPUT/$outputAlignment/g;
 	$treeCommand =~ s/#NUMTHREADS/$numThreads/g;
 	$defOutputAlignment =~ s/#OUTPUT/$outputAlignment/g;
+	$defOutputAlignment =~ s/#INPUT/$inputAlignment/g;
 	
 	print "Reconstructing phylogenetic tree...\n";
 	print "  Software: $treeProg\n  Parameters: ".$programs{"treeReconstruction"}{$treeProg}{"command"}."\n";
