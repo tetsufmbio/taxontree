@@ -145,8 +145,8 @@ are additional prerequisites. They are:
 
 * Standalone Blast+
 
-  Blast executables are required to make sequence similarity search and to retrieve 
-  sequence from a Blast-formatted sequence database.  Standalone Blast+ can be downloaded 
+  Blast executables are required to perform sequence similarity search and to retrieve 
+  sequences from a Blast-formatted database.  Standalone Blast+ can be downloaded 
   at ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/. 
 
 * Blast-formatted sequence database
@@ -159,7 +159,8 @@ are additional prerequisites. They are:
   > makeblastdb -in <multi-fasta_file> -out <database_name> -dbtype prot -parse_seqids -hash_index
   ```
   
-  Sequence databases used in TaxOnTree web tool are also available at its [Sourceforge page](https://sourceforge.net/projects/taxontree/files/db/).
+  Sequence databases used in [TaxOnTree web tool](http://bioinfo.icb.ufmg.br/taxontree) are also available 
+  at its [Sourceforge page](https://sourceforge.net/projects/taxontree/files/db/).
 
 * MySQL
 
@@ -209,7 +210,8 @@ are additional prerequisites. They are:
   > mysql -u <username> -p < taxontree.sql
   ```
   
-  The last command should take some time. 
+  Use the username of MySQL account that you have created in previous section. The last command 
+  should take some time, so please be patient.
   
 > **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate if it is worth having a local databases installed or if only web requests should be enough for your analysis.
 
@@ -232,24 +234,27 @@ servers through internet. If your server has internet connection but you don't w
 those servers, add the parameter `-forceNoInternet` in the command line 
 (e.g. `./taxontree -singleid 4757876 -db /path/to/seq_database -mysql -forceNoInternet`).
 
+### 4. Third-party software
 
-#### 3.1.6. Third-party software
-
-*This requirement is only necessary if TaxOnTree phylogenetic pipeline is required. If your input is a tree file in Newick format, than no third-party software are necessary for your analysis.* 
-
-The third-party software required by TaxOnTree are those software that will comprise the phylogenetic pipeline. Those software are divide in the following types:
+Third-party software required by TaxOnTree are those software that will 
+comprise the phylogenetic pipeline. Those software are divided in the following types:
 
 * *Blast search* - this is performed exclusively by [Blast+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download);
-* *Sequence aligner* - software that perform sequence alignment. Must have Multi-FASTA file as input and as output, e.g. [MUSCLE](https://www.drive5.com/muscle/), [Clustal Omega](http://www.clustal.org/omega/), [Kalign](http://msa.sbc.su.se/cgi-bin/msa.cgi);
-* *Sequence trimmer* - software that trim a sequence alignment according to its quality. Must have Multi-FASTA file as input and as output, e.g. [trimAl](http://trimal.cgenomics.org/);
-* *Tree reconstructor* - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output, e.g. [FastTree](http://www.microbesonline.org/fasttree/#Install).
+* *Sequence aligner* - software that performs sequence alignment. Must have Multi-FASTA file as input and as output;
+* *Sequence trimmer* - software that trim a sequence alignment according to its quality. Must have Multi-FASTA file as input and as output;
+* *Tree reconstructor* - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output.
 
-Third-party software that met the conditions above can be incorporated in TaxOnTree phylogenetic pipeline. To make these software viewable by TaxOnTree, they have to be installed in your system or, alternatively, you can compile them and move their executables to the bin folder that accompanies TaxOnTree package. Furthermore, parameters and command lines that TaxOnTree executes of each third-party software have to be listed in CONFIG.xml file that accompanies TaxOnTree package. The original CONFIG.xml file has some third-party software with their default parameters configured. They are listed on table X.
+Third-party software that met the conditions above can be incorporated in TaxOnTree phylogenetic pipeline. 
+To make these software viewable by TaxOnTree, they have to be installed in your system or, alternatively,
+you can compile them and move their executables to the `~/.taxontree/bin` folder. Furthermore, parameters and
+command lines that TaxOnTree executes for each third-party software have to be set in CONFIG.xml located 
+in `~/.taxontree` folder. The original CONFIG.xml file has some third-party software that is compiled during
+TaxOnTree installation with their default parameters already configured. They are listed on table X.
 
 Table X: Third-party software in CONFIG.xml.
 
-| third-party software | executable name | phylogenetic pipeline step | link |
-|-----------|-----------|-----------|-----------|
+| third-party software | executable name | phylogenetic pipeline step |                       link                               |
+|----------------------|-----------------|----------------------------|----------------------------------------------------------|
 | Blast+ | blastp and blastdbcmd | blast search | https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download |
 | MUSCLE | muscle | sequence aligner | http://www.drive5.com/muscle/ |
 | Clustal Omega | clustalo | sequence aligner | http://www.clustal.org/omega/ |
@@ -258,95 +263,102 @@ Table X: Third-party software in CONFIG.xml.
 | Gblocks | Gblocks | sequence trimmer | http://molevol.cmima.csic.es/castresana/Gblocks.html |
 | FastTree | fasttree | tree reconstructor | http://www.microbesonline.org/fasttree/ |
 
+In the next section, it will be discussed how to add a third-party software to TaxOnTree phylogenetic pipeline.
+
+#### 4.1. Adding third-party software in the pipeline
+
+In this section, let consider that you want to add the software **Gblocks**, a software that
+trims multiple sequence alignment. To do that, you have to first compile and install it in your system (for this
+check Gblocks installation insctruction) or move its executable to the folder `~/.taxontree/bin`. Any one of these
+procedures will make Gblocks viewable by TaxOnTree. Let consider also that Gblocks executable name is also **Gblocks**.
+
+After that, you have to include Gblocks in the TaxOnTree phylogenetic pipeline and set the command 
+line that you want to execute when TaxOnTree calls Gblocks. This is performed in the CONFIG.xml file that is located at
+`~/.taxontree/` folder. So, open the CONFIG.xml in the preferred text editor.
+
+In the CONFIG.xml file, you'll find the *program* tag from the line 77. Inside the *program* tag, there are four 
+other tags corresponding to each step of the phylogenetic pipeline. They are:
+
+* blastsearch
+* aligners
+* trimming
+* treeReconstruction
+
+Inside each tag corresponding to phylogenetic pipeline step, you'll see that there are several *program* tags. 
+Each *program* tag has the configuration of one software included in this step of the phylogenetic pipeline.
+Inside the *program* tag, we have four more other tags:
+
+* *name*    - name of the executable.
+* *path*    - path to the software. You can leave it blank if the executable is in the folder `~/.taxontree/bin` or 
+	      in a folder contained in your PATH;
+* *command* - parameters used after software call. Use the #INPUT and #OUTPUT codes to refer to the input and
+              output files. You can also use #NUMTHREADS to refer to the number of threads to be used (this is
+	      set using the parameter -numthreads).
+* *outName* - name of the output file. Place #OUTPUT if the name of the output file will be the same as the name
+              set in the *command* tag. If a software, for instance, add the extension .fas in the name of the output
+	      place #OUTPUT.fas here.
+
+So, to add a software to the phylogenetic pipeline, just add the *program* tag to the correspondent phylogenetic
+pipeline step.
+
+Since Gblocks is a software for trimming, we will add the Gblocks *program* tag inside the *trimming* tag. The 
+original CONFIG.xml file has only the software trimal configured as below:
+
+```xml
+<trimming>
+  <!--
+    All software for alignment trimming can be configured here.
+
+    NOTE: The output of the software must be in Multi-
+    FASTA format and the sequence header must be preserved
+    (except for the description after a space).
+  -->
+  <program>
+    <name>trimal</name> <!--http://trimal.cgenomics.org/downloads-->
+    <path></path>
+    <command>-in #INPUT -out #OUTPUT -fasta -automated1</command>
+    <outName>#OUTPUT</outName>
+  </program>
+</trimming>
+```
+
+```xml
+<trimming>
+  <!--
+    All software for alignment trimming can be configured here.
+
+    NOTE: The output of the software must be in Multi-
+    FASTA format and the sequence header must be preserved
+    (except for the description after a space).
+  -->
+  <program>
+    <name>trimal</name> <!--http://trimal.cgenomics.org/downloads-->
+    <path></path>
+    <command>-in #INPUT -out #OUTPUT -fasta -automated1</command>
+    <outName>#OUTPUT</outName>
+  </program>
+  <program>
+    <name>Gblocks</name> <!--http://molevol.cmima.csic.es/castresana/Gblocks.html-->
+    <path></path>
+    <command>#INPUT -t=p > /dev/null || mv #INPUT-gb #OUTPUT</command>
+    <outName>#OUTPUT</outName>
+  </program>
+</trimming>
+```
+Since Gblocks is a software for trimming, we will add it inside the *trimming* tag.
+
+To add a third-party software different of those that accompanies this package, firstly you have to install it in your system
+of move its executable to the folder `~/.taxontree/bin`.
+
+Then, 
 See the section [3.8](#38-adding-third-party-software-in-the-pipeline) to find out more details on how to configure a third-party software to be part of TaxOnTree phylogenetic pipeline.
 
 > **Note**: The requirement of software of each type depends on the input provided by the user. For instance, if an aligned Multi-FASTA sequence is provided as input, TaxOnTree will require only a software for tree reconstruction. In the other hand, if a single accession from NCBI is provided, TaxOnTree will require software of all four types to perform the analysis.
 
-### 3.2. Installation:
 
-#### 3.2.1. Downloading TaxOnTree
+### 4. Inputs
 
-Use the following commands to download TaxOnTree in a local machine:
-
-```bash
-git clone 
-cd taxontree
-```
-#### 3.2.2. Configuring your email address
-
-Set your email address to allow TaxOnTree to perform HTTP request to NCBI and/or Uniprot servers. For this, edit the file CONFIG.xml that accompanies this package and set your email address between <email> tags.
-
-```
-<email>your email goes here</email>
-```
-
-#### 3.2.3. Testing TaxOnTree
-
-Finally, test TaxOnTree by running the following command:
-
-```
-./taxontree
-```
-
-If all goes well, it should display the following message.
-
-```
-        TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
-        This program comes with ABSOLUTELY NO WARRANTY.
-        This is free software, and you are welcome to redistribute it under
-        certain conditions. See GNU general public license v.3 for details.
-
-ERROR: No input was provided.
-Usage:
-    ./taxontree -singleID <sequence_ID>
-
-    ./taxontree -seqFile <FASTA_file>
-
-    ./taxontree -listFile <list_file>
-
-    ./taxontree -treeFile <tree_file> -queryID <query_id>
-
-    Inputs:
-        [-seqFile FASTA_file] [-listFile list_file] [-singleID sequence_ID]
-        [-treeFile tree_file] [-blastFile blast_file] [-mfastaFile
-        mfasta_file] [-alignFile align_file]
-
-    Blast options:
-        [-db database_name] [-evalue] [-threshold] [-maxTarget int_value]
-        [-maxTargetBlast int_value]
-
-    Alignment options:
-        [-aligner] [-trimming]
-
-    Tree options:
-        [-treeProg] [-treeTable table_file] [-printLeaves] [-treeRoot]
-        [-leafFmt]
-
-    Filter options:
-        [-showIsoform] [lcaLimit] [taxFilter] [taxFilterCat] [restrictTax]
-
-    Other parameters:
-        [-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap
-        tax_id] [-position] [-delimiter] [-numThreads] [-mysql]
-        [-taxRepFormat] [-forceNoTxid] [-version]
-
-    Help:
-        [-help] [-man]
-
-        Use -man for a detailed help.
-```
-
-TaxOnTree is ready to use  in  most  of  Unix  Platform. But it only works if the folders lib/ that follow this script are  in  the same location of execution. If you want to freely run TaxOnTree  in  other  location,  add the TaxOnTree folder into the environment variable  by  using,  for 	example, the following commands:
-	
- ```bash
-	> echo "export PATH=$PATH:/path/to/program/taxontree/" >> ~/.bash_profile
-	> source ~/.bash_profile
-```
-
-
-### 3.3. Inputs
-
-#### 3.3.1. Single ID (-singleid <single_id>)
+#### 4.1. Single ID (-singleid <single_id>)
 
 Single protein accession number from NCBI (GI or accession number) or UniprotKB (accession number or entry name). Example: "P04156" or "4757876" or "PRIO_HUMAN".
 
