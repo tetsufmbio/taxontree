@@ -213,14 +213,14 @@ are additional prerequisites. They are:
   
 > **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate if it is worth having a local databases installed or if only web requests should be enough for your analysis.
 
-After fullfilling those requisites, you can now run TaxOnTree independently of internet connection. To tell TaxOnTree
+After fullfilling these requisites, you can now run TaxOnTree independently of internet connection. To tell TaxOnTree
 to access the MySQL database, add the parameter `-mysql` on the command line as below:
 
 ```bash
 > ./taxontree -treefile sample/test.nwk -queryid 544509544 -mysql
 ```
 
-If the sequence database are requested by TaxOnTree, you can provide its location to TaxOnTree using 
+If a sequence database is requested by TaxOnTree, you can provide its location using 
 the `-db` parameter as below: 
 
 ```bash
