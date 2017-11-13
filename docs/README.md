@@ -198,9 +198,14 @@ are additional prerequisites. They are:
 * TaxOnTree tables
   
   The last step is to populate the taxontree database with TaxOnTree tables. TaxOnTree tables are provided at its
-  [SourceForge page](https://sourceforge.net/projects/taxontree/files/db/). Download the file taxontree.sql.tgz and then
+  [SourceForge page](https://sourceforge.net/projects/taxontree/files/db/). Download the file taxontree.sql.tgz and type
+  the following commands:
   
-  
+  ```bash
+  > tar -zxf taxontree.sql.tgz
+  > cd taxontree_sql
+  > mysql -u <username> -p < taxontree.sql
+  ```
 
 ### 3.1. Prerequisites:
 
