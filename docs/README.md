@@ -90,9 +90,7 @@ Some prerequisites are required to run TaxOnTree. They are:
 ```bash
 > git clone https://github.com/tetsufmbio/taxontree.git
 > cd taxontree
-> ./install.sh  # Here you'll be asked for your email address and
-                # if you want to configure TaxOnTree to access a local MySQL.
-                # MySQL configuration can be done lately.
+> ./install.sh  # Here you'll be asked for your email address.
 ```
 
 > NOTE: A **valid email address** is required for TaxOnTree execution to request data from
