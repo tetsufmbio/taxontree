@@ -158,8 +158,9 @@ function compile_fasttree {
 		testval=$?
 		if [ $testval -ne 0 ]
 		then
+			echo "  FastTree test failed. Trying to recompile it without SSE3."
 			gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
-			./FastTree test_align.fasta >> $LOG 2>&1
+			./FastTree sample.fasta >> $LOG 2>&1
 			testval=$?
 			if [ $testval -ne 0 ] 
 			then
