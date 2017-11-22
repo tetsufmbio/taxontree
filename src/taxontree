@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-#	TaxOnTree Version: 1.10
+#	TaxOnTree Version: 1.10.1
 
 #############################################################################
 #                                                                           #
@@ -61,7 +61,7 @@ use Pod::Usage;
 use Data::Dumper;
 use strict;
 
-my $TaxOnTreeVersion = "TaxOnTree v.1.10";
+my $TaxOnTreeVersion = "TaxOnTree v.1.10.1";
 
 $| = (@ARGV > 0); 
 
@@ -95,9 +95,10 @@ $inputs{"noTrimal"} = undef;
 $inputs{"database"} 	= "refseq_protein";
 $inputs{"blastProgram"} 	= "blastp";
 $inputs{"aligner"} 	= "muscle";
-$inputs{"leafNameFormat"} 	= "lcaN;id;geneName;species;rankcode(family,order,class)";
+$inputs{"leafNameFormat"} 	= "lcaN;id;geneName;species";
 $inputs{"taxRepFormat"} 	= "1..12";
 $inputs{"lcaLimit"} 	= 0;
+$inputs{"lcaLimitDown"}	= -1;
 $inputs{"tpident_cut"} = 50;
 $inputs{"maxTarget"} = undef;
 $inputs{"maxTargetBlast"} = undef;
@@ -147,6 +148,7 @@ GetOptions(
 	'taxSimple!' 	=> \$inputs{"taxSimple"},
 	'treeRoot=i' 		=> \$inputs{"treeRoot"},
 	'lcaLimit=i' 		=> \$inputs{"lcaLimit"},
+	'lcaLimitDown=i' 		=> \$inputs{"lcaLimitDown"},
 	'printLeaves!' 		=> \$inputs{"printLeaves"},
     'help!'     	=> \$help,
 	'version!'		=> \$version,
@@ -230,27 +232,27 @@ TaxOnTree - Including taxonomic information in your phylogenetic tree
 
 =item B<Blast options>:
 
-[-db database_name] [-evalue] [-threshold] [-maxTarget int_value] [-maxTargetBlast int_value]
+[-db database_name] [-evalue evalue] [-threshold int_value] [-maxTarget int_value] [-maxTargetBlast int_value]
 
 =item B<Alignment options>:
 
-[-aligner] [-trimming]
+[-aligner software] [-trimming software]
 
 =item B<Tree options>:
 
-[-treeProg] [-treeTable table_file] [-printLeaves] [-treeRoot] [-leafFmt]
+[-treeProg software] [-treeTable table_file] [-printLeaves] [-treeRoot int_value] [-leafFmt string]
 
 =item B<Filter options>:
 
-[-showIsoform] [lcaLimit] [taxFilter] [taxFilterCat] [restrictTax]
+[-showIsoform] [-lcaLimit int_value] [-lcaLimitDown int_value] [-taxFilter int_value] [-taxFilterCat category] [-restrictTax]
 
 =item B<Other parameters>:
 
-[-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap tax_id] [-position] [-delimiter] [-numThreads] [-mysql] [-taxRepFormat] [-forceNoTxid]  [-version]
+[-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap tax_id] [-position int_value] [-delimiter string] [-numThreads int_value] [-mysql] [-taxRepFormat string] [-forceNoTxid] [-forceNoInternet]
 	
 =item B<Help>:
 
-[-help] [-man]
+[-version] [-help] [-man]
 
 Use -man for a detailed help.
 
@@ -402,7 +404,7 @@ Print the leaves comprising your tree and exit. Use this to help you making the 
 
 Define tree rooting mode. Use 0 to skip this step and 1 to root at midpoint. Work on all input.
 
-=item B<-leafFmt> Default: "lcaN;id;geneName;species;rankcode(family,order,class)"
+=item B<-leafFmt> Default: "lcaN;id;geneName;species"
 
 Leaf name format displayed in the tree. Data type available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName,
 rankcode, rankname. Use semicolons to separate the different data type. For "rankcode" and "rankname", include the taxonomic ranks that 
@@ -422,7 +424,12 @@ from further analysis. Use this option to allow isoforms in the tree. Work on al
 
 =item B<-lcaLimit> <int_value>
 
-Exclude all sequences from organisms which the LCA with the query organism is below the provided level. 
+Exclude all sequences from organisms which the LCA level with the query organism is below the provided level. 
+Work on all inputs.
+
+=item B<-lcaLimitDown> <int_value>
+
+Exclude all sequences from organisms which the LCA level with the query organism is above the provided level. 
 Work on all inputs.
 
 =item B<-taxFilterCat>
@@ -468,6 +475,10 @@ Protein accession or name in the list or tree to be considered as query. Work on
 
 Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
 be assigned with the taxonomy ID of root (txid:1). Work on all inputs.
+
+=item B<-forceNoInternet>
+
+Force TaxOnTree to not use internet connection to retrieve data. Work on all inputs.
 
 =item B<-out> <file_name> Default: Input name
 

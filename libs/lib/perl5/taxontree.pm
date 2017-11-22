@@ -56,6 +56,7 @@ my $aligner;
 my $leafNameFormat;
 my $taxRepFormat;
 my $lcaLimit;
+my $lcaLimitDown;
 my $tpident_cut;
 my $maxTarget;
 my $maxTargetBlast;
@@ -108,6 +109,7 @@ sub inputs {
 	$leafNameFormat = $inputs->{"leafNameFormat"};
 	$taxRepFormat = $inputs->{"taxRepFormat"};
 	$lcaLimit = $inputs->{"lcaLimit"};
+	$lcaLimitDown = $inputs->{"lcaLimitDown"};
 	$tpident_cut = $inputs->{"tpident_cut"};
 	$maxTarget = $inputs->{"maxTarget"};
 	$maxTargetBlast = $inputs->{"maxTargetBlast"};
@@ -661,34 +663,17 @@ sub querySingleID {
 		die "\nERROR: Could not retrieve taxonomy information from provided query ID.\n";
 	}
 	
-	if ($restrictTax){
-		@subjects = &restrictTax(\@subjects, \%restrictTax);
-		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after restricting with Taxonomy ID provided.\n";
-		}
-	}
-	
-	if ($taxFilter){
-		@subjects = &taxFilter(\@subjects, $taxFilter, $taxFilterCat);
-		print "  number of proteins after applying taxonomic filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filter.\n";
-		}
-	}
-	
-	if ($lcaLimit > 0){
-		@subjects = &lcaFilter($lcaLimit, \@subjects);
-		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-		}
-	}
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
 	
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	
+	if (scalar @subjects < 3){
+		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
+	}
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -698,6 +683,10 @@ sub querySingleID {
 	mergeGeneralInfo($sequenceInfoRef);
 	
 	@subjects = checkSeq(@subjects);
+	
+	if (scalar @subjects < 3){
+		die "\nERROR: Less than 3 proteins was retrieved.\n";
+	}
 	
 	my $alignmentFile = &align($aligner, \@subjects);
 	if (!($noTrimal)){
@@ -792,31 +781,14 @@ sub queryList {
 		die "\nERROR: Could not retrieve taxonomy information from provided query ID.\n";
 	}
 	
-	if ($restrictTax){
-		@subjects = &restrictTax(\@subjects, \%restrictTax);
-		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after restricting with Taxonomy ID provided.\n";
-		}
-	}
-	
-	if ($taxFilter){
-		@subjects = &taxFilter(\@subjects, $taxFilter, $taxFilterCat);
-		print "  number of proteins after applying taxonomic filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filter.\n";
-		}
-	}
-	
-	if ($lcaLimit > 0){
-		@subjects = &lcaFilter($lcaLimit, \@subjects);
-		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-		}
-	}
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
 	
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	
+	if (scalar @subjects < 3){
+		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
+	}
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -886,34 +858,17 @@ sub querySeqFile {
 		die "\nERROR: Could not retrieve taxonomy information from provided query ID.\n";
 	}
 
-	if ($restrictTax){
-		@subjects = &restrictTax(\@subjects, \%restrictTax);
-		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after restricting with Taxonomy ID provided.\n";
-		}
-	}
-	
-	if ($taxFilter){
-		@subjects = &taxFilter(\@subjects, $taxFilter, $taxFilterCat);
-		print "  number of proteins after applying taxonomic filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filter.\n";
-		}
-	}
-	
-	if ($lcaLimit > 0){
-		@subjects = &lcaFilter($lcaLimit, \@subjects);
-		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-		}
-	}
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
 	
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	
+	if (scalar @subjects < 3){
+		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
+	}
 	
 	my %subjectList;
 	my $queryCode = shift @subjects;
@@ -927,7 +882,7 @@ sub querySeqFile {
 	unshift (@subjects, $queryCode);
 	
 	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
+		die "\nERROR: Less than 3 proteins was retrieved.\n";
 	}
 	
 	my $alignmentFile = &align($aligner, \@subjects);
@@ -1101,29 +1056,8 @@ sub queryMFastaFile {
 		die "\nERROR: Could not retrieve taxonomy lineage information from provided query ID.\n";
 	}
 
-	if ($restrictTax){
-		@subjects = &restrictTax(\@subjects, \%restrictTax);
-		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after restricting with Taxonomy ID provided.\n";
-		}
-	}
-	
-	if ($taxFilter){
-		@subjects = &taxFilter(\@subjects, $taxFilter, $taxFilterCat);
-		print "  number of proteins after applying taxonomic filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filter.\n";
-		}
-	}
-	
-	if ($lcaLimit > 0){
-		@subjects = &lcaFilter($lcaLimit, \@subjects);
-		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-		}
-	}
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
 	
 	print "  checking sequence...\n";
 	@subjects = checkSeq(@subjects);
@@ -1246,29 +1180,8 @@ sub queryBlastFile {
 		die "\nERROR: Could not retrieve taxonomy information from provided query ID.\n";
 	}
 	
-	if ($restrictTax){
-		@subjects = &restrictTax(\@subjects, \%restrictTax);
-		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after restricting with Taxonomy ID provided.\n";
-		}
-	}
-	
-	if ($taxFilter){
-		@subjects = &taxFilter(\@subjects, $taxFilter, $taxFilterCat);
-		print "  number of proteins after applying taxonomic filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filter.\n";
-		}
-	}
-	
-	if ($lcaLimit > 0){
-		@subjects = &lcaFilter($lcaLimit, \@subjects);
-		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
-		if (scalar @subjects < 3){
-			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-		}
-	}
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
 	
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
@@ -1444,6 +1357,27 @@ sub treeFile {
 		die "\nERROR: Could not retrieve taxonomy lineage information from provided query ID.\n";
 	}
 
+	# tax filter
+	@subjects = taxonomicFilters(@subjects);
+	
+	if (scalar @subjects < 3){
+		die "\nERROR: Less than 3 proteins was retrieved after applying filter.\n";
+	}
+	###########
+	
+	my $treeFileTmp = &filterTree($tmpFile, \@subjects);
+	
+	&formatTree($treeFileTmp);
+	system("rm $treeFileTmp");
+	print "OK!\n";
+	return 1;
+
+}
+###################### subroutine ######################
+
+sub taxonomicFilters {
+	my @subjects = @_;
+	
 	if ($restrictTax){
 		@subjects = &restrictTax(\@subjects, \%restrictTax);
 		print "  number of proteins after restricting with Taxonomy ID provided: ".scalar @subjects."\n";
@@ -1468,20 +1402,17 @@ sub treeFile {
 		}
 	}
 	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying filter.\n";
+	if ($lcaLimitDown > 0){
+		@subjects = &lcaFilterDown($lcaLimitDown, \@subjects);
+		print "  number of proteins after applying LCA filter: ".scalar @subjects."\n";
+		if (scalar @subjects < 3){
+			die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
+		}
 	}
-	###########
 	
-	my $treeFileTmp = &filterTree($tmpFile, \@subjects);
+	return @subjects;
 	
-	&formatTree($treeFileTmp);
-	system("rm $treeFileTmp");
-	print "OK!\n";
-	return 1;
-
 }
-###################### subroutine ######################
 
 sub orderByDistance {
 	my $treeFile2 = $_[0];
@@ -1662,7 +1593,7 @@ sub restrictTax {
 	return @newGiList;
 }
 
-sub lcaFilter{
+sub lcaFilter {
 	my $lcaLimit2 = $_[0];
 	my $refsubjects = $_[1];
 	my @subjects2 = @$refsubjects;
@@ -1670,7 +1601,22 @@ sub lcaFilter{
 	foreach my $subject2(@subjects2){
 		my $subject = $hashCode{"code"}{$subject2}{"id"};
 		my $lcaSubject = $map_txid{"pair2pairLCA"}{$generalInfo{$subject}{"txid"}}{"lcaN"}{$txidMap};
-		if ($lcaLimit < $lcaSubject){
+		if ($lcaLimit2 <= $lcaSubject){
+			push (@newSubjects, $subject2);
+		}
+	}
+	return @newSubjects;
+}
+
+sub lcaFilterDown {
+	my $lcaLimit2 = $_[0];
+	my $refsubjects = $_[1];
+	my @subjects2 = @$refsubjects;
+	my @newSubjects;
+	foreach my $subject2(@subjects2){
+		my $subject = $hashCode{"code"}{$subject2}{"id"};
+		my $lcaSubject = $map_txid{"pair2pairLCA"}{$generalInfo{$subject}{"txid"}}{"lcaN"}{$txidMap};
+		if ($lcaLimit2 >= $lcaSubject || $subject2 eq "ID1"){
 			push (@newSubjects, $subject2);
 		}
 	}
@@ -2002,7 +1948,8 @@ sub filterTree {
 	
 	foreach my $leaves (@leaves){
 		my $id = $leaves->id;
-		if (!exists $remLeafs{$id}){
+		my @id2 = keys %{$hashCode{"id"}{$id}};
+		if (!exists $remLeafs{$id2[0]}){
 			my $ancestor = $leaves->ancestor;
 			$tree->remove_Node($leaves);
 			my @descendent = $ancestor->each_Descendent;
@@ -2013,6 +1960,7 @@ sub filterTree {
 				@descendent = $ancestor->each_Descendent;
 			}
 		}
+		$leaves->id($id2[0])
 	}
 	
 	$tree->contract_linear_paths(1);
@@ -2022,7 +1970,6 @@ sub filterTree {
 	my $output = Bio::TreeIO -> new(-format => "newick",
 									-file => "> ".$tmpTree);
 	$output -> write_tree($tree);
-	
 	return $tmpTree;
 }
 
@@ -2497,7 +2444,15 @@ sub webBLAST {
 	my $blast_result = $response->{content};
 	my $blastFileName = $pid."_blast.txt";
 	open (BLAST, "> $blastFileName") or die;
-	print BLAST $blast_result;
+	my @blast_result = split(/\n/, $blast_result);
+	for(my $i = 0; $i < scalar @blast_result; $i++){
+		next if ($blast_result[$i] =~ m/^#/);
+		next if ($blast_result[$i] !~ m/^.+\t.+\t.+\t.+/);
+		chomp $blast_result[$i];
+		my @blastLine = split(/\t/, $blast_result[$i]);
+		splice(@blastLine, 3, 1);
+		print BLAST join("\t", @blastLine)."\n";
+	}
 	close BLAST;
 	return($blastFileName);
 	
@@ -2566,9 +2521,9 @@ sub excludeOverlapHSP {
 	for (my $i = 0; $i < scalar @blast_result; $i++){
 
 		if ($blast_result[$i] =~ m/^#/){
-			if ($blast_result[$i] =~ m/^# RID: /){
-				$webBlast = 1;
-			}
+		#	if ($blast_result[$i] =~ m/^# RID: /){
+		#		$webBlast = 1;
+		#	}
 			next;
 		}
 		
@@ -2578,13 +2533,13 @@ sub excludeOverlapHSP {
 		my ($qseqid, $sseqid, $pident, $positive, $length, $mismatch, $gapopen, $qstart, 
 							$qend, $sstart, $send, $evalue2, $bitscore, $rest);
 		
-		if ($webBlast){
-			($qseqid, $sseqid, $pident, $positive, $length, $mismatch, $gapopen, $qstart, 
-							$qend, $sstart, $send, $evalue2, $bitscore, $rest) = split("\t", $blast_result[$i], 14);
-		} else {
+		#if ($webBlast){
+		#	($qseqid, $sseqid, $pident, $positive, $length, $mismatch, $gapopen, $qstart, 
+		#					$qend, $sstart, $send, $evalue2, $bitscore, $rest) = split("\t", $blast_result[$i], 14);
+		#} else {
 			($qseqid, $sseqid, $pident, $length, $mismatch, $gapopen, $qstart, 
 							$qend, $sstart, $send, $evalue2, $bitscore, $rest) = split("\t", $blast_result[$i], 13);
-		}
+		#}
 		
 		# check data		
 		next if (!$bitscore);
@@ -4209,7 +4164,7 @@ sub trimal{
 	my $alignmentFile2 = $_[0];
 	
 	my $inputAlignment = $alignmentFile2;
-	my $outputAlignment = $pid."_seq_aligned_TrimAl.fasta";
+	my $outputAlignment = $pid."_seq_aligned_trimmed.fasta";
 	my $defOutputAlignment = $programs{"trimming"}{$trimProg}{"outName"};
 	
 	my $alignmentCommand = 	$programs{"trimming"}{$trimProg}{"path"}." ".$programs{"trimming"}{$trimProg}{"command"};
@@ -5955,6 +5910,20 @@ Begin taxa;
 	set nodeShape.shapeType=Circle;
 	set nodeShape.size=6.0;
 	set nodeShape.sizeAttribute="BOOT";
+	set nodeShapeExternal.colourAttribute="User selection";
+	set nodeShapeExternal.isShown=false;
+	set nodeShapeExternal.minSize=10.0;
+	set nodeShapeExternal.scaleType=Width;
+	set nodeShapeExternal.shapeType=Circle;
+	set nodeShapeExternal.size=4.0;
+	set nodeShapeExternal.sizeAttribute="Fixed";
+	set nodeShapeInternal.colourAttribute="User selection";
+	set nodeShapeInternal.isShown=true;
+	set nodeShapeInternal.minSize=0.0;
+	set nodeShapeInternal.scaleType=Width;
+	set nodeShapeInternal.shapeType=Circle;
+	set nodeShapeInternal.size=8.0;
+	set nodeShapeInternal.sizeAttribute="BOOT";
 	set polarLayout.alignTipLabels=false;
 	set polarLayout.angularRange=0;
 	set polarLayout.rootAngle=0;
@@ -5991,13 +5960,13 @@ Begin taxa;
 	set trees.order=true;
 	set trees.orderType="increasing";
 	set trees.rooting=false;
-	set trees.rootingType="Midpoint";
+	set trees.rootingType="User Selection";
 	set trees.transform=false;
 	set trees.transformType="cladogram";
 end;';
 	
 	close TREE;
-	#system("rm ".$pid."_seq_tree.nhx");
+	system("rm ".$pid."_seq_tree.nhx");
 }
 
 1;
