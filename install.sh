@@ -35,28 +35,28 @@ then
 fi
 
 echo
-echo "# Do you want to configure TaxOnTree to access your MySQL database?"
-echo "# This is optional and is only needed if you intend to load TaxOnTree tables on MySQL."
-read -p "# [y/N]:" answer
-while [ ! -z $answer ] && [ ${answer,,} != "y" ] && [ ${answer,,} != "n" ]
-do 
-	echo # ERROR: invalid answer. Answer with "y" or "n".
-	read -p "# [y/N]:" answer
-done
+#echo "# Do you want to configure TaxOnTree to access your MySQL database?"
+#echo "# This is optional and is only needed if you intend to load TaxOnTree tables on MySQL."
+#read -p "# [y/N]:" answer
+#while [ ! -z $answer ] && [ ${answer,,} != "y" ] && [ ${answer,,} != "n" ]
+#do 
+#	echo # ERROR: invalid answer. Answer with "y" or "n".
+#	read -p "# [y/N]:" answer
+#done
 
 cp -f ./config/CONFIG.xml ./config/CONFIG.xml.tmp
 sed -i.bak "s/<email>.*<\/email>/<email>$TAXONTREEMAIL<\/email>/" ./config/CONFIG.xml.tmp
 export TAXONTREEMAIL=
 
-if [ ! -z $answer ] && [ $answer = "y" ]
-then
-	read -p "# Enter your mysql username: " mysqluser
-	read -sp "# Enter the password of user $mysqluser: " mysqlpass
-	sed -i.bak "s/<user>.*<\/user>/<user>$mysqluser<\/user>/" ./config/CONFIG.xml.tmp
-	sed -i.bak "s/<password>.*<\/password>/<password>$mysqlpass<\/password>/" ./config/CONFIG.xml.tmp
-
-	echo
-fi
+#if [ ! -z $answer ] && [ $answer = "y" ]
+#then
+#	read -p "# Enter your mysql username: " mysqluser
+#	read -sp "# Enter the password of user $mysqluser: " mysqlpass
+#	sed -i.bak "s/<user>.*<\/user>/<user>$mysqluser<\/user>/" ./config/CONFIG.xml.tmp
+#	sed -i.bak "s/<password>.*<\/password>/<password>$mysqlpass<\/password>/" ./config/CONFIG.xml.tmp
+#
+#	echo
+#fi
 
 mv ./config/CONFIG.xml.tmp $TOT/CONFIG.xml
 rm ./config/CONFIG.xml.tmp.bak
@@ -149,10 +149,25 @@ function compile_fasttree {
 		rm FastTree;	
 	fi
 
-	gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
+	gcc -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
 	makeval=$?
 	if [ $makeval -eq 0 ]
 	then
+		# test FastTree
+		./FastTree sample.fasta >> $LOG 2>&1
+		testval=$?
+		if [ $testval -ne 0 ]
+		then
+			gcc -DNO_SSE -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm >> $LOG 2>&1;
+			./FastTree test_align.fasta >> $LOG 2>&1
+			testval=$?
+			if [ $testval -ne 0 ] 
+			then
+				echo "  ERROR: Could not compile $software." | tee -a $LOG
+				MISSING[${#MISSING[@]}]=$software
+				return $testval
+			fi
+		fi
 		cp FastTree $BIN
 		rm FastTree;
 		echo "  $software compiled." | tee -a $LOG
