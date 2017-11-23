@@ -6,9 +6,9 @@
 
 [TaxOnTree](http://biodados.icb.ufmg.br/taxontree) is a bioinformatics tool that embeds taxonomic information from [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy) into phylogenetic trees allowing users to easily access the taxonomic information of all samples comprising the tree (**Figure 1**).
 
-<img src="/img/taxontree_suppfile6b.png" width=650px/>
+<img src="/img/taxontree_man_figure1.png" width=800px/>
 
-**Figure 1**: Phylogenetic tree of Angiogenin processed by TaxOnTree. Branches are colored according to the taxonomic classes on the tree.
+**Figure 1**: Phylogenetic tree of Angiogenin processed by TaxOnTree. Branches are colored according to the taxonomic classes (left) in the tree and according to the LCA (right).
 
 This document is a guide to understand all TaxOnTree features and resources to make you an expert in taxonomy. 
 
