@@ -2,6 +2,44 @@
 
 *Sakamoto T.* and *J. M. Ortega*
 
+## Summary
+
+[1. About TaxOnTree and this document](#1-about-taxontree-and-this-document)
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#2-taxontree-features
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#21-taxontree-workflow
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#22-lowest-common-ancestor-lca
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#23-missing-ranks-and-taxallnomy-database
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#3-installation
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#31-prerequisites
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#32-downloading-and-installing
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#33-testing
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#4-command-line-parameters
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#41-inputs
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#411-single-id--singleid-single_id
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#412-sequence-file--seqfile-fasta_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#413-blast-file--blastfile-blast_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#414-list-file--listfile-list_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#415-multi-fasta-file--mfastafile-mfasta_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#416-aligned-multi-fasta-file--alignfile-align_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#417-tree-file--treefile-tree_file
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#42-other-parameters-that-follow-the-input
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#421-blast-option
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#422-alignment-option
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#423-tree-option
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#424-filter-option
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#425-other-parameters
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#43-outputs
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#5-exploring-the-nexus-file-on-figtree
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#51-exploring-the-taxonomic-relationship-by-lca
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#52-exploring-the-taxonomic-diversity-by-ranks
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#53-adding-or-changing-labels-in-the-tree
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#54-checking-branch-statistic-support-value
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#55-evidencing-duplication-nodes
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#6-advanced-topics
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#61-running-taxontree-without-internet-connection
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#62-adding-other-third-party-software-in-the-pipeline
+https://github.com/tetsufmbio/taxontree/tree/docs/docs#7-contact
+
 ## 1. About TaxOnTree and this document
 
 [TaxOnTree](http://biodados.icb.ufmg.br/taxontree) is a bioinformatics tool that embeds taxonomic information from [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy) into phylogenetic trees allowing users to easily access the taxonomic information of all samples comprising the tree (**Figure 1**).
@@ -238,24 +276,24 @@ Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID
 
 #### 4.2.2 Alignment option
 
-* **-aligner <aligner_software> Default: muscle
+* **-aligner <aligner_software> Default: muscle**
 
 Software for sequence alignment step. It works on -seqFile, -blastFile, -listFile, -mfastaFile and -singleID. 
 To add more aligners, see CONFIG.xml.
 
-* **-trimming <trimming_software> Default: trimal
+* **-trimming <trimming_software> Default: trimal**
 
 Software for alignment trimming step. You can set "false" to skip this step. It works on -seqFile, -blastFile, -listFile, -mfastaFile, 
 -alignFile and -singleID. To add more alignment trimming software, see CONFIG.xml.
 
 #### 4.2.3. Tree option
 
-* **-treeProg <tree_reconstruction_software> Default: FastTree
+* **-treeProg <tree_reconstruction_software> Default: FastTree**
 
 Software for tree reconstruction. It works on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
 reconstruction software, see CONFIG.xml.
 
-* **-treeTable <table_file>
+* **-treeTable <table_file>**
 
 A table containing the leaf names of the input tree file in the first column and the correspondent taxonomy
 ID in the second. Use this option if the input tree does not contain an accession from NCBI or Uniprot
@@ -267,15 +305,15 @@ Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-de
 	chimp	9598
 	gorilla	9595
 
-* **-printLeaves
+* **-printLeaves**
 
 Print the leaf names comprising your tree and exit. Use this to help you making the tree table file. It works on -treeFile.
 
-* **-treeRoot Default: 1
+* **-treeRoot Default: 1**
 
 Define tree rooting mode. Use 0 to skip this step, 1 to root at midpoint or 2 to use taxonomic information do define a root. It works on all input.
 
-* **-leafFmt Default: "lcaN;id;geneName;species;rankcode(family,order,class)"
+* **-leafFmt Default: "lcaN;id;geneName;species"**
 
 Leaf name format displayed in the tree. It works on all input. Data available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName, rankcode, rankname. Use semicolons to separate the different data type. 
 
@@ -283,22 +321,22 @@ For "rankcode" and "rankname", include the taxonomic ranks that you want to disp
 
 #### 4.2.4 Filter option
 
-* **-showIsoform
+* **-showIsoform**
 
 TaxOnTree automatically links the RefSeq or Uniprot protein to a GeneID and discards its isoforms 
 from further analysis. Use this option to allow isoforms in the tree. It works on all inputs.
 
-* **-lcaLimit <int_value>
+* **-lcaLimit <int_value>**
 
 Exclude all sequences from organisms which the LCA with the query organism is below the provided level. 
 It works on all inputs.
 
-* **-lcaLimitDown <int_value>
+* **-lcaLimitDown <int_value>**
 
 Exclude all sequences from organisms which the LCA with the query organism is above the provided level 
 (except for the query sequence). It works on all inputs.
 
-* **-taxFilterCat <category>
+* **-taxFilterCat <category>**
 
 Filter sequences by category which could be a taxonomic rank or LCA. If "kingdom" is provided, it'll leave 
 sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. It works on all inputs.
@@ -306,55 +344,55 @@ sequences from N organisms in each kingdom found in the tree. Use -taxFilter to 
 Categories allowed: lca, superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, 
 superfamily, family, subfamily, genus, subgenus, species, subspecies.
 
-* **-taxFilter <int_value>
+* **-taxFilter <int_value>**
 
 Filter sequences by category which could be a taxonomic rank or LCA. If 2 is provided, it'll leave 
 sequences from 2 organisms in each category found in the tree. Use -taxFilterCat to define the category. 
 It works on all inputs.
 
-* **-restrictTax <list_file>
+* **-restrictTax <list_file>**
 
 Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms which 
 have their taxonomy ID listed in the file. It works on all inputs.
 
 #### 4.2.5. Other parameters
 
-* **-txidMap <taxonomy_id>
+* **-txidMap <taxonomy_id>**
 
 Force TaxOnTree to consider the taxonomy ID provided by this option to be mapped in the tree. Example: "9606"
 for human. It works on all inputs. 
 
-* **-queryTax <taxonomy_id>
+* **-queryTax <taxonomy_id>**
 
 NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. It works only in -seqFile. 
 
-* **-queryID <query_id>
+* **-queryID <query_id>**
 
 Protein accession or name in the list or tree to be considered as query. It works on -blastFile, -listFile, -mfastaFile
 -alignFile and -treeFile. 
 
-* **-forceNoTxid
+* **-forceNoTxid**
 
 Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
 be assigned with the taxonomy ID of root (txid:1). It works on all inputs.
 
-* **-forceNoInternet
+* **-forceNoInternet**
 
 Force TaxOnTree to not retrieve data from internet. It works on all inputs.
 
-* **-out <file_name> Default: Input name
+* **-out <file_name> Default: Input name**
 
 Prefix for output files. It works on all inputs.
 
-* **-mysql
+* **-mysql**
 
 Use a local MySQL database to retrieve required TaxOnTree data (See README for details). It works on all inputs.
 
-* **-numThreads Defalut: 1
+* **-numThreads Defalut: 1**
 
 Number of processors to be used for programs that can handle multi-threading. It works on all inputs.
 
-* **-version
+* **-version**
 
 Print TaxOnTree version.
 
@@ -525,8 +563,8 @@ those servers, add the parameter `-forceNoInternet` in the command line
 
 ### 6.2. Adding other third-party software in the pipeline
 
-Third-party software required by TaxOnTree are those software that will 
-comprise the phylogenetic pipeline. Those software are subdivided in the following types:
+Third-party software that comprise the TaxOnTree phylogenetic pipeline are subdivided 
+in the following types:
 
 * *Blast search* - this is performed exclusively by [Blast+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download);
 * *Sequence aligner* - software that performs sequence alignment. Must have Multi-FASTA file as input and as output;
@@ -540,17 +578,13 @@ command lines that TaxOnTree executes for each third-party software have to be s
 in `~/.taxontree` folder. Third-party software that is compiled during TaxOnTree installation is already 
 configured in the original CONFIG.xml.
 
-In the next section, it will be discussed how to add a third-party software to TaxOnTree phylogenetic pipeline.
-
-#### 4.1. Adding third-party software in the pipeline
-
-In this section, let consider that you want to add the software **MAFFT**, another largely used sequence aligner. 
+Let consider that you want to add the software **MAFFT**, another largely used sequence aligner. 
 To do that, you have to first compile and install it in your system (for this
 check MAFFT installation insctruction) or move the compiled executables to the folder `~/.taxontree/bin`. Any one of these
 procedures will make **MAFFT** visible to TaxOnTree.
 
-After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command 
-line that you want to execute when TaxOnTree calls it. This is performed in the CONFIG.xml file that is located at
+After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command-line
+that you want to execute when TaxOnTree calls it. This is performed in the CONFIG.xml file that is located at
 `~/.taxontree/` folder. So, open the CONFIG.xml in the text editor of your preference.
 
 In the CONFIG.xml file, you'll find the *programs* tag from the line 77. Inside *programs* tag, there are four 
@@ -566,8 +600,8 @@ other tags corresponding to each step of the phylogenetic pipeline. They are:
 ```
 
 Inside each tag of phylogenetic pipeline step, there are several *program* tags. 
-Each *program* tag corresponds to the configuration of one software included in this step of the pipeline.
-Inside the *program* tag, we have four more other tags:
+Each *program* tag corresponds to the configuration of one software included in this pipeline step.
+Inside a *program* tag, we have four more other tags:
 
 ```xml
 <programs>
@@ -579,7 +613,7 @@ Inside the *program* tag, we have four more other tags:
 	                         `~/.taxontree/bin` or in a folder contained in your PATH-->
       <command>...</command> <!--parameters used after software call. Use the #INPUT and #OUTPUT codes to refer to the 
                                  input and output files. Use #NUMTHREADS to refer to the number of threads to be used 
-                                 (this is set by the parameter -numthreads).-->
+                                 (this is set by the parameter -numthreads on TaxOnTree).-->
       <outName>...</outName> <!--name of the output file. Place #OUTPUT if the name of the output file will be the same 
                                  as the name set in the *command* tag. If a software, for instance, add the extension .fas
                                   in the name of the output place #OUTPUT.fas here.-->
@@ -590,37 +624,62 @@ Inside the *program* tag, we have four more other tags:
 </programs>
 ```
 
-So, to add a software to the phylogenetic pipeline, just add the *program* tag to the correspondent phylogenetic
-pipeline step.
-
-Since MAFFT is a software for sequence alignment, we will add its *program* tag inside the 
+So, to add a software to the phylogenetic pipeline, just add another *program* tag to the correspondent phylogenetic
+pipeline step tag. Since MAFFT is a software for sequence alignment, we will add a *program* tag inside the 
 *aligners* tag. 
 
-The command line to run MAFFT in high-speed mode and using multi-threads is:
+Let say that you want to run MAFFT in high-speed mode and using multi-threads as below:
 
 ```bash
 > ./mafft --quiet --thread [threads] [input_file] > [output_file]
 ```
 
-To configure this command in CONFIG.xml, just add the following *program* tag inside the *aligners* tag:
+To configure the previous command in CONFIG.xml, just add a *program* tag inside the *aligners* 
+tag with the following configuration:
 
 ```xml
   <program>
-    <name>mafft</name> <!--http://trimal.cgenomics.org/downloads-->
+    <name>mafft</name>
     <path></path>
     <command>--quiet --thread #NUMTHREADS #INPUT > #OUTPUT</command>
     <outName>#OUTPUT</outName>
   </program>
 ```
 
-Save the file. 
+Your *aligners* tag should look like this:
 
-> **Note**: The requirement of software of each type depends on the input provided by the user. For instance, if an aligned Multi-FASTA sequence is provided as input, TaxOnTree will require only a software for tree reconstruction. In the other hand, if a single accession from NCBI is provided, TaxOnTree will require software of all four types to perform the analysis.
+```xml
+...
+ <aligners>
+  <program>
+    <name>mafft</name>
+    <path></path>
+    <command>--quiet --thread #NUMTHREADS #INPUT > #OUTPUT</command>
+    <outName>#OUTPUT</outName>
+  </program>
+  <program>
+    <name>muscle</name> <!--http://www.drive5.com/muscle/downloads.htm-->
+    <path></path>
+    <command>-in #INPUT -out #OUTPUT -quiet</command>
+    <outName>#OUTPUT</outName>
+  </program>
+  ...
+ </aligners>
+...
+```
 
+Save the file. Now the newly configured aligner can be used by TaxOnTree. To select this aligner on a TaxOnTree run,
+add the parameter `-aligner mafft` to the command-line as below:
+
+```bash
+> ./taxontree -singleid 4757876 -aligner mafft
+```
+
+If you added another third-party software for trimming or tree reconstruction steps, use respectively the parameters `-trimming` or `-treeProg` to select the newly added software. 
 
 ## 7. Contact
 
-If you have troubles or suggestions to improve our work, please contact us by the following email address:
+If you have any trouble or suggestion to improve our work, please contact us by the following email address:
 
 * tetsufmbio@gmail.com (Tetsu Sakamoto)
 * miguel@ufmg.br (J. Miguel Ortega)
