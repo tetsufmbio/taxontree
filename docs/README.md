@@ -15,8 +15,8 @@
   * [3.3. Testing](#33-testing)
 * [4. Command-line parameters](#4-command-line-parameters)
   * [4.1. Inputs](#41-inputs)
-    * [4.1.1. Single ID (-singleid <single_id>)](#411-single-id--singleid-single_id)
-    * [4.1.2. Sequence file (-seqFile <fasta_file>)](#412-sequence-file--seqfile-fasta_file)
+		* [4.1.1. Single ID (-singleid <single_id>)](#411-single-id--singleid-single_id)
+		* [4.1.2. Sequence file (-seqFile <fasta_file>)](#412-sequence-file--seqfile-fasta_file)
     * [4.1.3. Blast file (-blastFile <blast_file>)](#413-blast-file--blastfile-blast_file)
     * [4.1.4. List file (-listFile <list_file>)](#414-list-file--listfile-list_file)
     * [4.1.5. Multi-FASTA file (-mfastaFile <mfasta_file>)](#415-multi-fasta-file--mfastafile-mfasta_file)
@@ -136,7 +136,8 @@ In a UNIX terminal, type the following commands:
 > NOTE: A **valid email address** is required for TaxOnTree execution to request data from
 other servers like NCBI and UniProt. The email address is requested by those servers admin
 to contact you when necessary. This could happen if you are using TaxOnTree excessively.
-To run TaxOnTree without internet connection, refer to the [advanced topics]() of this manual.
+To run TaxOnTree without internet connection, refer to the Section [6.1]
+(61-running-taxontree-without-internet-connection) of this manual.
 
 This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
@@ -251,7 +252,7 @@ BLAST-formatted database name. It works on -seqFile, -singleID, -blastFile and -
 For Standalone protein BLAST search, provide the address and the name (without extension) of the database. 
 Example: /home/user/taxontree/db, where db is the name of BLAST-formatted database. This option will
 only work if the database was generated using sequences from GenBank or Uniprot (using its 
-FASTA-header pattern) and the option -parse_seqids on makeblastdb command (See details on README).
+FASTA-header pattern) and the option -parse_seqids on makeblastdb command (See details on Section [6.1](61-running-taxontree-without-internet-connection)).
 
 To request the BLAST search from NCBI server, you may choose one of these databases: 
 nr or refseq_protein. 
@@ -279,7 +280,8 @@ Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID
 * **-aligner <aligner_software> Default: muscle**
 
 Software for sequence alignment step. It works on -seqFile, -blastFile, -listFile, -mfastaFile and -singleID. 
-To add more aligners, see CONFIG.xml.
+To add more aligners, 
+CONFIG.xml.
 
 * **-trimming <trimming_software> Default: trimal**
 
@@ -386,7 +388,7 @@ Prefix for output files. It works on all inputs.
 
 * **-mysql**
 
-Use a local MySQL database to retrieve required TaxOnTree data (See README for details). It works on all inputs.
+Use a local MySQL database to retrieve required TaxOnTree data (See details on Section [6.1](61-running-taxontree-without-internet-connection)). It works on all inputs.
 
 * **-numThreads Defalut: 1**
 
@@ -416,7 +418,7 @@ After running TaxOnTree from [web interface](http://biodados.icb.ufmg.br/taxontr
 
 ### 5.1. Exploring the taxonomic relationship by LCA
 
-Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure 5**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see **Box 1** for mor details). There will have also a legend for the colors used in the branches of the tree. 
+Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure 5**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see Section [2.2](#22-lowest-common-ancestor-lca) for mor details). There will have also a legend for the colors used in the branches of the tree. 
 
 <img src="/img/taxontree_figtree1.png" width=650px/>
 
@@ -437,7 +439,7 @@ Did you ever asked yourself how many distinct class, order or family are in your
 
 **Figure 6**: Steps on FigTree to evidence taxonomic diversity by ranks.
 
-> **Note**: Ranks that are missing in a taxonomic lineage are filled using Taxallnomy database. See **Box 2** for more details.
+> **Note**: Ranks that are missing in a taxonomic lineage are filled using Taxallnomy database. See Section [2.3](#23-missing-ranks-and-taxallnomy-database) for more details.
 
 ### 5.3. Adding or changing labels in the tree
 
