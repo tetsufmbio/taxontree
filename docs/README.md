@@ -311,11 +311,11 @@ Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-de
 
 Print the leaf names comprising your tree and exit. Use this to help you making the tree table file. It works on -treeFile.
 
-* **-treeRoot Default: 1**
+* **-treeRoot <int_value> Default: 1**
 
 Define tree rooting mode. Use 0 to skip this step, 1 to root at midpoint or 2 to use taxonomic information do define a root. It works on all input.
 
-* **-leafFmt Default: "lcaN;id;geneName;species"**
+* **-leafFmt <string_value> Default: "lcaN;id;geneName;species"**
 
 Leaf name format displayed in the tree. It works on all input. Data available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName, rankcode, rankname. Use semicolons to separate the different data type. 
 
@@ -338,7 +338,7 @@ It works on all inputs.
 Exclude all sequences from organisms which the LCA with the query organism is above the provided level 
 (except for the query sequence). It works on all inputs.
 
-* **-taxFilterCat <category>**
+* **-taxFilterCat <category_name>**
 
 Filter sequences by category which could be a taxonomic rank or LCA. If "kingdom" is provided, it'll leave 
 sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. It works on all inputs.
@@ -372,6 +372,12 @@ NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. It wo
 
 Protein accession or name in the list or tree to be considered as query. It works on -blastFile, -listFile, -mfastaFile
 -alignFile and -treeFile. 
+
+* **-taxRepFormat <string_value> Default: 1..12** 
+
+Taxonomic ranks to be displayed in the taxonomic report table. The number corresponds to the rank level, in which 1 is 
+for superkingdom and 17 for subspecies. Rank level that should be in taxonomic report should be separated by comma
+(i.e. 1;2;12;16). You can use ".." to provide a rank level range (i.e. 1..12).
 
 * **-forceNoTxid**
 
