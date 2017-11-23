@@ -30,22 +30,22 @@ TaxOnTree uses the concept of LCA to determine the taxonomic relationship betwee
 and the other organisms in the tree. LCA of two or more organisms represents the most recent ancestor
 that all organisms in a set have in common. 
 
-To determine it, TaxOnTree takes advantage of the hierarchical structure from NCBI Taxonomy. As illustration, a short taxonomic lineages of human, dog and frog from NCBI Taxonomy are represented in the **Figure 2**. Walking through the human taxonomic lineage, beginning from the root (level 0), we could observe that several taxa comprising the human lineage are shared with the other two species. However, in different point of the human lineage, frog and dog lineages take different route. The frog lineage diverge from the human lineage after the level 17 (Amniota), while, in dog lineage, this occur at level 21 (Boreoeutheria). The last taxa shared between the pairs of lineages human X frog or human X dog are what we denominate as LCA. The higher the LCA level, the more recent the first divergence between the species in comparison and, thus, the more closer they are. So, for instance, by comparing the LCA level of human x frog and human x dog, we could claim that human is more closely related to dog than to frog.  
+To determine it, TaxOnTree takes advantage of the hierarchical structure from NCBI Taxonomy. As illustration, a short taxonomic lineages of human, dog and frog from NCBI Taxonomy are represented in the **Figure 3**. Walking through the human taxonomic lineage, beginning from the root (level 0), we could observe that several taxa comprising the human lineage are shared with the other two species. However, in different point of the human lineage, frog and dog lineages take different route. The frog lineage diverge from the human lineage after the level 17 (Amniota), while, in dog lineage, this occur at level 21 (Boreoeutheria). The last taxa shared between the pairs of lineages human X frog or human X dog are what we denominate as LCA. The higher the LCA level, the more recent the first divergence between the species in comparison and, thus, the more closer they are. So, for instance, by comparing the LCA level of human x frog and human x dog, we could claim that human is more closely related to dog than to frog.  
 
 <img src="/img/lca_frog.png" width=650px/>
 
-**Figure 2**: Determining LCA. Taxonomic lineage of human, dog and frog are shown. LCA between human and dog is Boreoeutheria, while LCA between human and frog is Amniota.
+**Figure 3**: Determining LCA. Taxonomic lineage of human, dog and frog are shown. LCA between human and dog is Boreoeutheria, while LCA between human and frog is Amniota.
 
 ### 2.3. Missing ranks and Taxallnomy database
 
  Whenever we are querying for a taxonomic rank from NCBI Taxonomy, two issues have to be considered :
- * Some taxonomic ranks are absent in a taxonomic lineage, e.g. there is no taxon for subclass, superclass, and subphylum in the human lineage (**Figure 3A**);
- * Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa are referred as *no rank*, e.g. Theria, Eutheria, Boroeutheria and others are taxa without rank in the human lineage (**Figure 3A**).  
+ * Some taxonomic ranks are absent in a taxonomic lineage, e.g. there is no taxon for subclass, superclass, and subphylum in the human lineage (**Figure 4A**);
+ * Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa are referred as *no rank*, e.g. Theria, Eutheria, Boroeutheria and others are taxa without rank in the human lineage (**Figure 4A**).  
   
- To handle these issues, we use [Taxallnomy](http://biodados.icb.ufmg.br/taxallnomy), a taxonomic database which provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy. Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy which its hierarchical levels are correspondent to the taxonomic ranks. **Figure 3B** shows the human taxonomic lineage retrieved from Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data.  
+ To handle these issues, we use [Taxallnomy](http://biodados.icb.ufmg.br/taxallnomy), a taxonomic database which provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy. Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy which its hierarchical levels are correspondent to the taxonomic ranks. **Figure 4B** shows the human taxonomic lineage retrieved from Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data.  
 <img src="/img/taxontree_taxsimple.png" width=650px/>
   
-**Figure 3**: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
+**Figure 4**: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
 
 ## 3. Installation
 
@@ -102,9 +102,9 @@ To run TaxOnTree without internet connection, refer to the [advanced topics]() o
 
 This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
-some third-party software that is in src folder (Table X).
+some third-party software that is in src folder (**Table 1**).
 
-Table X: Third-party software compiled durint TaxOnTree installation.
+**Table 1**: Third-party software compiled durint TaxOnTree installation.
 
 | third-party software | phylogenetic pipeline step |                    link                 |
 |----------------------|----------------------------|-----------------------------------------|
@@ -378,32 +378,38 @@ After running TaxOnTree from [web interface](http://biodados.icb.ufmg.br/taxontr
 
 ### 5.1. Exploring the taxonomic relationship by LCA
 
-Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure S3**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see **Box 1** for mor details). There will have also a legend for the colors used in the branches of the tree. 
+Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure 5**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see **Box 1** for mor details). There will have also a legend for the colors used in the branches of the tree. 
 
 <img src="/img/taxontree_figtree1.png" width=650px/>
+
+**Figure 5**: FigTree tree display right after opening a Nexus file generated by TaxOnTree.
 
 > **Note**: Some taxon names in the legend are followed by an asterisk. This indicates that there is no organism in the tree that has this taxon as the LCA with the query organism.
 
 ### 5.2. Exploring the taxonomic diversity by ranks
 
-Did you ever asked yourself how many distinct class, order or family are in your tree? This can be shortly answered with a tree generated by TaxOnTree in hand. TaxOnTree also embeds in the tree data of taxonomic lineage of all taxa comprising the tree, allowing the colorization of the tree according to a taxonomic rank. Take the following steps in the FigTree software and, if you are curious about how missing ranks in some lineages are filled in TaxOnTree, check the **Box 2**.
+Did you ever asked yourself how many distinct class, order or family are in your tree? This can be shortly answered with a tree generated by TaxOnTree in hand. TaxOnTree also embeds in the tree data of taxonomic lineage of all taxa comprising the tree, allowing the colorization of the tree according to a taxonomic rank. Take the following steps in the FigTree software:
 
 1. In the FigTree side menu, go to *Appearance*;
 1. In *Colour by* parameter, and choose a taxonomic rank to be used to color the branches. By choosing *08-superorder*, for example, the tree will be colored according to the superorder rank. You can setup the branch colors by clicking in *Colours* button;
 1. To make the color legend concordant to the branch color, go to *Legend* in the FigTree side menu;
-1. In *Attribute* parameter, set the same taxonomic rank that you selected in the previous step (**Figure S5**).
+1. In *Attribute* parameter, set the same taxonomic rank that you selected in the previous step (**Figure 6**).
 
 <img src="/img/taxontree_figtree2.png" width=650px/>
 
-Figure 
+**Figure 6**: Steps on FigTree to evidence taxonomic diversity by ranks.
+
+> **Note**: Ranks that are missing in a taxonomic lineage are filled using Taxallnomy database. See **Box 2** for more details.
 
 ### 5.3. Adding or changing labels in the tree
 
-Taxonomic data can also be evidenced on the tips, nodes and/or branches in the tree. For instance, to change the tip label, go to *Tip labels*, on FigTree side menu; and, on *Display* parameter, select a taxonomic rank to be diplayed at the tip of the tree.
+Taxonomic data can also be evidenced on the tips, nodes and/or branches in the tree. For instance, to change the tip label, go to *Tip labels*, on FigTree side menu; and, on *Display* parameter, select a taxonomic rank to be diplayed at the tip of the tree (**Figure 7**).
 
 To evidence the taxonomic data on the nodes and/or on branches of the tree, use the same procedures but at *Node label* and/or *Branch label*, respectively.
 
 <img src="/img/taxontree_figtree3.png" width=650px/>
+
+**Figure 7**: Steps on FigTree to to add or change labels in the tree.
 
 ### 5.4. Checking branch statistic support value
 
@@ -414,6 +420,8 @@ By default, nodes in the tree are sized proportionally to the statistic support 
 TaxOnTree also annotates those nodes that represent duplication events. To evidence them, go to the *Node shapes*, on FigTree side menu, and choose *dup* on *Size by* parameter. Set also an appropriate value for *Max size* (i.e. 6) and *Min size* (i.e. 0) parameters.
 
 <img src="/img/taxontree_figtree4.png" width=650px/>
+
+**Figure 8**: Steps on FigTree to evidence duplication nodes on the tree.
 
 ## 6. Advanced topics
 
@@ -515,10 +523,10 @@ servers through internet. If your server has internet connection but you don't w
 those servers, add the parameter `-forceNoInternet` in the command line 
 (e.g. `./taxontree -singleid 4757876 -db /path/to/seq_database -mysql -forceNoInternet`).
 
-### 6.2. Third-party software
+### 6.2. Adding other third-party software in the pipeline
 
 Third-party software required by TaxOnTree are those software that will 
-comprise the phylogenetic pipeline. Those software are divided in the following types:
+comprise the phylogenetic pipeline. Those software are subdivided in the following types:
 
 * *Blast search* - this is performed exclusively by [Blast+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download);
 * *Sequence aligner* - software that performs sequence alignment. Must have Multi-FASTA file as input and as output;
@@ -536,10 +544,10 @@ In the next section, it will be discussed how to add a third-party software to T
 
 #### 4.1. Adding third-party software in the pipeline
 
-In this section, let consider that you want to add the software **MAFFT**, another largely used sequen aligner. 
+In this section, let consider that you want to add the software **MAFFT**, another largely used sequence aligner. 
 To do that, you have to first compile and install it in your system (for this
-check MAFFT installation insctruction) or move its executable to the folder `~/.taxontree/bin`. Any one of these
-procedures will make Gblocks viewable by TaxOnTree.
+check MAFFT installation insctruction) or move the compiled executables to the folder `~/.taxontree/bin`. Any one of these
+procedures will make **MAFFT** visible to TaxOnTree.
 
 After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command 
 line that you want to execute when TaxOnTree calls it. This is performed in the CONFIG.xml file that is located at
@@ -557,8 +565,8 @@ other tags corresponding to each step of the phylogenetic pipeline. They are:
 </programs>
 ```
 
-Inside each tag of phylogenetic pipeline step, you'll see that there are several *program* tags. 
-Each *program* tag has the configuration of one software included in this step of the phylogenetic pipeline.
+Inside each tag of phylogenetic pipeline step, there are several *program* tags. 
+Each *program* tag corresponds to the configuration of one software included in this step of the pipeline.
 Inside the *program* tag, we have four more other tags:
 
 ```xml
@@ -585,65 +593,27 @@ Inside the *program* tag, we have four more other tags:
 So, to add a software to the phylogenetic pipeline, just add the *program* tag to the correspondent phylogenetic
 pipeline step.
 
-###################
+Since MAFFT is a software for sequence alignment, we will add its *program* tag inside the 
+*aligners* tag. 
 
-Since Gblocks is a software for trimming multiple alignment, we will add the Gblocks *program* tag inside the 
-*trimming* tag. The command line to run Gblocks is:
+The command line to run MAFFT in high-speed mode and using multi-threads is:
 
 ```bash
-> ./Gblocks <input_file> -t=p
+> ./mafft --quiet --thread [threads] [input_file] > [output_file]
 ```
 
-The original CONFIG.xml file has only the software trimal configured as below:
+To configure this command in CONFIG.xml, just add the following *program* tag inside the *aligners* tag:
 
 ```xml
-<trimming>
-  <!--
-    All software for alignment trimming can be configured here.
-
-    NOTE: The output of the software must be in Multi-
-    FASTA format and the sequence header must be preserved
-    (except for the description after a space).
-  -->
   <program>
-    <name>trimal</name> <!--http://trimal.cgenomics.org/downloads-->
+    <name>mafft</name> <!--http://trimal.cgenomics.org/downloads-->
     <path></path>
-    <command>-in #INPUT -out #OUTPUT -fasta -automated1</command>
+    <command>--quiet --thread #NUMTHREADS #INPUT > #OUTPUT</command>
     <outName>#OUTPUT</outName>
   </program>
-</trimming>
 ```
 
-```xml
-<trimming>
-  <!--
-    All software for alignment trimming can be configured here.
-
-    NOTE: The output of the software must be in Multi-
-    FASTA format and the sequence header must be preserved
-    (except for the description after a space).
-  -->
-  <program>
-    <name>trimal</name> <!--http://trimal.cgenomics.org/downloads-->
-    <path></path>
-    <command>-in #INPUT -out #OUTPUT -fasta -automated1</command>
-    <outName>#OUTPUT</outName>
-  </program>
-  <program>
-    <name>Gblocks</name> <!--http://molevol.cmima.csic.es/castresana/Gblocks.html-->
-    <path></path>
-    <command>#INPUT -t=p > /dev/null || mv #INPUT-gb #OUTPUT</command>
-    <outName>#OUTPUT</outName>
-  </program>
-</trimming>
-```
-Since Gblocks is a software for trimming, we will add it inside the *trimming* tag.
-
-To add a third-party software different of those that accompanies this package, firstly you have to install it in your system
-of move its executable to the folder `~/.taxontree/bin`.
-
-Then, 
-See the section [3.8](#38-adding-third-party-software-in-the-pipeline) to find out more details on how to configure a third-party software to be part of TaxOnTree phylogenetic pipeline.
+Save the file. 
 
 > **Note**: The requirement of software of each type depends on the input provided by the user. For instance, if an aligned Multi-FASTA sequence is provided as input, TaxOnTree will require only a software for tree reconstruction. In the other hand, if a single accession from NCBI is provided, TaxOnTree will require software of all four types to perform the analysis.
 
