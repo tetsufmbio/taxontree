@@ -2,43 +2,43 @@
 
 *Sakamoto T.* and *J. M. Ortega*
 
-## Summary
+## Table of contents
 
-[1. About TaxOnTree and this document](#1-about-taxontree-and-this-document)
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#2-taxontree-features
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#21-taxontree-workflow
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#22-lowest-common-ancestor-lca
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#23-missing-ranks-and-taxallnomy-database
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#3-installation
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#31-prerequisites
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#32-downloading-and-installing
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#33-testing
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#4-command-line-parameters
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#41-inputs
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#411-single-id--singleid-single_id
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#412-sequence-file--seqfile-fasta_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#413-blast-file--blastfile-blast_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#414-list-file--listfile-list_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#415-multi-fasta-file--mfastafile-mfasta_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#416-aligned-multi-fasta-file--alignfile-align_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#417-tree-file--treefile-tree_file
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#42-other-parameters-that-follow-the-input
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#421-blast-option
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#422-alignment-option
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#423-tree-option
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#424-filter-option
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#425-other-parameters
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#43-outputs
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#5-exploring-the-nexus-file-on-figtree
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#51-exploring-the-taxonomic-relationship-by-lca
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#52-exploring-the-taxonomic-diversity-by-ranks
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#53-adding-or-changing-labels-in-the-tree
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#54-checking-branch-statistic-support-value
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#55-evidencing-duplication-nodes
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#6-advanced-topics
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#61-running-taxontree-without-internet-connection
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#62-adding-other-third-party-software-in-the-pipeline
-https://github.com/tetsufmbio/taxontree/tree/docs/docs#7-contact
+* [1. About TaxOnTree and this document](#1-about-taxontree-and-this-document)
+* [2. TaxOnTree features](#2-taxontree-features)
+  *	[2.1. TaxOnTree workflow](#21-taxontree-workflow)
+  * [2.2 Lowest Common Ancestor (LCA)](#22-lowest-common-ancestor-lca)
+  * [2.3. Missing ranks and Taxallnomy database](#23-missing-ranks-and-taxallnomy-database)
+* [3. Installation](#3-installation)
+  * [3.1. Prerequisites](#31-prerequisites)
+  * [3.2. Downloading and installing](#32-downloading-and-installing)
+  * [3.3. Testing](#33-testing)
+* [4. Command-line parameters](#4-command-line-parameters)
+  * [4.1. Inputs](#41-inputs)
+    * [4.1.1. Single ID (-singleid <single_id>)](#411-single-id--singleid-single_id)
+    * [4.1.2. Sequence file (-seqFile <fasta_file>)](#412-sequence-file--seqfile-fasta_file)
+    * [4.1.3. Blast file (-blastFile <blast_file>)](#413-blast-file--blastfile-blast_file)
+    * [4.1.4. List file (-listFile <list_file>)](#414-list-file--listfile-list_file)
+    * [4.1.5. Multi-FASTA file (-mfastaFile <mfasta_file>)](#415-multi-fasta-file--mfastafile-mfasta_file)
+    * [4.1.6. Aligned multi-FASTA file (-alignFile <align_file>)](#416-aligned-multi-fasta-file--alignfile-align_file)
+    * [4.1.7. Tree file (-treeFile <tree_file>)](#417-tree-file--treefile-tree_file)
+  * [4.2. Other parameters that follow the input](#42-other-parameters-that-follow-the-input)
+    * [4.2.1. Blast option](#421-blast-option)
+    * [4.2.2 Alignment option](#422-alignment-option)
+		* [4.2.3. Tree option](#423-tree-option)
+		* [4.2.4 Filter option](#424-filter-option)
+		* [4.2.5. Other parameters](#425-other-parameters)
+	* [4.3. Outputs](#43-outputs)
+* [5. Exploring the Nexus file on FigTree](#5-exploring-the-nexus-file-on-figtree)
+	* [5.1. Exploring the taxonomic relationship by LCA](#51-exploring-the-taxonomic-relationship-by-lca)
+	* [5.2. Exploring the taxonomic diversity by ranks](#52-exploring-the-taxonomic-diversity-by-ranks)
+	* [5.3. Adding or changing labels in the tree](#53-adding-or-changing-labels-in-the-tree)
+	* [5.4. Checking branch statistic support value](#54-checking-branch-statistic-support-value)
+	* [5.5. Evidencing duplication nodes](#55-evidencing-duplication-nodes)
+* [6. Advanced topics](#6-advanced-topics)
+	* [6.1. Running TaxOnTree without internet connection](#61-running-taxontree-without-internet-connection)
+	* [6.2. Adding other third-party software in the pipeline](#62-adding-other-third-party-software-in-the-pipeline)
+* [7. Contact](#7-contact)
 
 ## 1. About TaxOnTree and this document
 
