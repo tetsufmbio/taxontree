@@ -996,7 +996,7 @@ sub queryMFastaFile {
 	# Retrieve subjects data
 	my @subjects;
 	foreach my $key (@accessions){
-		if ($generalInfo{$key}{"type"} ne "NULL"){
+		if ($generalInfo{$key}{"type"}){
 			push(@subjects, $generalInfo{$key}{"id"});
 		}
 	}
@@ -1019,7 +1019,7 @@ sub queryMFastaFile {
 	if (scalar keys %treeTableHash > 0){
 		foreach my $key(@accessions){
 			if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
-				$generalInfo{$key}{"txid"} = $treeTableHash{$key};
+				$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
 			}
 		}
 	}
@@ -1828,8 +1828,10 @@ sub formatAlignment {
 		my $idType = verifyID($defID);
 		if (!$idType){
 			if (!exists $treeTable->{$header}){
-				$error = 1;
-				print "NOTE: Could not recognize $defID as NCBI or Uniprot identifier.\n      Could not find $defID in the table.\n      Please check it.\n";
+				if (!$forceNoTxid){
+					$error = 1;
+					print "NOTE: Could not recognize $defID as NCBI or Uniprot identifier.\n      Could not find $defID in the table.\n      Please check it.\n";
+				}
 			}
 		}
 		my $id = "ID".$count;
