@@ -1516,16 +1516,16 @@ sub checkInfoTxid {
 	my @newList;
 	print "  Checking taxonomy data:\n";
 	foreach my $key(@list){
-		if (exists $generalInfo{$key}){
+		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"txid"}){
 			push(@newList, $key);
 			$map_txid{"txids"}{$generalInfo{$key}{"txid"}} = {};
 		} else {
 			if ($forceNoTxid){
-				print "    NOTE: Could not retrieve txid from $key. It was set to 1.\n";
+				print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". It was set to 1.\n";
 				push(@newList, $key);
 				$generalInfo{$key}{"txid"} = 1;
 			} else {
-				print "    NOTE: Could not retrieve txid from $key. This entry will be discarded.\n";
+				print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". This entry will be discarded.\n";
 			}
 		}
 	}
