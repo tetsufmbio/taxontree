@@ -19,7 +19,7 @@ use Bio::Tree::TreeFunctionsI;
 use Bio::Tree::TreeI;
 use Bio::Tree::NodeI;
 	
-$VERSION     = 1.9;
+$VERSION     = "1.10.1";
 @ISA         = qw(Exporter);
 @EXPORT      = qw(inputs check main);
 #@EXPORT_OK   = qw(input);
@@ -569,6 +569,7 @@ my %missingTxid;
 my %missingTaxTN;
 my %generalInfo;
 my %otherTableHash;
+my %treeTableHash;
 my %hashCode;
 my %hashFileTrans;
 
@@ -595,6 +596,14 @@ sub main {
 		$map_txid{"txids"}{$txidMap} = {};
 	}
 
+	if ($treeTable){
+		popTreeTableHash($treeTable);
+	}
+	
+	if ($otherTable){
+		popOtherTableHash($otherTable);
+	}
+	
 	$map_txid{"txids"}{1} = {};
 	querySingleID() if ($inputType eq "querySingleID");
 	queryList() if ($inputType eq "queryList");
@@ -905,23 +914,6 @@ sub queryMFastaFile {
 	
 	my $file = $queryAlignmentFile if ($queryAlignmentFile);
 	$file = $queryMFastaFile if ($queryMFastaFile);
-	# table
-	my %treeTableHash;
-	if ($treeTable){
-		open (TABLE, "< $treeTable") or die "\nERROR: Can't open the file $_\n";
-		while (my $line = <TABLE>){
-			my $error2;
-			chomp $line;
-			next if ($line eq "");
-			my @line = split(/\t/, $line);
-			if ($line[1] =~ /\D/){
-				print "NOTE: txid provided for $line[0] contains a not number character.\n      This information will be discarded.\n";
-				$error2 = 1;
-			}
-			$treeTableHash{$line[0]} = $line[1] if (!$error2);
-		}
-		close TABLE;
-	}
 	
 	# extract alignment ID
 	my ($ref_accessions, $ref_seq) = extractAlignment($file);
@@ -1225,60 +1217,6 @@ sub treeFile {
 		exit;
 	}
 	
-	my %treeTableHash;
-	if ($treeTable){
-		open (TABLE, "< $treeTable") or die "\nERROR: Can't open the file $_\n";
-		while (my $line = <TABLE>){
-			my $error2 = 0;
-			chomp $line;
-			next if ($line eq "");
-			my @line = split(/\t/, $line);
-			if (!(exists $leavesTree{$line[0]})){
-				print "NOTE: your tree does not contain $line[0]\n";
-			}
-			if ($line[1] =~ /\D/){
-				print "NOTE: txid provided for $line[0] contains a not number character. This information will be discarded.\n";
-				$error2 = 1;
-			}
-			$treeTableHash{$line[0]} = $line[1] if ($error2 == 0);
-		}
-		close TABLE;
-	}
-	
-	if ($otherTable){
-		open (TABLE, "< $otherTable") or die "\nERROR: Can't open the file $_\n";
-		my @otherTable = <TABLE>;
-		my @header;
-		if ($otherTable[0] =~ m/^#/){
-			my $header = shift @otherTable;
-			chomp $header;
-			@header = split(/\t/, $header);
-		} 		
-		while (my $line = <TABLE>){
-			my $error2 = 0;
-			chomp $line;
-			next if ($line eq "");
-			my @line = split(/\t/, $line);
-			my $leafID = shift @line;
-			if (!(exists $leavesTree{$leafID})){
-				print "NOTE: your tree does not contain $leafID\n";
-			} else {
-				my $count = 1;
-				foreach my $line2 (@line){
-					my $label;
-					if (!$header[$count]){
-						$label = "label".$count;
-					} else {
-						$label = $header[$count];
-					}
-					$otherTableHash{$label}{$leafID} = $line2;
-					$count++;
-				}
-			}
-		}
-		close TABLE;
-	}
-	
 	if (!($queryID)){
 		die "\nERROR: Use -queryID and nominate a protein from your tree as query.\n";
 	} 
@@ -1313,7 +1251,7 @@ sub treeFile {
 	if (scalar keys %treeTableHash > 0){
 		foreach my $key(@accessions){
 			if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
-				$generalInfo{$key}{"txid"} = $treeTableHash{$key};
+				$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
 			}
 		}
 	}
@@ -1374,6 +1312,62 @@ sub treeFile {
 
 }
 ###################### subroutine ######################
+
+sub popOtherTableHash {
+
+	my $file = $_[0];
+	open (TABLE, "< $file") or die "\nERROR: Can't open the file $_\n";
+	my @otherTable = <TABLE>;
+	my @header;
+	if ($otherTable[0] =~ m/^#/){
+		my $header = shift @otherTable;
+		chomp $header;
+		@header = split(/\t/, $header);
+	} 		
+	while (my $line = <TABLE>){
+		my $error2 = 0;
+		chomp $line;
+		next if ($line eq "");
+		my @line = split(/\t/, $line);
+		my $leafID = shift @line;
+		#if (exists $leavesTree{$leafID}){
+		#	print "NOTE: your tree does not contain $leafID\n";
+		#} else {
+		my $count = 1;
+		foreach my $line2 (@line){
+			my $label;
+			if (!$header[$count]){
+				$label = "label".$count;
+			} else {
+				$label = $header[$count];
+			}
+			$otherTableHash{$label}{$leafID} = $line2;
+			$count++;
+		}
+		#}
+	}
+	close TABLE;
+}
+
+sub popTreeTableHash {
+	my $file = $_[0];
+
+	open (TABLE, "< $file") or die "\nERROR: Can't open the file $_\n";
+	while (my $line = <TABLE>){
+		my $error2 = 0;
+		chomp $line;
+		next if ($line eq "");
+		my @line = split(/\t/, $line);
+		
+		if ($line[1] =~ /\D/){
+			print "NOTE: txid provided for $line[0] contains a not number character. This information was ignored.\n";
+			$error2 = 1;
+		}
+		$treeTableHash{$line[0]} = $line[1] if ($error2 == 0);
+	}
+	close TABLE;
+
+}
 
 sub taxonomicFilters {
 	my @subjects = @_;
@@ -2730,7 +2724,7 @@ sub verifyID{
 		return "uniprot_ac";
 	} elsif ($id =~ m/^[0-9]+$/){
 		return "ncbi_gi";
-	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || $id =~ m/\w{3}\d{5}(\.\d+)?/ || $id =~ m/\w{2}\d{6}(\.\d+)?/ || $id =~ m/\w{1}\d{5}(\.\d+)?/){
+	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || $id =~ m/^\w{3}\d{5}(\.\d+)?$/ || $id =~ m/^\w{2}\d{6}(\.\d+)?$/ || $id =~ m/^\w{1}\d{5}(\.\d+)?$/){
 		return "ncbi_ac";
 	} else {
 		return 0;
