@@ -641,7 +641,6 @@ sub querySingleID {
 	%queryInfo = %{$generalInfo{$querySingleID}};
 	$txidMap = $queryInfo{"txid"} if (!$txidMap);
 	
-	#&retrieveQueryInfo($querySingleID); # fill %queryInfo;
 	my $blastResult = &executeBlast($local); # return Blast result;
 	my $subjects = &formatBlastResult($blastResult); # return a list of subjects to be considered in the analysis
 	my @subjects = @$subjects;
@@ -680,10 +679,6 @@ sub querySingleID {
 	}
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
-	}
-	
 	my %subjectList;
 	foreach my $key(@subjects){
 		$subjectList{$hashCode{"code"}{$key}{"id"}} = 1;
@@ -692,10 +687,6 @@ sub querySingleID {
 	mergeGeneralInfo($sequenceInfoRef);
 	
 	@subjects = checkSeq(@subjects);
-	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved.\n";
-	}
 	
 	my $alignmentFile = &align($aligner, \@subjects);
 	if (!($noTrimal)){
@@ -795,10 +786,6 @@ sub queryList {
 	
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
-	}
-	
 	my %subjectList;
 	foreach my $key(@subjects){
 		$subjectList{$hashCode{"code"}{$key}{"id"}} = 1;
@@ -874,11 +861,7 @@ sub querySeqFile {
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
-	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying taxonomic filters.\n";
-	}
-	
+		
 	my %subjectList;
 	my $queryCode = shift @subjects;
 	foreach my $key(@subjects){
@@ -887,12 +870,8 @@ sub querySeqFile {
 	my $sequenceInfoRef = retrieveSubjectInfo(keys %subjectList);
 	mergeGeneralInfo($sequenceInfoRef);
 
-	@subjects = checkSeq(@subjects);
 	unshift (@subjects, $queryCode);
-	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved.\n";
-	}
+	@subjects = checkSeq(@subjects);
 	
 	my $alignmentFile = &align($aligner, \@subjects);
 	
@@ -1017,11 +996,7 @@ sub queryMFastaFile {
 	
 	# Incorporate treeTableHash data
 	if (scalar keys %treeTableHash > 0){
-		foreach my $key(@accessions){
-			if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
-				$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
-			}
-		}
+		incorporateTreeTable();
 	}
 	
 	# Check txid data
@@ -1053,9 +1028,6 @@ sub queryMFastaFile {
 	
 	print "  checking sequence...\n";
 	@subjects = checkSeq(@subjects);
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying LCA filter.\n";
-	}
 	
 	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
@@ -1249,11 +1221,7 @@ sub treeFile {
 	
 	# Incorporate treeTableHash data
 	if (scalar keys %treeTableHash > 0){
-		foreach my $key(@accessions){
-			if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
-				$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
-			}
-		}
+		incorporateTreeTable();
 	}
 	
 	# check query info;
@@ -1298,9 +1266,6 @@ sub treeFile {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	if (scalar @subjects < 3){
-		die "\nERROR: Less than 3 proteins was retrieved after applying filter.\n";
-	}
 	###########
 	
 	my $treeFileTmp = &filterTree($tmpFile, \@subjects);
@@ -1312,6 +1277,17 @@ sub treeFile {
 
 }
 ###################### subroutine ######################
+
+sub incorporateTreeTable{
+
+	foreach my $key(keys %generalInfo){
+		if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
+			$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
+		}
+	}
+	return 1;
+	
+}
 
 sub popOtherTableHash {
 
@@ -1347,6 +1323,8 @@ sub popOtherTableHash {
 		#}
 	}
 	close TABLE;
+	return 1;
+	
 }
 
 sub popTreeTableHash {
@@ -1366,7 +1344,8 @@ sub popTreeTableHash {
 		$treeTableHash{$line[0]} = $line[1] if ($error2 == 0);
 	}
 	close TABLE;
-
+	return 1;
+	
 }
 
 sub taxonomicFilters {
@@ -1486,13 +1465,16 @@ sub checkSeq {
 			push (@newList, $key);
 		}
 	}
+	if (scalar @newList < 3){
+		die "ERROR: less than 3 proteins had their sequence retrieved.\n"
+	}
 	return @newList;
 }
 
 sub checkTaxLin {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy lineage data:\n";
+	print "  Checking taxonomy lineage data...\n";
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"txid"};
 		if (!exists $map_txid{"txids"}{$subject}){
@@ -2107,119 +2089,6 @@ sub formatQueryFile {
 	return \%defID;
 }
 
-sub retrieveQueryInfo {
-	
-	print "Retrieving query information...\n";
-	# determine if query is from NCBI or Uniprot:
-	my $id = $_[0];
-	my $queryType = verifyID($id);
-	if (!$queryType){
-		die "\nERROR: Could not recognize this query as NCBI or Uniprot identifier...\n";
-	}
-	
-	# retrieve query sequence
-	
-	# retrieve sequence in a local database
-	my $retrieveWeb = 1;
-	my $fetch_fasta;
-	if ($local == 1){
-		my $tmp_file = $pid."_tmp_list.txt";
-		open(TMP, "> ".$pid."_tmp_list.txt");
-		print TMP $id;
-		close TMP;
-		my $inputblastdbcmd = $tmp_file;
-		my $outputblastdbcmd = $pid."_query.fasta";
-		my $defOutputblastdbcmd = $programs{"blastSearch"}{"blastdbcmd"}{"outName"};
-		
-		my $blastdbcmdCommand = $programs{"blastSearch"}{"blastdbcmd"}{"path"}." ".$programs{"blastSearch"}{"blastdbcmd"}{"command"};
-		$blastdbcmdCommand =~ s/#INPUT/$inputblastdbcmd/g;
-		$blastdbcmdCommand =~ s/#OUTPUT/$outputblastdbcmd/g;
-		$blastdbcmdCommand =~ s/#DB/$database/g;
-		$defOutputblastdbcmd =~ s/#OUTPUT/$outputblastdbcmd/g;
-		
-		system($blastdbcmdCommand);
-		
-		open(BLASTDBCMD, "< $outputblastdbcmd") or die "\nERROR: Can't open the file containing the retrieved sequence from blastdbcmd.\n";
-		
-		while (<BLASTDBCMD>){
-			$fetch_fasta .= $_;
-		}
-		close BLASTDBCMD;
-		system ("rm $outputblastdbcmd");
-		system("rm ".$pid."_tmp_list.txt");
-		
-		if (!$fetch_fasta){
-			print "  NOTE: Could not retrieve $id from the selected database.\n        Trying to retrieve sequence from the web.\n";
-		} else {
-			$retrieveWeb = 0;
-		}
-	}
-
-	if ($retrieveWeb == 1){
-		my $url_fetch_seq;
-		if ($queryType =~ m/uniprot/){
-			my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
-			if ($queryType eq "uniprot_ac"){
-				$url_fetch_seq = "http://www.uniprot.org/uniprot/".$id.".fasta";
-			} elsif ($queryType eq "uniprot_id"){
-				$url_fetch_seq = "http://www.uniprot.org/uniprot/".$id.".fasta";
-			} 
-			my $errorCount = -1;
-			do {
-				my $response = $http->get($url_fetch_seq);
-				$fetch_fasta = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($fetch_fasta =~ m/Could not connect to 'www.uniprot.org:80'/ and $errorCount < 5);
-			
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to Uniprot server retrieved error 4 times. Please, try to run TaxOnTree again later.\n";
-			}
-			
-		} elsif ($queryType eq "ncbi_gi" or $queryType eq "ncbi_ac"){
-		
-			my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".$id;
-			my $fetch_lineage;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$fetch_lineage = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
-			my $xs2 = XML::Simple->new();
-			my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
-
-			my @linkSet = @{$doc_lineage->{"TSeq"}};
-			my $link = $linkSet[0];				
-			my $gi = $link->{"TSeq_gi"};
-			my $accession = $link->{"TSeq_accver"};
-			my $seq = $link->{"TSeq_sequence"};
-		}
-	}
-	
-	if ($fetch_fasta !~ m/^>/){
-		die "\nERROR: Could not retrieve the sequence of $id neither from local database or from the web.\n";
-	}
-	my @fetch_fasta = split("\n>", $fetch_fasta);
-	my ($tempfastaHeader, $fastaSeq) = split(/\n/, $fetch_fasta[0], 2);
-	$tempfastaHeader = substr($tempfastaHeader, 0 ,index($tempfastaHeader, " ") + 1);
-	$tempfastaHeader =~ s/^>//g;
-	$fastaSeq =~ s/\n//g;
-	$queryInfo{"name"} = $id;
-	$queryInfo{"fastaHeader"} = $tempfastaHeader;
-	$queryInfo{"seq"} = $fastaSeq;
-	$queryInfo{"qlen"} = length($fastaSeq);
-	$queryInfo{"type"} = $queryType;
-	
-	print "  OK!\n";
-	return 1;
-	
-}
-
 sub retrieveInfoUniprot {
 	my $refuniprotlist = $_[0];
 	my $type = $_[1];
@@ -2497,8 +2366,6 @@ sub formatBlastResult {
 	$formattedBlast = extractIdBlast($formattedBlast);
 	
 	return $formattedBlast;
-	print "  OK!\n";
-	####################################
 	
 }
 
