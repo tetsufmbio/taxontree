@@ -1296,7 +1296,7 @@ sub popOtherTableHash {
 		chomp $header;
 		@header = split(/\t/, $header);
 	} 		
-	while (my $line = <TABLE>){
+	foreach my $line (@otherTable){
 		my $error2 = 0;
 		chomp $line;
 		next if ($line eq "");
@@ -5014,8 +5014,8 @@ sub treeAddTag {
 		if (scalar(keys %otherTableHash) > 0){
 			foreach my $label(sort keys %otherTableHash){
 				my $leafid2 = $hashCode{"code"}{$leafid}{"id"};
-				if (exists $otherTableHash{$label}{$leafid2}){
-					$leaf -> add_tag_value($label, '"'.$otherTableHash{$label}{$leafid2}.'"');
+				if (exists $otherTableHash{$label}{$generalInfo{$leafid2}{"name"}}){
+					$leaf -> add_tag_value($label, '"'.$otherTableHash{$label}{$generalInfo{$leafid2}{"name"}}.'"');
 				} else {	
 					#$leaf -> add_tag_value($label, 'NULL');
 				}
