@@ -624,12 +624,11 @@ sub querySingleID {
 	mergeGeneralInfo($queryInfoRef);
 	
 	# check query info
-	if (!$generalInfo{$querySingleID}{"txid"}){
-		die "\nERROR: Could not retrieve taxonomy ID from provided query ID.\n";
-	} else {
-		$map_txid{"txids"}{$generalInfo{$querySingleID}{"txid"}} = {};
+	my @query = checkInfoTxid(($queryID));
+	if (scalar @query == 0){
+		die "\nERROR: Could not retrieve taxonomy id from query.\n";
 	}
-
+	
 	my $sequenceInfoRef = retrieveSubjectInfo(($queryID));
 	mergeGeneralInfo($sequenceInfoRef);
 	
@@ -648,9 +647,6 @@ sub querySingleID {
 	print "Retrieving Subject info...\n";
 	my $refDefinedID = defineIdSubject(@subjects);
 	mergeGeneralInfo($refDefinedID);
-	
-	# Incorporate treeTableHash data
-	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
 	
 	@subjects = checkInfoTxid(@subjects);
 	@subjects = queryOnTopList(@subjects);	
@@ -738,17 +734,16 @@ sub queryList {
 		@subjects = @subjects2;
 	}
 	
+	# check query info
 	my $queryInfoRef = defineIdSubject(($queryID));
 	mergeGeneralInfo($queryInfoRef);
+	my @query = checkInfoTxid(($queryID));
+	if (scalar @query == 0){
+		die "\nERROR: Could not retrieve taxonomy id from query.\n";
+	}
+	
 	my $sequenceInfoRef = retrieveSubjectInfo(($queryID));
 	mergeGeneralInfo($sequenceInfoRef);
-	
-	# check query info
-	if (!$generalInfo{$queryID}{"txid"}){
-		die "\nERROR: Could not retrieve taxonomy ID from provided query ID.\n";
-	} else {
-		$map_txid{"txids"}{$generalInfo{$queryID}{"txid"}} = {};
-	}
 	if (!$generalInfo{$queryID}{"seq"}){
 		die "\nERROR: Could not retrieve sequence from provided query ID.\n";
 	}
@@ -760,6 +755,7 @@ sub queryList {
 	print "Retrieving Subject info...\n";
 	my $refDefinedID = defineIdSubject(@subjects);
 	mergeGeneralInfo($refDefinedID);
+		
 	@subjects = checkInfoTxid(@subjects);
 	#@subjects = queryOnTopList(@subjects);	
 	
@@ -827,10 +823,16 @@ sub querySeqFile {
 	print "Retrieving Subject info...\n";
 	my $refDefinedID = defineIdSubject(@subjects);
 	mergeGeneralInfo($refDefinedID);
+	
 	@subjects = checkInfoTxid(@subjects);
 	
 	if ($queryInfo{"txid"} eq "NULL"){
-		$queryInfo{"txid"} = $generalInfo{$subjects[0]}{"txid"};
+		if (exists $treeTableHash{$queryID}){
+			$queryInfo{"txid"} = $treeTableHash{$queryID};
+			$map_txid{"txids"}{$queryInfo{"txid"}} = {};
+		} else {
+			$queryInfo{"txid"} = $generalInfo{$subjects[0]}{"txid"};
+		}
 		$txidMap = $queryInfo{"txid"} if (!$txidMap);
 		$generalInfo{$queryID}{"txid"} = $queryInfo{"txid"};
 	}
@@ -949,27 +951,25 @@ sub queryMFastaFile {
 	
 	my ($ref_alignment, $ref_accessions2) = formatAlignment(\@accessions, \@seq, \%treeTableHash);
 	mergeGeneralInfo($ref_alignment);
+	
 	@accessions = @$ref_accessions2;
 	
-	%queryInfo = %{$generalInfo{"ID1"}};
-	$queryID = $queryInfo{"id"};
+	$queryID = $generalInfo{"ID1"}{"id"};
 	#check query info	
-	if ($generalInfo{"ID1"}{"type"} eq "NULL"){
-		if (!exists $treeTableHash{$queryID}){
+	if (exists $treeTableHash{$queryID}){
+		$generalInfo{"ID1"}{"txid"} = $treeTableHash{$queryID};
+	} else {
+		if ($generalInfo{"ID1"}{"type"} eq "other"){
 			die "\nERROR: queryID provided do not have txid.\n";
 		} else {
-			$generalInfo{"ID1"}{"txid"} = $treeTableHash{$queryID};
+			my $refDefinedID = defineIdSubject(($queryID));
+			if (exists $refDefinedID->{$queryID}->{"txid"}){
+				$generalInfo{"ID1"}{"txid"} = $refDefinedID->{$queryID}->{"txid"};
+			} else {
+				die "\nERROR: could not retrieve txid from queryID ($queryID).\n";
+			}
+			
 		}
-	} else {
-		my $refDefinedID = defineIdSubject(($queryID));
-		#mergeGeneralInfo($refDefinedID);
-		$generalInfo{"ID1"}{"txid"} = $refDefinedID->{$queryID}->{"txid"} if (exists $refDefinedID->{$queryID}->{"txid"});
-		$generalInfo{"ID1"}{"txid"} = $treeTableHash{$queryID} if ($treeTableHash{$queryID});
-	}
-	
-	my @query = checkInfoTxid(("ID1"));
-	if (scalar @query == 0){
-		die "\nERROR: Could not retrieve taxonomy id from query.\n";
 	}
 	
 	$map_txid{"txids"}{$generalInfo{"ID1"}{"txid"}} = {};
@@ -997,9 +997,6 @@ sub queryMFastaFile {
 			}
 		}
 	}
-	
-	# Incorporate treeTableHash data
-	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
 	
 	# Check txid data
 	@subjects = checkInfoTxid(@accessions);
@@ -1040,7 +1037,7 @@ sub queryMFastaFile {
 		$alignmentFile = $pid."_tmp_align.fasta";
 		open (TMPALIGN, "> $alignmentFile") or die "\nERROR: Could not create an alignment file";
 		foreach my $subject(@subjects){
-			print TMPALIGN ">".$subject."\n".$subjectInfo{$subject}{"seq"}."\n";
+			print TMPALIGN ">".$subject."\n".$generalInfo{$subject}{"seq"}."\n";
 		}
 	}
 	
@@ -1062,7 +1059,7 @@ sub queryBlastFile {
 	print "Blast file provided: $queryBlastFile\n";
 	
 	if (!($queryID)){
-		print "NOTE: QueryID not provided.\n      Picking the first column of the blast result as Query ID.\n";
+		print "NOTE: QueryID not provided.\n      Picking the first column of the blast result as QueryID.\n";
 		open (BLASTTMP, "< $queryBlastFile") or die "\nERROR: Could not open $queryBlastFile.\n";
 		my @blastTmp = <BLASTTMP>;
 		close BLASTTMP;
@@ -1075,8 +1072,10 @@ sub queryBlastFile {
 			}
 			$queryID = $line[0];
 			my $type = verifyID($queryID);
-			if (!$type){
-				print "NOTE: QueryID from the first column was not recognized as NCBI or Uniprot identifiers.\n      Picking the best hit of the blast result as Query ID.\n";
+			if (!$type && !exists $treeTableHash{$queryID}){
+				print "NOTE: QueryID from the first column was not recognized as NCBI or Uniprot identifiers.\n";
+				print "      QueryID from the first column was not provided in -treeTable.\n";
+				print "      Picking the best hit of the blast result as QueryID.\n";
 				my $bestHit = $line[1];
 				if ($bestHit =~ /;/){
 					my ($firstHit, @rest) = split(";", $bestHit);
@@ -1089,8 +1088,8 @@ sub queryBlastFile {
 				$queryID = $bestHit;
 				my $type2 = verifyID($queryID);
 				
-				if (!$type2){
-					die "\nERROR: Best hit of the blast result was not recognized as NCBI or Uniprot identifiers.\n       Please, check it.\n";
+				if (!$type2 && !exists $treeTableHash{$queryID}){
+					die "\nERROR: Best hit of the blast result was not recognized as NCBI or Uniprot identifiers.\n       Please, check it or provide a table containing taxID for each accession using -taxTable.\n";
 				}
 			}
 			last;
@@ -1098,17 +1097,16 @@ sub queryBlastFile {
 	} 
 	print "Query ID: ".$queryID."\n";
 	
+	# check query info
 	my $queryInfoRef = defineIdSubject(($queryID));
 	mergeGeneralInfo($queryInfoRef);
+	my @query = checkInfoTxid(($queryID));
+	if (scalar @query == 0){
+		die "\nERROR: Could not retrieve taxonomy id from query.\n";
+	}
+	
 	my $sequenceInfoRef = retrieveSubjectInfo(($queryID));
 	mergeGeneralInfo($sequenceInfoRef);
-	
-	# check query info
-	if (!$generalInfo{$queryID}{"txid"}){
-		die "\nERROR: Could not retrieve taxonomy ID from provided query ID.\n";
-	} else {
-		$map_txid{"txids"}{$generalInfo{$queryID}{"txid"}} = {};
-	}
 	if (!$generalInfo{$queryID}{"seq"}){
 		die "\nERROR: Could not retrieve sequence from provided query ID.\n";
 	}
@@ -1123,6 +1121,7 @@ sub queryBlastFile {
 	print "Retrieving Subject info...\n";
 	my $refDefinedID = defineIdSubject(@subjects);
 	mergeGeneralInfo($refDefinedID);
+	
 	@subjects = checkInfoTxid(@subjects);
 	@subjects = queryOnTopList(@subjects);	
 	# generate seq codes
@@ -1202,7 +1201,7 @@ sub treeFile {
 	my @accessions = keys %generalInfo;
 	my @subjects;
 	foreach my $key (@accessions){
-		if ($generalInfo{$key}{"type"} ne "NULL"){
+		if ($generalInfo{$key}{"type"} ne "other"){
 			push(@subjects, $generalInfo{$key}{"id"});
 		}
 	}
@@ -1221,15 +1220,12 @@ sub treeFile {
 		}
 	}
 	
-	# Incorporate treeTableHash data
-	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
-	
 	# check query info;
-	%queryInfo = %{$generalInfo{"ID1"}};
 	my @query = checkInfoTxid(("ID1"));
 	if (scalar @query == 0){
 		die "\nERROR: Could not retrieve taxonomy id from query.\n";
 	}
+	%queryInfo = %{$generalInfo{"ID1"}};
 	$txidMap = $queryInfo{"txid"} if (!$txidMap);
 	
 	# Check txid data
@@ -1498,18 +1494,25 @@ sub checkInfoTxid {
 	my @newList;
 	print "  Checking taxonomy data:\n";
 	foreach my $key(@list){
-		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"txid"}){
+		if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
+			# Incorporate treeTableHash data
 			push(@newList, $key);
+			$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
 			$map_txid{"txids"}{$generalInfo{$key}{"txid"}} = {};
 		} else {
-			if ($forceNoTxid){
-				print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". It was set to 1.\n";
+			if (exists $generalInfo{$key} && exists $generalInfo{$key}{"txid"}){
 				push(@newList, $key);
-				$generalInfo{$key}{"txid"} = 1;
+				$map_txid{"txids"}{$generalInfo{$key}{"txid"}} = {};
 			} else {
-				print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". This entry will be discarded.\n";
+				if ($forceNoTxid){
+					print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". It was set to 1.\n";
+					push(@newList, $key);
+					$generalInfo{$key}{"txid"} = 1;
+				} else {
+					print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". This entry will be discarded.\n";
+				}
 			}
-		}
+		}		
 	}
 	return @newList;
 }
@@ -1815,6 +1818,7 @@ sub formatAlignment {
 					print "NOTE: Could not recognize $defID as NCBI or Uniprot identifier.\n      Could not find $defID in the table.\n      Please check it.\n";
 				}
 			}
+			$idType = "other";
 		}
 		my $id = "ID".$count;
 		$hash_align{$id}{"name"} = $header;
@@ -1882,7 +1886,7 @@ sub makeTempTree {
 			}
 			#push(@accessions, $defID);
 		} else {
-			$idType = "NULL";
+			$idType = "other";
 			if (!exists $treeTable->{$id}){
 				if (!$forceNoTxid){
 					$error = 1;
@@ -2626,12 +2630,14 @@ sub defineIdSubject {
 		my $subjectType = verifyID($id);
 		if (!$subjectType){
 			if(!exists $treeTableHash{$id}){
-				print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession will be discarded.\n";
+				print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
 			} else {
 				$definedID{$id}{"type"} = "other";
 				$definedID{$id}{"id"} = $id;
+				$definedID{$id}{"accession"} = $id;
 				$definedID{$id}{"geneID"} = "NULL";
 				$definedID{$id}{"geneName"} = "NULL";
+				$definedID{$id}{"txid"} = $treeTableHash{$id};
 			}
 		} elsif ($subjectType eq "uniprot_id"){
 			$definedID{$id}{"type"} = "uniprot_id";
