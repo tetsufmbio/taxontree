@@ -648,6 +648,10 @@ sub querySingleID {
 	print "Retrieving Subject info...\n";
 	my $refDefinedID = defineIdSubject(@subjects);
 	mergeGeneralInfo($refDefinedID);
+	
+	# Incorporate treeTableHash data
+	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
+	
 	@subjects = checkInfoTxid(@subjects);
 	@subjects = queryOnTopList(@subjects);	
 	# generate seq codes
@@ -995,9 +999,7 @@ sub queryMFastaFile {
 	}
 	
 	# Incorporate treeTableHash data
-	if (scalar keys %treeTableHash > 0){
-		incorporateTreeTable();
-	}
+	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
 	
 	# Check txid data
 	@subjects = checkInfoTxid(@accessions);
@@ -1220,9 +1222,7 @@ sub treeFile {
 	}
 	
 	# Incorporate treeTableHash data
-	if (scalar keys %treeTableHash > 0){
-		incorporateTreeTable();
-	}
+	incorporateTreeTable() if (scalar keys %treeTableHash > 0);
 	
 	# check query info;
 	%queryInfo = %{$generalInfo{"ID1"}};
@@ -2625,7 +2625,14 @@ sub defineIdSubject {
 		
 		my $subjectType = verifyID($id);
 		if (!$subjectType){
-			print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
+			if(!exists $treeTableHash{$id}){
+				print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession will be discarded.\n";
+			} else {
+				$definedID{$id}{"type"} = "other";
+				$definedID{$id}{"id"} = $id;
+				$definedID{$id}{"geneID"} = "NULL";
+				$definedID{$id}{"geneName"} = "NULL";
+			}
 		} elsif ($subjectType eq "uniprot_id"){
 			$definedID{$id}{"type"} = "uniprot_id";
 			$hashJoinIDUniprot{$id} = "uniprot_id";
