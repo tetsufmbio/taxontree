@@ -5032,7 +5032,7 @@ sub treeAddTag {
 		push (@internal_nodes, $node);
 		my @leaves2 = $node -> get_all_Descendents;
 		
-		my ($value1, $value2) = '';
+		my ($value1, $value2);
 		my $n = 0;
 		
 		foreach my $leaves(@leaves2){
@@ -5040,13 +5040,14 @@ sub treeAddTag {
 			if ($leaves -> is_Leaf()){
 			
 				my $leafid = $leaves -> id();
-				
 				$value2 = $leaves -> get_tag_values("lca");  ## <---
-				if ($value1 eq ''){
+				if (!$value2){
+					$n = 1;
+					last;
+				} elsif (!$value1){
 					$value1 = $value2;
 					next;
 				} elsif ($value1 eq $value2){  ## <---
-
 					next;
 				} else {
 					$n = 1;
@@ -5056,8 +5057,7 @@ sub treeAddTag {
 			}
 		}
 		
-		if ($n == 0){
-
+		if ($n == 0 && $value1){
 			$node -> add_tag_value("lca",$value1);  ## <---
 		}
 	}
@@ -5069,7 +5069,7 @@ sub treeAddTag {
 
 				my @leaves2 = $node -> get_all_Descendents;
 				
-				my ($value1, $value2) = '';
+				my ($value1, $value2);
 				my $n = 0;
 				
 				foreach my $leaves(@leaves2){
@@ -5077,13 +5077,14 @@ sub treeAddTag {
 					if ($leaves -> is_Leaf()){
 					
 						my $leafid = $leaves -> id();
-						
 						$value2 = $leaves -> get_tag_values($label);  ## <---
-						if ($value1 eq ''){
+						if (!$value2){
+							$n = 1;
+							last;
+						} elsif (!$value1){
 							$value1 = $value2;
 							next;
 						} elsif ($value1 eq $value2){  ## <---
-
 							next;
 						} else {
 							$n = 1;
@@ -5093,8 +5094,7 @@ sub treeAddTag {
 					}
 				}
 				
-				if ($n == 0){
-
+				if ($n == 0 && $value1){
 					$node -> add_tag_value($label,$value1);  ## <---
 				}
 			}
@@ -5106,7 +5106,6 @@ sub treeAddTag {
 
 		if ($node -> id()){
 			my $bs = $node -> id();
-
 			$node -> add_tag_value("BOOT",$bs);
 		}
 	}
@@ -5223,7 +5222,7 @@ sub treeAddTag {
 	my $taxsimpleLCA = 100;
 	foreach my $node(@internal_nodes){
 		my @leaves2 = $node -> get_all_Descendents;
-		my ($leaf1, $leaf2) = '';
+		my ($leaf1, $leaf2);
 		my $leaf1Txid;
 		my $ref_ranks;
 		my $lca = 100;
@@ -5231,7 +5230,7 @@ sub treeAddTag {
 			if ($leaves -> is_Leaf()){
 				my $leafid = $leaves -> id();
 				my $leafTxid = $hashCode{"code"}{$leafid}{"txid"};
-				if ($leaf1 eq ''){
+				if (!$leaf1){
 					$leaf1 = $leafid;
 					$leaf1Txid = $hashCode{"code"}{$leaf1}{"txid"};
 					$ref_ranks = $map_txid{"txids"}{$leafTxid}{"lineageTaxSimple"};
