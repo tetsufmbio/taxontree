@@ -1309,7 +1309,7 @@ sub popOtherTableHash {
 		foreach my $line2 (@line){
 			my $label;
 			if (!$header[$count]){
-				$label = "label".$count;
+				$label = "feature".$count;
 			} else {
 				$label = $header[$count];
 			}

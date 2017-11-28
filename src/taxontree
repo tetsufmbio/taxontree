@@ -128,8 +128,8 @@ GetOptions(
     'mfastaFile=s'    => \$inputs{"queryMFastaFile"},
     'queryID=s'    => \$inputs{"queryID"},
     'treeFile=s'    => \$inputs{"treeFile"},
-    'treeTable=s'    => \$inputs{"treeTable"},
-    'otherTable=s'    => \$inputs{"otherTable"},
+    'taxTable=s'    => \$inputs{"treeTable"},
+    'featureTable=s'    => \$inputs{"otherTable"},
     'queryTax=s'    => \$inputs{"queryTax"},
     'txidMap=s'    => \$inputs{"txidMap"},
     'db=s' 			=> \$inputs{"database"},
@@ -149,7 +149,7 @@ GetOptions(
 	'treeRoot=i' 		=> \$inputs{"treeRoot"},
 	'lcaLimit=i' 		=> \$inputs{"lcaLimit"},
 	'lcaLimitDown=i' 		=> \$inputs{"lcaLimitDown"},
-	'printLeaves!' 		=> \$inputs{"printLeaves"},
+	'printSamples!' 		=> \$inputs{"printLeaves"},
     'help!'     	=> \$help,
 	'version!'		=> \$version,
 	'man!'			=> \$man,
@@ -240,7 +240,7 @@ TaxOnTree - Including taxonomic information in your phylogenetic tree
 
 =item B<Tree options>:
 
-[-treeProg software] [-treeTable table_file] [-printLeaves] [-treeRoot int_value] [-leafFmt string]
+[-treeProg software] [-treeRoot int_value] [-leafFmt string]
 
 =item B<Filter options>:
 
@@ -248,7 +248,7 @@ TaxOnTree - Including taxonomic information in your phylogenetic tree
 
 =item B<Other parameters>:
 
-[-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap tax_id] [-position int_value] [-delimiter string] [-numThreads int_value] [-mysql] [-taxRepFormat string] [-forceNoTxid] [-forceNoInternet]
+[-out file_name] [-queryID query_id] [-queryTax tax_id] [-txidMap tax_id] [-position int_value] [-delimiter string] [-numThreads int_value] [-mysql] [-printSamples] [-taxTable table_file] [-featureTable table_file]  [-taxRepFormat string] [-forceNoTxid] [-forceNoInternet]
 	
 =item B<Help>:
 
@@ -311,8 +311,8 @@ A tree file in NEWICK format. You must provide the protein in the tree to be con
 using -queryID. If all or most of leaves contain a protein accession from RefSeq or Uniprot, you can use
 -delimiter and -position to allow TaxOnTree extract the accession and retrieve the taxonomy ID of each
 proteins. Alternatively, you can provide a table containing the leaves (first column) and their
-corresponding taxonomy id (second column) using the option -treetable. To generate a file with all leaves
-name in your tree, use the option -printLeaves. 
+corresponding taxonomy id (second column) using the option -taxTable. To generate a file with all leaves
+name in your tree, use the option -printSamples. 
 
 =back
 
@@ -322,7 +322,7 @@ name in your tree, use the option -printLeaves.
 
 =item B<-db> <database_name> Default: refseq_protein
 
-BLAST-formatted database name. Work on -seqFile, -singleID, -blastFile and -listFile.
+BLAST-formatted database name. It works on -seqFile, -singleID, -blastFile and -listFile.
 
 For Standalone protein BLAST search, provide the address and the name (without extension) of the database. 
 Example: /home/user/taxontree/db, where db is the name of BLAST-formatted database. This option will
@@ -334,21 +334,21 @@ nr or refseq_protein.
 
 =item B<-evalue> <real_value> Default: 10e-5
 
-Expect value threshold for BLAST search. Work on -seqFile and -singleID.
+Expect value threshold for BLAST search. It works on -seqFile and -singleID.
 
 =item B<-threshold> <int_value> Default: 50
 
 Protein identity threshold. For each subject, TaxOnTree calculate its identity with the query after
 removing overlapping HSPs and considering the length of the query sequence. Threshold may vary between 0-100.
-Work on -seqFile, -blastFile and -singleID.
+It works on -seqFile, -blastFile and -singleID.
 
 =item B<-maxTarget> <int_value> Default: 200
 
-Max target sequence to be used for phylogenetic analysis. Work on -seqFile, -blastFile and -singleID.
+Max target sequence to be used for phylogenetic analysis. It works on -seqFile, -blastFile and -singleID.
 
 item B<-maxTargetBlast> <int_value>
 
-Max target sequence to be retrieved by BLAST. Work on -seqFile and -singleID.
+Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID.
 
 =back
 
@@ -359,13 +359,13 @@ Max target sequence to be retrieved by BLAST. Work on -seqFile and -singleID.
 =item B<-aligner> <aligner_software> Default: muscle
 
 Software for sequence alignment procedure. Configured options in CONFIG.xml are "muscle", "prank", 
-"clustalo" and "kalign". Work on -seqFile, -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. 
+"clustalo" and "kalign". It works on -seqFile, -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. 
 To add more aligners, see CONFIG.xml.
 
 =item B<-trimming> <trimming_software> Default: trimal
 
 Software for alignment trimming. The only configured option in CONFIG.xml is "trimal". 
-You can set "false" to skip this step. Work on -seqFile, -blastFile, -listFile, -mfastaFile, 
+You can set "false" to skip this step. It works on -seqFile, -blastFile, -listFile, -mfastaFile, 
 -alignFile and -singleID. To add more alignment trimming software, see CONFIG.xml.
 
 =back
@@ -377,38 +377,18 @@ You can set "false" to skip this step. Work on -seqFile, -blastFile, -listFile, 
 =item B<-treeProg> <tree reconstruction software> Default: FastTree
 
 Software for tree reconstruction. The only configured option in CONFIG.xml is "FastTree". 
-Work on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
+It works on -blastFile, -listFile, -mfastaFile, -alignFile and -singleID. To add more tree 
 reconstruction software, see CONFIG.xml.
-
-=item B<-treeTable> <table_name>
-
-A table containing the leaves of the input file in the first column and the correspondent taxonomy
-ID in the second. Use this option if the input tree does not contain an identifier from NCBI or Uniprot
-in its leaves. To obtain a list of leaves name in your tree, use the option -printLeaves. Work on -treeFile.
-
-Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
-
-=over 4
-
-	human	9606
-	chimp	9598
-	gorilla	9595
-
-=back
-
-=item B<-printLeaves>
-
-Print the leaves comprising your tree and exit. Use this to help you making the tree table file. Work on -treeFile.
 
 =item B<-treeRoot> Default: 1
 
-Define tree rooting mode. Use 0 to skip this step and 1 to root at midpoint. Work on all input.
+Define tree rooting mode. Use 0 to skip this step and 1 to root at midpoint. It works on all inputs.
 
 =item B<-leafFmt> Default: "lcaN;id;geneName;species"
 
 Leaf name format displayed in the tree. Data type available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName,
 rankcode, rankname. Use semicolons to separate the different data type. For "rankcode" and "rankname", include the taxonomic ranks that 
-you want to display separated with comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum,
+you want to display separated with comma and delimited by parenthesis. Example: rankname(order,family). Taxonomic rank options: superkingdom, kingdom, phylum, subphylum,
 superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
 
 =back
@@ -420,22 +400,22 @@ superclass, class, subclass, superorder, order, suborder, superfamily, family, s
 =item B<-showIsoform>
 
 TaxOnTree can automatically link the RefSeq or Uniprot protein to a GeneID and discards its isoforms 
-from further analysis. Use this option to allow isoforms in the tree. Work on all inputs.
+from further analysis. Use this option to allow isoforms in the tree. It works on all inputs.
 
 =item B<-lcaLimit> <int_value>
 
 Exclude all sequences from organisms which the LCA level with the query organism is below the provided level. 
-Work on all inputs.
+It works on all inputs.
 
 =item B<-lcaLimitDown> <int_value>
 
 Exclude all sequences from organisms which the LCA level with the query organism is above the provided level. 
-Work on all inputs.
+It works on all inputs.
 
 =item B<-taxFilterCat>
 
 Filter sequences by category which could be a taxonomic rank or by LCA. If "kingdom" is provided, it'll leave 
-sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. Work on all inputs.
+sequences from N organisms in each kingdom found in the tree. Use -taxFilter to define the N. It works on all inputs.
 
 Categories allowed: lca, superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, 
 superfamily, family, subfamily, genus, subgenus, species, subspecies.
@@ -444,12 +424,12 @@ superfamily, family, subfamily, genus, subgenus, species, subspecies.
 
 Filter sequences by category which could be a taxonomic rank or by LCA. If 2 is provided, it'll leave 
 sequences from 2 organisms in each category found in the tree. Use -taxFilterCat to define the category. 
-Work on all inputs.
+It works on all inputs.
 
 =item B<-restrictTax> <list_file>
 
 Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms which 
-have their taxonomy ID listed in the file. Work on all inputs.
+have their taxonomy ID listed in the file. It works on all inputs.
 
 =back
 
@@ -460,25 +440,63 @@ have their taxonomy ID listed in the file. Work on all inputs.
 =item B<-txidMap> <taxonomy_id>
 
 Force TaxOnTree to consider the taxonomy ID provided by this option to be mapped in the tree. Example: "9606"
-for human. Work on all inputs. 
+for human. It works on all inputs. 
 
 =item B<-queryTax> <taxonomy_id>
 
-NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. Works only in -seqFile. 
+NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. It works only in -seqFile. 
 
 =item B<-queryID> <query_id>
 
-Protein accession or name in the list or tree to be considered as query. Work on -blastFile, -listFile, -mfastaFile
+Protein accession or name in the list or tree to be considered as query. It works on -blastFile, -listFile, -mfastaFile
 -alignFile and -treeFile. 
+
+=item B<-printSamples>
+
+Print the leaf/sample names comprising your input and exit. Use this to help you making 
+the tax- or feature-table file. It works on -mfastaFile, -alignFile and -treeFile.
+
+=item B<-taxTable> <table_name>
+
+A tab-delimited table containing the leaf/sample name of the input file in the first column and the correspondent taxonomy
+ID in the second. Use this option if the input tree does not contain an identifier from NCBI or Uniprot
+in its name. To obtain a list of leaf/sample name of your tree, use the option -printSamples. It works on -treeFile.
+
+Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
+
+=over 4
+
+	human	9606
+	chimp	9598
+	gorilla	9595
+
+=back
+
+=item B<-featureTable> <table_name>
+
+A tab-delimited table containing the leaf/sample names of the input file in the first column and the correspondent
+classification of a feature in the remaining columns. Use this parameter to add other features as tags on the tree nodes.
+To obtain a list of leaf/sample name of your tree, use the option -printSamples. In FigTree, each feature will be
+named as 'feature'+(columnNumber). It works on all inputs.
+
+Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
+
+=over 4
+
+	human	susceptible  omnivore
+	chimp	susceptible  omnivore
+	gorilla	resitant     herbivore
+
+=back
 
 =item B<-forceNoTxid>
 
 Retain entries in which TaxOnTree could not determine their taxonomy ID. These entries will
-be assigned with the taxonomy ID of root (txid:1). Work on all inputs.
+be assigned with the taxonomy ID of root (txid:1). It works on all inputs.
 
 =item B<-forceNoInternet>
 
-Force TaxOnTree to not use internet connection to retrieve data. Work on all inputs.
+Force TaxOnTree to not use internet connection to retrieve data. It works on all inputs.
 
 =item B<-out> <file_name> Default: Input name
 
