@@ -3090,7 +3090,7 @@ sub defineIdSubject {
 			
 			# retrieve geneID of missing accession
 			if (scalar @gene2retrieve > 0){
-				if (exists $leafNameOptions{"genename"} or $leafNameOptions{"geneid"}){
+				#if (exists $leafNameOptions{"genename"} or $leafNameOptions{"geneid"}){
 					my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
 					my %linkGene = %$ref_linkGene;
 					foreach my $keySubject(@gene2retrieve){
@@ -3117,7 +3117,7 @@ sub defineIdSubject {
 							}
 						}						
 					}
-				}
+				#}
 			}
 		}
 	}
