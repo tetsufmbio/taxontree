@@ -83,7 +83,7 @@ the following message after the command `./taxontree -version`.
 TaxOnTree v.1.10.1
 ```
 
-A sample Newick file is also provided for test in sample folder. Try the following command:
+A sample Newick file is also provided for test in *sample* folder. Try the following command:
 
 ```bash
 > ./taxontree -treefile sample/test.nwk -queryid 544509544
