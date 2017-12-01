@@ -44,9 +44,7 @@ easily access the taxonomic information of all entities comprising the tree.
 ```bash
 > git clone https://github.com/tetsufmbio/taxontree.git
 > cd taxontree
-> ./install.sh  # Here you'll be asked for your email address and
-                # if you want to configure TaxOnTree to access a local MySQL.
-                # MySQL configuration can be done lately.
+> ./install.sh  # Here you'll be asked for your email address.
 ```
 
 > NOTE: A **valid email address** is required for TaxOnTree execution to request data from
@@ -82,10 +80,10 @@ the following message after the command `./taxontree -version`.
         This is free software, and you are welcome to redistribute it under
         certain conditions. See GNU general public license v.3 for details.
 
-TaxOnTree v.1.10
+TaxOnTree v.1.10.1
 ```
 
-A sample Newick file is also provided for test in sample folder. Try the following command:
+A sample Newick file is also provided for test in *sample* folder. Try the following command:
 
 ```bash
 > ./taxontree -treefile sample/test.nwk -queryid 544509544
