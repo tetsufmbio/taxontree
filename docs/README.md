@@ -113,8 +113,8 @@ Some prerequisites are required to run TaxOnTree. They are:
 
   [OpenSSL](https://www.openssl.org/) package is required by TaxOnTree to communicate 
   with NCBI server which uses HTTPS communication protocol. Run the command `openssl version`
-  to verify if it is installed in your system. This can be installed using the installation 
-  tool of your Unix distribution (`sudo apt-get install libssl-dev` for Debian or 
+  to verify if it is installed in your system. If not, use the installation 
+  tool of your Unix distribution for its installation (`sudo apt-get install libssl-dev` for Debian or 
   `sudo yum install openssl-dev` for RPM based distribution).
 
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/).
