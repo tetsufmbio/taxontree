@@ -171,10 +171,10 @@ the following message after the command `./taxontree -version`.
         This is free software, and you are welcome to redistribute it under
         certain conditions. See GNU general public license v.3 for details.
 
-TaxOnTree v.1.10
+TaxOnTree v.1.10.1
 ```
 
-In sample folder, there is a Newick file to test if TaxOnTree is working. Try the following command:
+In *sample* folder, there is a Newick file to test if TaxOnTree is working. Try the following command:
 
 ```bash
 > ./taxontree -treefile sample/test.nwk -queryid 544509544
