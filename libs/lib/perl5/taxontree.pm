@@ -73,7 +73,7 @@ my $taxFilterCat;
 my $restrictTax;
 my $forceNoTxid;
 my $forceNoInternet;
-
+my $considerIPG;
 my $TaxOnTreeVersion;
 
 sub inputs {
@@ -126,6 +126,7 @@ sub inputs {
 	$restrictTax = $inputs->{"restrictTax"};
 	$forceNoTxid = $inputs->{"forceNoTxid"};
 	$forceNoInternet = $inputs->{"forceNoInternet"};
+	$noIPG = $inputs->{"noIPG"};
 	$TaxOnTreeVersion = $_[1];
 	return 1;
 }
@@ -2619,7 +2620,9 @@ sub defineIdSubject {
 	my %listAccessions;
 	my %geneID2geneName;
 	my %accession2gi;
+	my %gi2accession;
 	my @gene2retrieve;
+	my @ipg2retrieve;
 	foreach my $id(@subjectList){
 		chomp $id;
 		my $idNoVersion = $id;
@@ -3068,6 +3071,7 @@ sub defineIdSubject {
 				foreach my $refseqGI (@refseqGI){
 					if (exists ($accession2gi{$refseqGI})){
 						my $accession2 = $accession2gi{$refseqGI};
+						$gi2accession{$accession2} = $refseqGI; #
 						my ($identifier, $version) = split(/\./, $accession2, 2);
 						if (exists $refseqData{$identifier}{"v"}{$version}){
 							$definedID{$refseqGI}{"id"} = $accession2gi{$refseqGI};
@@ -3119,6 +3123,41 @@ sub defineIdSubject {
 					}
 				#}
 			}
+			
+			# retrieve IPG of missing accession
+			if (!$noIPG){
+				if (scalar @ipg2retrieve > 0){
+					my $ref_linkGene = retrieveIPG(\@ipg2retrieve);
+					my %linkGene = %$ref_linkGene;
+					foreach my $keySubject(@ipg2retrieve){
+						
+						my ($accNoVersion, $version) = split(/\./, $keySubject, 2);
+						
+						if (exists $linkGene{$accNoVersion}){
+							if (!$version){
+								$version = $linkGene{$accNoVersion}{"vmax"};
+							}
+							if (exists $linkGene{$accNoVersion}{"v"}{$version}){
+								if (exists $definedID{$keySubject}){
+									$definedID{$keySubject}{"mtax"} = { %{$linkGene{$accNoVersion}{"v"}{$version}} };
+								}
+								
+								if (exists $definedID{$accNoVersion}){
+									$definedID{$accNoVersion}{"mtax"} = { %{$linkGene{$accNoVersion}{"v"}{$linkGene{$accNoVersion}{"vmax"}}} };
+								}
+							}
+						}
+						
+						if (exists $gi2accession{$keySubject}){
+							$keySubject = $gi2accession{$keySubject};
+							if (exists $definedID{$keySubject}){
+								$definedID{$keySubject}{"mtax"} = { %{$linkGene{$accNoVersion}{"v"}{$version}} };
+							}
+						}
+					}
+				}
+			}
+			
 		}
 	}
 	

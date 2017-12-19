@@ -115,6 +115,7 @@ $inputs{"taxFilterCat"} = "species";
 $inputs{"restrictTax"} = undef;
 $inputs{"forceNoTxid"} = undef;
 $inputs{"forceNoInternet"} = undef;
+$inputs{"noIPG"} = undef;
 my $help		= 0;
 my $man			= 0;
 my $version = undef;
@@ -164,6 +165,7 @@ GetOptions(
 	'restrictTax=s'		=> \$inputs{"restrictTax"},
 	'forceNoTxid!'		=> \$inputs{"forceNoTxid"},
 	'forceNoInternet!'		=> \$inputs{"forceNoInternet"},
+	'noIPG!'		=> \$inputs{"noIPG"},
 ) or pod2usage(-verbose => 99, 
             -sections => [ qw(NAME SYNOPSIS) ] );
 
