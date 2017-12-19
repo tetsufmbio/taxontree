@@ -1494,7 +1494,7 @@ sub checkInfoTxid {
 	my @newList;
 	print "  Checking taxonomy data:\n";
 	foreach my $key(@list){
-		if (exists $treeTableHash{$generalInfo{$key}{"name"}}){
+		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"name"} && exists $treeTableHash{$generalInfo{$key}{"name"}}){
 			# Incorporate treeTableHash data
 			push(@newList, $key);
 			$generalInfo{$key}{"txid"} = $treeTableHash{$generalInfo{$key}{"name"}};
@@ -1504,12 +1504,18 @@ sub checkInfoTxid {
 				push(@newList, $key);
 				$map_txid{"txids"}{$generalInfo{$key}{"txid"}} = {};
 			} else {
+				my $name;
+				if (exists $generalInfo{$key} && $generalInfo{$key}{"name"}){
+					$name = $generalInfo{$key}{"name"};
+				} else {
+					$name = $key;
+				}
 				if ($forceNoTxid){
-					print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". It was set to 1.\n";
+					print "    NOTE: Could not retrieve txid from ".$name.". It was set to 1.\n";
 					push(@newList, $key);
 					$generalInfo{$key}{"txid"} = 1;
 				} else {
-					print "    NOTE: Could not retrieve txid from ".$generalInfo{$key}{"name"}.". This entry will be discarded.\n";
+					print "    NOTE: Could not retrieve txid from ".$name.". This entry will be discarded.\n";
 				}
 			}
 		}		
