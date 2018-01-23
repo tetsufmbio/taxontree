@@ -1275,6 +1275,92 @@ sub treeFile {
 }
 ###################### subroutine ######################
 
+sub retrieveIPG {
+	my @subjectList = @_;
+	
+	my @newList;
+	foreach my $subject (@subjectList){
+		if ($subject =~ /^WP_/){
+			push (@newList, $subject);
+		}
+	}
+	
+	my %hash_ipg;
+	
+	if (scalar @newList > 0){
+		my %missingList;
+		@missingList{@newList} = ();
+		if ($mysqlInfo{"connection"}){
+			if (exists $mysqlInfo{"table"}{"refseq_ipg"}){
+				my $n = -1;
+				my $m = -100;
+				do {
+					$n = $n + 100;
+					$m = $m + 100;
+					$n = $#newList if ($n > $#newList);
+					my $results = $wire->query("SELECT * FROM refseq_ipg where accession in ('".join("','", @newList[$m .. $n])."');");
+					while (my $row = $results->next_hash) {
+						my $id = $row->{accession};
+						my $txid = $row->{txid};
+						$hash_ipg{$id}{$txid} = 1;
+						delete $missingList{$id};
+					}
+				} while ($n < $#newList)
+			}
+		}
+		
+		my @newList = keys %missingList;
+		if (scalar @newList > 0){
+			if ($internetConnection == 1){
+				my $n = -1;
+				my $m = -50;
+				do {
+					$n = $n + 50;
+					$m = $m + 50;
+					$n = $#newList if ($n > $#newList);
+					
+					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=tetsufmbio\@gmail.com&db=protein&retmode=xml&rettype=ipg&id=".join(",",@newList[$m..$n]);
+					my $fetch_lineage;
+					my $errorCount = -1;
+					do {
+						my $response = HTTP::Tiny->new->get($url_fetch_seq);
+						$fetch_lineage = $response->{content};
+						$errorCount++;
+						sleep 1;
+					} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
+					if ($errorCount > 4){
+						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
+					}
+					my $xs2 = XML::Simple->new();
+					my $doc_lineage = $xs2->XMLin($fetch_lineage, KeyAttr => "accver", ForceArray => ["IPGReport"]);
+					
+					my @linkSet = @{$doc_lineage->{"IPGReport"}};
+
+					foreach my $link(@linkSet){
+						my $accession = $link->{"product_acc"};
+						my $cds = $link->{"ProteinList"}->{"Protein"}->{$accession}->{"CDSList"}->{"CDS"};
+						if (exists $cds->{"taxid"}){
+							my $txid = $cds->{"taxid"};
+							$hash_ipg{$accession}{$txid} = 1;
+						} else {
+							foreach my $cds2 (keys %{$cds}){
+								my $txid = $cds->{$cds2}->{"taxid"};
+								$hash_ipg{$accession}{$txid} = 1;
+							}
+						}
+					}
+			
+					sleep 1;
+					
+				} while ($n < $#newList);
+			}
+		}
+	}
+	
+	return \%hash_ipg;
+}
+
+
 sub incorporateTreeTable{
 
 	foreach my $key(keys %generalInfo){
