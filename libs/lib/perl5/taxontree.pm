@@ -2625,6 +2625,7 @@ sub defineIdSubject {
 	my %listAccessions;
 	my %geneID2geneName;
 	my %accession2gi;
+	my %gi2accession;
 	my @gene2retrieve;
 	foreach my $id(@subjectList){
 		chomp $id;
@@ -2986,6 +2987,34 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
+					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]).",4757876";
+					my $fetch_lineage2;
+					my $errorCount2 = -1;
+					do {
+						my $response = HTTP::Tiny->new->get($url_fetch_id);
+						$fetch_lineage2 = $response->{content};
+						$errorCount2++;
+						sleep 1;
+					} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+					if ($errorCount2 > 4){
+						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
+					}
+					
+					my @ids = split(/\n\n/, $fetch_lineage2);
+					foreach my $ids (@ids){
+						$ids =~ /accession \"([^\" ]+)\" ,/;
+						my $acc = $1;
+						$ids =~  /version (\d+) /;
+						my $ver = $1;
+						$ids =~  /Seq-id ::= gi (\d+)/;
+						my $gi = $1;
+						if ($gi && $acc){
+							$accession2gi{$gi} = $acc.".".$ver;
+							$gi2accession{$acc.".".$ver} = $gi;
+						}
+						
+					}
+					
 					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@allRefseqAccession[$m .. $n]);
 					my $fetch_lineage;
 					my $errorCount = -1;
@@ -3005,7 +3034,7 @@ sub defineIdSubject {
 					foreach my $link(@linkSet){
 					
 						my $type = $link->{"TSeq_seqtype"}->{"value"};
-						my $gi = $link->{"TSeq_gi"};
+						#my $gi = $link->{"TSeq_gi"};
 						my $accession = $link->{"TSeq_accver"};
 						$accession =~ /\.(\d+)$/;
 						my $version = $1;
@@ -3016,15 +3045,21 @@ sub defineIdSubject {
 						$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
 						$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
 						$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
-						$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+						if (exists $gi2accession{$accession.".".$version}){
+							my $gi = $gi2accession{$accession.".".$version};
+							$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+						} else {
+							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+						}
 						$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
-						$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+						
 						if (exists $refseqData{$accession}{"vmax"}){
 							$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
 						} else {
 							$refseqData{$accession}{"vmax"} = $version;
 						}
-						$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
+						#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
 					}
 					
 					sleep 1;
@@ -3045,21 +3080,27 @@ sub defineIdSubject {
 							}
 							
 							if (exists $refseqData{$identifier}{"v"}{$version}){
-								$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
+								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
+									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 								$definedID{$identifier2}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
 								$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
-								push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+								
 							} elsif (exists $refseqData{$identifier}) {
 								$version = $refseqData{$identifier}{"vmax"};
-								$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
+								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
+									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 								$definedID{$identifier2}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
 								$definedID{$identifier2}{"geneID"} = "NULL";
 								$definedID{$identifier2}{"geneName"} = "NULL";
-								push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+								
 							} else {
 								print "  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.\n";
 								delete $definedID{$refseqAC} if (exists $definedID{$refseqAC});
