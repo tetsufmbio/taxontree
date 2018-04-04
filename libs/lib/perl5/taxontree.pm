@@ -549,8 +549,20 @@ sub check {
 		print "\n  OK!\n";
 	}
 
-	# check taxfiltercat
+	# check taxfilter and taxfiltercat
+	if ($taxFilter){
+		if (!$taxFilterCat){
+			die "/nERROR: -taxFilterCat not provided.\n";
+		}
+		if ($taxFilter =~ /(^\d)/){
+			die "/nERROR: data provided in -taxFilter is not a number.\n";
+		}
+	}
+	
 	if ($taxFilterCat){
+		if (!$taxFilter){
+			die "/nERROR: -taxFilter not provided.\n";
+		}
 		$taxFilterCat = lc($taxFilterCat);
 		if ($taxFilterCat ne "lca" and !exists $ranks{$taxFilterCat}){
 			die "/nERROR: data provided in -taxFilterCat is not lca or a taxonomic rank.\n";
