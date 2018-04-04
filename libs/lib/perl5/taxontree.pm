@@ -554,7 +554,7 @@ sub check {
 		if (!$taxFilterCat){
 			die "/nERROR: -taxFilterCat not provided.\n";
 		}
-		if ($taxFilter =~ /(^\d)/){
+		if ($taxFilter =~ /[^\d]/){
 			die "/nERROR: data provided in -taxFilter is not a number.\n";
 		}
 	}
