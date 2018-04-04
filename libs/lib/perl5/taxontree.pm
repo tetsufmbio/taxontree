@@ -1622,7 +1622,7 @@ sub taxFilter {
 	my $queryTxid2 = $queryInfo{"txid"};
 	$filterTax{"txid"}{$queryTxid2} = 1;	
 	
-	if ($taxFilter2 ne "lca"){
+	if ($taxFilterCat2 ne "lca"){
 		my @taxSimple_ranks = (
 			"superkingdom",
 			"kingdom",
