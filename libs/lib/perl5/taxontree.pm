@@ -550,8 +550,20 @@ sub check {
 		print "\n  OK!\n";
 	}
 
-	# check taxfiltercat
+	# check taxfilter and taxfiltercat
+	if ($taxFilter){
+		if (!$taxFilterCat){
+			die "/nERROR: -taxFilterCat not provided.\n";
+		}
+		if ($taxFilter =~ /[^\d]/){
+			die "/nERROR: data provided in -taxFilter is not a number.\n";
+		}
+	}
+	
 	if ($taxFilterCat){
+		if (!$taxFilter){
+			die "/nERROR: -taxFilter not provided.\n";
+		}
 		$taxFilterCat = lc($taxFilterCat);
 		if ($taxFilterCat ne "lca" and !exists $ranks{$taxFilterCat}){
 			die "/nERROR: data provided in -taxFilterCat is not lca or a taxonomic rank.\n";
@@ -1709,7 +1721,7 @@ sub taxFilter {
 	my $queryTxid2 = $queryInfo{"txid"};
 	$filterTax{"txid"}{$queryTxid2} = 1;	
 	
-	if ($taxFilter2 ne "lca"){
+	if ($taxFilterCat2 ne "lca"){
 		my @taxSimple_ranks = (
 			"superkingdom",
 			"kingdom",
@@ -2258,7 +2270,9 @@ sub retrieveInfoNCBI {
 	my @refseqlist = @$refrefseqlist;
 	my %refseqData;
 	#my %refseqDataHeader;
-
+	my %accession2gi;
+	my %gi2accession;
+	
 	my $n = -1;
 	my $m = -50;
 	
@@ -2266,6 +2280,34 @@ sub retrieveInfoNCBI {
 		$n = $n + 50;
 		$m = $m + 50;
 		$n = $#refseqlist if ($n > $#refseqlist);
+		
+		my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@refseqlist[$m .. $n]);
+		my $fetch_lineage2;
+		my $errorCount2 = -1;
+		do {
+			my $response = HTTP::Tiny->new->get($url_fetch_id);
+			$fetch_lineage2 = $response->{content};
+			$errorCount2++;
+			sleep 1;
+		} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+		if ($errorCount2 > 4){
+			die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
+		}
+		
+		my @ids = split(/\n\n/, $fetch_lineage2);
+		foreach my $ids (@ids){
+			$ids =~ /accession \"([^\" ]+)\" ,/;
+			my $acc = $1;
+			$ids =~  /version (\d+) /;
+			my $ver = $1;
+			$ids =~  /Seq-id ::= gi (\d+)/;
+			my $gi = $1;
+			if ($gi && $acc){
+				$accession2gi{$gi} = $acc.".".$ver;
+				$gi2accession{$acc.".".$ver} = $gi;
+			}
+			
+		}
 		
 		my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@refseqlist[$m .. $n]);
 		my $fetch_lineage;
@@ -2282,19 +2324,35 @@ sub retrieveInfoNCBI {
 		my $xs2 = XML::Simple->new();
 		my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
 		
-			my @linkSet = @{$doc_lineage->{"TSeq"}};
-					
-			foreach my $link(@linkSet){
+		my @linkSet = @{$doc_lineage->{"TSeq"}};
+				
+		foreach my $link(@linkSet){
+		
+			#my $gi = $link->{"TSeq_gi"} if ($link->{"TSeq_gi"});
+			my $accession = $link->{"TSeq_accver"};
+			my $seq = $link->{"TSeq_sequence"};
+			#$refseqData{$accession}{"seq"} = $seq;
+			$accession =~ /\.(\d+)$/;
+			my $version = $1;
+			$accession =~ s/\.\d+//;
+			#$refseqData{$accession}{"seq"} = $seq;
+			#$refseqData{$gi2accession{$accession}}{"seq"} = $seq if (exists $gi2accession{$accession});
+			#$refseqDataHeader{$accession}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+
+			$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+			if (exists $gi2accession{$accession.".".$version}){
+				my $gi = $gi2accession{$accession.".".$version};
+				$refseqData{$gi}{"seq"} = $seq;
+			} 
 			
-				my $gi = $link->{"TSeq_gi"} if ($link->{"TSeq_gi"});
-				my $accession = $link->{"TSeq_accver"};
-				my $seq = $link->{"TSeq_sequence"};
-				$refseqData{$accession}{"seq"} = $seq;
-				$accession =~ s/\.\d*//;
-				$refseqData{$accession}{"seq"} = $seq;
-				$refseqData{$gi}{"seq"} = $seq if ($gi);
-				#$refseqDataHeader{$accession}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+			if (exists $refseqData{$accession}{"vmax"}){
+				$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
+			} else {
+				$refseqData{$accession}{"vmax"} = $version;
 			}
+			
+			
+		}
 			
 		sleep 1;
 			
@@ -2480,29 +2538,25 @@ sub excludeOverlapHSP {
 	
 	for (my $i = 0; $i < scalar @blast_result; $i++){
 
-		if ($blast_result[$i] =~ m/^#/){
-		#	if ($blast_result[$i] =~ m/^# RID: /){
-		#		$webBlast = 1;
-		#	}
-			next;
-		}
+		$webBlast = 1 if (!$local);
 		
 		chomp $blast_result[$i];
 		$blast_result[$i] =~ s/\r//g;
 		
 		my ($qseqid, $sseqid, $pident, $positive, $length, $mismatch, $gapopen, $qstart, 
 							$qend, $sstart, $send, $evalue2, $bitscore, $rest);
-		
-		#if ($webBlast){
-		#	($qseqid, $sseqid, $pident, $positive, $length, $mismatch, $gapopen, $qstart, 
-		#					$qend, $sstart, $send, $evalue2, $bitscore, $rest) = split("\t", $blast_result[$i], 14);
-		#} else {
+	
+		if ($webBlast){
+			($qseqid, $sseqid, $pident, $mismatch, $gapopen, $qstart, 
+							$qend, $sstart, $send, $evalue2, $bitscore, $positive, $rest) = split("\t", $blast_result[$i], 14);
+		} else {
 			($qseqid, $sseqid, $pident, $length, $mismatch, $gapopen, $qstart, 
 							$qend, $sstart, $send, $evalue2, $bitscore, $rest) = split("\t", $blast_result[$i], 13);
-		#}
+		}
 		
 		# check data		
 		next if (!$bitscore);
+		$length = $qend - $qstart + 1;
 		my $error;
 		my $join = $length.$mismatch.$gapopen.$qstart.$qend.$sstart.$send;
 		if ($join !~ /^\d+$/){
@@ -3075,7 +3129,7 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
-					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]).",4757876";
+					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]);
 					my $fetch_lineage2;
 					my $errorCount2 = -1;
 					do {
@@ -3684,10 +3738,27 @@ sub retrieveSubjectInfo {
 		if (scalar @refseqAC + scalar @refseqGI > 0 ){
 			my @joinList = (@refseqAC, @refseqGI);
 			my $refNCBIData = retrieveInfoNCBI(\@joinList);
-			foreach my $id(@joinList){
+			foreach my $id(@refseqGI){
 				if (exists $refNCBIData->{$id}){
 					$definedID{$id}{"seq"} = $refNCBIData->{$id}->{"seq"};
 					delete ($missingID{$id});
+				} else {
+					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+				}
+			}
+			foreach my $id(@refseqAC){
+				if (exists $refNCBIData->{$id}){
+					my $vmax = $refNCBIData->{$id}->{"vmax"};
+					$definedID{$id}{"seq"} = $refNCBIData->{$id}->{"v"}->{$vmax}->{"seq"};
+					delete ($missingID{$id});
+				} elsif ($id =~ /\.(\d+)$/) {
+					my $version = $1;
+					$id =~ s/\.\d+//;
+					if (exists $refNCBIData->{$id}->{"v"}->{$version}->{"seq"}){
+						$definedID{$id.".".$version}{"seq"} = $refNCBIData->{$id}->{"v"}->{$version}->{"seq"};
+					} else {
+						print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					}
 				} else {
 					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
 				}
