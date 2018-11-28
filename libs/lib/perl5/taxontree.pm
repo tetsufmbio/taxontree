@@ -3200,7 +3200,7 @@ sub defineIdSubject {
 						
 						if (exists $linkGene{$keySubject}){
 							$geneID = $linkGene{$keySubject}{"geneID"};
-							$geneID2geneName{$geneID} = "NULL";							
+							$geneID2geneName{$geneID} = "NULL";
 						} 
 						
 						if (exists $definedID{$keySubject}){
@@ -3272,7 +3272,7 @@ sub retrieveGeneNCBI {
 			}
 			my $xs1 = XML::Simple->new();
 			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["LinkSet"]);
-					
+			
 			my @linkSet = @{$doc_link->{"LinkSet"}};
 					
 			foreach my $link(@linkSet){
@@ -3294,7 +3294,7 @@ sub retrieveGeneNCBI {
 					} else {
 						die "\nERROR: problem with this protein: $protID. Please contact me (tetsufmbio\@gmail.com)";
 					}
-					#
+					
 				} else {
 					$linkGene{$protID}{"geneID"} = "NULL";
 					$linkGene{$protID}{"geneName"} = "NULL";
@@ -3345,10 +3345,16 @@ sub retrieveGeneNCBI {
 			
 			sleep 1;
 			
-		} while ($n < $#giObsolete);	
+		} while ($n < $#giObsolete);
+
+		foreach my $giObsolete (@giObsolete){
+			if ($linkGene{$giObsolete}{"geneID"} eq "NULL"){
+				delete $linkGene{$giObsolete};
+			}
+		}
 	
 	}
-	
+
 	return \%linkGene;
 }
 
@@ -3397,6 +3403,7 @@ sub retrieveGeneName {
 			my $response = HTTP::Tiny->new->get($url_fetch_seq);
 			my $link_xml;
 			my $errorCount = -1;
+			
 			do {
 				my $response = HTTP::Tiny->new->get($url_fetch_seq);
 				$link_xml = $response->{content};
