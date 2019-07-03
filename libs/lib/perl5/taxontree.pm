@@ -2689,38 +2689,41 @@ sub defineIdSubject {
 		$definedID{$id}{"name"} = $id;
 		
 		my $subjectType = verifyID($id);
-		if (!$subjectType){
-			if(!exists $treeTableHash{$id}){
-				print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
-			} else {
-				$definedID{$id}{"type"} = "other";
+		
+		if(exists $treeTableHash{$id}){
+			$definedID{$id}{"type"} = "other";
+			$definedID{$id}{"id"} = $id;
+			$definedID{$id}{"accession"} = $id;
+			$definedID{$id}{"geneID"} = "NULL";
+			$definedID{$id}{"geneName"} = "NULL";
+			$definedID{$id}{"txid"} = $treeTableHash{$id};
+		} else {
+			if (!$subjectType){
+			
+			print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
+			
+			} elsif ($subjectType eq "uniprot_id"){
+				$definedID{$id}{"type"} = "uniprot_id";
+				$hashJoinIDUniprot{$id} = "uniprot_id";
+			} elsif ($subjectType eq "uniprot_ac"){
 				$definedID{$id}{"id"} = $id;
-				$definedID{$id}{"accession"} = $id;
-				$definedID{$id}{"geneID"} = "NULL";
-				$definedID{$id}{"geneName"} = "NULL";
-				$definedID{$id}{"txid"} = $treeTableHash{$id};
-			}
-		} elsif ($subjectType eq "uniprot_id"){
-			$definedID{$id}{"type"} = "uniprot_id";
-			$hashJoinIDUniprot{$id} = "uniprot_id";
-		} elsif ($subjectType eq "uniprot_ac"){
-			$definedID{$id}{"id"} = $id;
-			$definedID{$id}{"type"} = "uniprot_ac";
-			$idNoVersion =~ s/-\d+$//;
-			$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
-			$hashJoinIDUniprot{$id} = "uniprot_ac";			
-		} elsif ($subjectType eq "ncbi_gi"){
-			
-			$definedID{$id}{"type"} = "ncbi_gi";
-			$hashJoinIDNCBI{$id} = "ncbi_gi";
-		} elsif ($subjectType eq "ncbi_ac"){
-			
-			$definedID{$id}{"id"} = $id;
-			$definedID{$id}{"type"} = "ncbi_ac";
+				$definedID{$id}{"type"} = "uniprot_ac";
+				$idNoVersion =~ s/-\d+$//;
+				$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
+				$hashJoinIDUniprot{$id} = "uniprot_ac";			
+			} elsif ($subjectType eq "ncbi_gi"){
+				
+				$definedID{$id}{"type"} = "ncbi_gi";
+				$hashJoinIDNCBI{$id} = "ncbi_gi";
+			} elsif ($subjectType eq "ncbi_ac"){
+				
+				$definedID{$id}{"id"} = $id;
+				$definedID{$id}{"type"} = "ncbi_ac";
 
-			$hashJoinIDNCBI{$id} = "ncbi_ac";
-			$idNoVersion =~ s/\.\d+$//;
-		}
+				$hashJoinIDNCBI{$id} = "ncbi_ac";
+				$idNoVersion =~ s/\.\d+$//;
+			}
+		}		
 		
 		$version2accession{$idNoVersion}{$id} = 1;
 		$accession2version{$id} = $idNoVersion;
