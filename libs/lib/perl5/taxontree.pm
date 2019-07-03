@@ -3044,7 +3044,7 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
-					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]);
+					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]);
 					my $fetch_lineage2;
 					my $errorCount2 = -1;
 					do {
