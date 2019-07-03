@@ -3072,7 +3072,7 @@ sub defineIdSubject {
 						
 					}
 					
-					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@allRefseqAccession[$m .. $n]);
+					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@allRefseqAccession[$m .. $n]);
 					my $fetch_lineage;
 					my $errorCount = -1;
 					do {
@@ -3097,11 +3097,11 @@ sub defineIdSubject {
 						my $version = $1;
 						$accession =~ s/\.\d+//;
 						my $txid = $link->{"TSeq_taxid"};
-						my $seq = $link->{"TSeq_sequence"};
+						#my $seq = $link->{"TSeq_sequence"};
 
 						$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
 						$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
-						$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+						#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
 						if (exists $gi2accession{$accession.".".$version}){
 							my $gi = $gi2accession{$accession.".".$version};
 							$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
@@ -3144,7 +3144,7 @@ sub defineIdSubject {
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 								$definedID{$identifier2}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
-								$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+								#$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
 								
 							} elsif (exists $refseqData{$identifier}) {
 								$version = $refseqData{$identifier}{"vmax"};
@@ -3179,7 +3179,7 @@ sub defineIdSubject {
 							$definedID{$refseqGI}{"accession"} = $refseqGI;
 							$definedID{$refseqGI}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 							$definedID{$refseqGI}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
-							$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+							#$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
 							push (@gene2retrieve, $refseqGI); # to retrieve geneID, GI is required
 						} else {
 							print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
