@@ -3117,6 +3117,9 @@ sub defineIdSubject {
 				
 				if (scalar @refseqProt > 0){
 					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqProt if ($n > $#refseqProt);
 						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqProt[$m .. $n]);
 						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
 						
@@ -3164,6 +3167,9 @@ sub defineIdSubject {
 				
 				if (scalar @refseqNucl > 0){
 					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqNucl if ($n > $#refseqNucl);
 						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqNucl[$m .. $n]);
 						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
 						
