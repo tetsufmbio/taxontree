@@ -3229,18 +3229,20 @@ sub defineIdSubject {
 							if (exists $refseqData{$identifier}{"v"}{$version}){
 								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
 									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
-									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 								$definedID{$identifier2}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
 								#$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+								$definedID{$identifier2}{"geneID"} = "NULL";
+								$definedID{$identifier2}{"geneName"} = "NULL";
 								
 							} elsif (exists $refseqData{$identifier}) {
 								$version = $refseqData{$identifier}{"vmax"};
 								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
 									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
-									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
