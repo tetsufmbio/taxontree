@@ -3272,7 +3272,7 @@ sub defineIdSubject {
 							$definedID{$refseqGI}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 							$definedID{$refseqGI}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
 							#$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
-							push (@gene2retrieve, $refseqGI); # to retrieve geneID, GI is required
+							push (@gene2retrieve, $refseqGI) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 						} else {
 							print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
 							delete $definedID{$refseqGI};
