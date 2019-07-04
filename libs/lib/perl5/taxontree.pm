@@ -2840,7 +2840,7 @@ sub defineIdSubject {
 							} else {
 								$definedID{$id}{"geneID"} = "NULL";
 								$definedID{$id}{"geneName"} = "NULL";
-								push (@gene2retrieve, $id);
+								#push (@gene2retrieve, $id);
 							}
 							$definedID{$id}{"txid"} = $txid;
 							delete $hashJoinIDNCBI{$id};
@@ -2878,7 +2878,7 @@ sub defineIdSubject {
 								} else {
 									$definedID{$ac}{"geneID"} = "NULL";
 									$definedID{$ac}{"geneName"} = "NULL";
-									push (@gene2retrieve, $id);
+									#push (@gene2retrieve, $id);
 									$accession2gi{$id} = $ac;
 									
 								}
