@@ -3036,6 +3036,8 @@ sub defineIdSubject {
 			my $m = -50;
 			my @refseqGI = keys %{$listAccessions{"ncbi_gi"}};
 			my @refseqAC = keys %{$listAccessions{"ncbi_ac"}};
+			my (@refseqProt, @refseqNucl);
+			
 			if (scalar @refseqGI + scalar @refseqAC > 0){
 				my %refseqData;
 				my @allRefseqAccession = (@refseqGI, @refseqAC);
@@ -3044,20 +3046,12 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
-					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]);
-					my $fetch_lineage2;
-					my $errorCount2 = -1;
-					do {
-						my $response = HTTP::Tiny->new->get($url_fetch_id);
-						$fetch_lineage2 = $response->{content};
-						$errorCount2++;
-						sleep 1;
-					} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
-					if ($errorCount2 > 4){
-						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-					}
+					my @ac2retrieve = @allRefseqAccession[$m .. $n];
+					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
+					my $fetch_lineage2 = retrieveEFetch($url_fetch_id);
 					
 					my @ids = split(/\n\n/, $fetch_lineage2);
+					my %accessionRetrieved;
 					foreach my $ids (@ids){
 						$ids =~ /accession \"([^\" ]+)\" ,/;
 						my $acc = $1;
@@ -3065,6 +3059,8 @@ sub defineIdSubject {
 						my $ver = $1;
 						$ids =~  /Seq-id ::= gi (\d+)/;
 						my $gi = $1;
+						$accessionRetrieved{$gi} = 1;
+						$accessionRetrieved{$acc} = 1;
 						if ($gi && $acc){
 							$accession2gi{$gi} = $acc.".".$ver;
 							$gi2accession{$acc.".".$ver} = $gi;
@@ -3072,58 +3068,146 @@ sub defineIdSubject {
 						
 					}
 					
-					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@allRefseqAccession[$m .. $n]);
-					my $fetch_lineage;
-					my $errorCount = -1;
-					do {
-						my $response = HTTP::Tiny->new->get($url_fetch_seq);
-						$fetch_lineage = $response->{content};
-						$errorCount++;
-						sleep 1;
-					} while ($fetch_lineage =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-					if ($errorCount > 4){
-						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-					}
-					my $xs2 = XML::Simple->new();
-					my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
-					my @linkSet = @{$doc_lineage->{"TSeq"}};
-					
-					foreach my $link(@linkSet){
-					
-						my $type = $link->{"TSeq_seqtype"}->{"value"};
-						#my $gi = $link->{"TSeq_gi"};
-						my $accession = $link->{"TSeq_accver"};
-						$accession =~ /\.(\d+)$/;
-						my $version = $1;
-						$accession =~ s/\.\d+//;
-						my $txid = $link->{"TSeq_taxid"};
-						#my $seq = $link->{"TSeq_sequence"};
-
-						$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
-						$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
-						#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
-						if (exists $gi2accession{$accession.".".$version}){
-							my $gi = $gi2accession{$accession.".".$version};
-							$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
-							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+					foreach my $ac(@ac2retrieve){
+						my $ac2 = $ac;
+						$ac2 =~ s/\.\d+$//;
+						if(!exists $accessionRetrieved{$ac2}){
+							push (@refseqNucl, $ac);
 						} else {
-							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							push (@refseqProt, $ac);
 						}
-						$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
-						
-						if (exists $refseqData{$accession}{"vmax"}){
-							$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
-						} else {
-							$refseqData{$accession}{"vmax"} = $version;
-						}
-						#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
 					}
-					
-					sleep 1;
-					
 				} while ($n < $#allRefseqAccession);
 				$n = -1;
 				$m = -50;
+				
+				if (scalar @refseqNucl > 0){
+					
+					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqNucl if ($n > $#refseqNucl);
+						
+						my @ac2retrieve = @refseqNucl[$m .. $n];
+						my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
+						my $fetch_lineage2 = retrieveEFetch($url_fetch_id);
+						
+						my @ids = split(/\n\n/, $fetch_lineage2);
+						my %accessionRetrieved;
+						foreach my $ids (@ids){
+							$ids =~ /accession \"([^\" ]+)\" ,/;
+							my $acc = $1;
+							$ids =~  /version (\d+) /;
+							my $ver = $1;
+							$ids =~  /Seq-id ::= gi (\d+)/;
+							my $gi = $1;
+							$accessionRetrieved{$gi} = 1;
+							$accessionRetrieved{$acc} = 1;
+							if ($gi && $acc){
+								$accession2gi{$gi} = $acc.".".$ver;
+								$gi2accession{$acc.".".$ver} = $gi;
+							}
+							
+						}
+						
+					} while ($n < $#refseqNucl);
+				}
+				$n = -1;
+				$m = -50;
+				
+				if (scalar @refseqProt > 0){
+					do {
+						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqProt[$m .. $n]);
+						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+						
+						my $xs2 = XML::Simple->new();
+						my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
+						my @linkSet = @{$doc_lineage->{"TSeq"}};
+						
+						foreach my $link(@linkSet){
+						
+							my $type = $link->{"TSeq_seqtype"}->{"value"};
+							#my $gi = $link->{"TSeq_gi"};
+							my $accession = $link->{"TSeq_accver"};
+							$accession =~ /\.(\d+)$/;
+							my $version = $1;
+							$accession =~ s/\.\d+//;
+							my $txid = $link->{"TSeq_taxid"};
+							#my $seq = $link->{"TSeq_sequence"};
+
+							$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
+							$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
+							#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+							if (exists $gi2accession{$accession.".".$version}){
+								my $gi = $gi2accession{$accession.".".$version};
+								$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+							} else {
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							}
+							$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
+							
+							if (exists $refseqData{$accession}{"vmax"}){
+								$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
+							} else {
+								$refseqData{$accession}{"vmax"} = $version;
+							}
+							#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
+						}
+						
+						sleep 1;
+						
+					} while ($n < $#refseqProt);
+					$n = -1;
+					$m = -50;
+				}
+				
+				if (scalar @refseqNucl > 0){
+					do {
+						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqNucl[$m .. $n]);
+						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+						
+						my $xs2 = XML::Simple->new();
+						my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
+						my @linkSet = @{$doc_lineage->{"TSeq"}};
+						
+						foreach my $link(@linkSet){
+						
+							my $type = $link->{"TSeq_seqtype"}->{"value"};
+							#my $gi = $link->{"TSeq_gi"};
+							my $accession = $link->{"TSeq_accver"};
+							$accession =~ /\.(\d+)$/;
+							my $version = $1;
+							$accession =~ s/\.\d+//;
+							my $txid = $link->{"TSeq_taxid"};
+							#my $seq = $link->{"TSeq_sequence"};
+
+							$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
+							$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
+							#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+							if (exists $gi2accession{$accession.".".$version}){
+								my $gi = $gi2accession{$accession.".".$version};
+								$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+							} else {
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							}
+							$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
+							
+							if (exists $refseqData{$accession}{"vmax"}){
+								$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
+							} else {
+								$refseqData{$accession}{"vmax"} = $version;
+							}
+							#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
+						}
+						
+						sleep 1;
+						
+					} while ($n < $#refseqNucl);
+					$n = -1;
+					$m = -50;
+				}
 				
 				foreach my $refseqAC (@refseqAC){
 					
@@ -3240,6 +3324,23 @@ sub defineIdSubject {
 	}
 	
 	return \%definedID;
+}
+
+sub retrieveEFetch {
+	my $url_fetch_id = $_[0];
+	my $fetch_lineage2;
+	my $errorCount2 = -1;
+	do {
+		my $response = HTTP::Tiny->new->get($url_fetch_id);
+		$fetch_lineage2 = $response->{content};
+		$errorCount2++;
+		sleep 1;
+	} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+	if ($errorCount2 > 4){
+		die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
+	}
+	
+	return $fetch_lineage2;
 }
 
 sub retrieveGeneNCBI {
