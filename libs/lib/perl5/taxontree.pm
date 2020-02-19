@@ -2657,7 +2657,12 @@ sub verifyID{
 		return "uniprot_ac";
 	} elsif ($id =~ m/^[0-9]+$/){
 		return "ncbi_gi";
-	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || $id =~ m/^\w{3}\d{5}(\.\d+)?$/ || $id =~ m/^\w{2}\d{6}(\.\d+)?$/ || $id =~ m/^\w{1}\d{5}(\.\d+)?$/){
+	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || 
+				$id =~ m/^\w{3}\d{5}(\.\d+)?$/ || 
+				$id =~ m/^\w{2}\d{6}(\.\d+)?$/ || 
+				$id =~ m/^\w{1}\d{5}(\.\d+)?$/ || 
+				$id =~ m/^\w{2}\d{8}(\.\d+)?$/ || 
+				$id =~ m/^\w{3}\d{7}(\.\d+)?$/){
 		return "ncbi_ac";
 	} else {
 		return 0;
