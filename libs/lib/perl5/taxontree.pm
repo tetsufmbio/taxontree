@@ -1311,6 +1311,7 @@ sub popOtherTableHash {
 	foreach my $line (@otherTable){
 		my $error2 = 0;
 		chomp $line;
+		$line =~ s/\r//g;
 		next if ($line eq "");
 		my @line = split(/\t/, $line);
 		my $leafID = shift @line;
@@ -1342,6 +1343,7 @@ sub popTreeTableHash {
 	while (my $line = <TABLE>){
 		my $error2 = 0;
 		chomp $line;
+		$line =~ s/\r//g;
 		next if ($line eq "");
 		my @line = split(/\t/, $line);
 		
