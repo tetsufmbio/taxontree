@@ -36,7 +36,7 @@
 		system PATH. More than one PATH can be specified by separating 
 		them with ":". 
 	-->
-	<generalPath>/home/tot/taxontree/bin</generalPath>
+	<generalPath></generalPath>
 	<!--
 		The softwares are divided in:
 			- blastSearch			NCBI Blast search;

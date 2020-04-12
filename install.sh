@@ -46,6 +46,7 @@ echo
 
 cp -f ./config/CONFIG.xml ./config/CONFIG.xml.tmp
 sed -i.bak "s/<email>.*<\/email>/<email>$TAXONTREEMAIL<\/email>/" ./config/CONFIG.xml.tmp
+sed -i.bak "s/<generalPath></generalPath>/<generalPath>$TOT/bin</generalPath>/" ./config/CONFIG.xml.tmp
 export TAXONTREEMAIL=
 
 #if [ ! -z $answer ] && [ $answer = "y" ]
