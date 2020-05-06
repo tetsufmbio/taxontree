@@ -4097,7 +4097,7 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#txid_list2 if ($n > $#txid_list2);
-				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/taxallnomy/cgi-bin/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
 				my $fetch_lineage;
 				my $errorCount = -1;
 				do {
@@ -4135,7 +4135,7 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#retrieveTN if ($n > $#retrieveTN);
-				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/taxallnomy/cgi-bin/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
 				my $fetch_lineage;
 				my $errorCount = -1;
 				do {
