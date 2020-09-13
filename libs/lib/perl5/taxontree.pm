@@ -4107,7 +4107,6 @@ sub pair2pairLCA {
 					sleep 1;
 				} while ($fetch_lineage =~ m/<p>The server encountered an internal error or|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
 				if ($errorCount > 4){
-						next;
 					print "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
 				} else {
 					my @fetch_lineage = split(/\n/, $fetch_lineage);
