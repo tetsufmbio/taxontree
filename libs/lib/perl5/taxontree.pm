@@ -4105,32 +4105,35 @@ sub pair2pairLCA {
 					$fetch_lineage = $response->{content};
 					$errorCount++;
 					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
+				} while ($fetch_lineage =~ m/<p>The server encountered an internal error or|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
 				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
-				}
-				my @fetch_lineage = split(/\n/, $fetch_lineage);
-				my @ranks = @taxSimple_ranks;
-				unshift (@ranks, "Root");
-				for(my $o = 2; $o < scalar @fetch_lineage; $o++){
-					my $lineage = $fetch_lineage[$o];
-					chomp $lineage;
-					next if ($lineage =~ /^$/);
-					my ($txid, @lineage) = split(/\t/, $lineage);
-					if ($lineage =~ /taxid not found in our database./){
 						next;
-					} else {
-						unshift (@lineage, "Root");
-						$map_txid{"txids"}{$txid}{"rankTaxSimple"} = \@ranks;
-						$map_txid{"txids"}{$txid}{"lineageTaxSimple"} = \@lineage;
-						delete $missingTaxTN{$txid};
-						push(@retrieveTN, $txid);
+					print "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
+				} else {
+					my @fetch_lineage = split(/\n/, $fetch_lineage);
+					my @ranks = @taxSimple_ranks;
+					unshift (@ranks, "Root");
+					for(my $o = 2; $o < scalar @fetch_lineage; $o++){
+						my $lineage = $fetch_lineage[$o];
+						chomp $lineage;
+						next if ($lineage =~ /^$/);
+						my ($txid, @lineage) = split(/\t/, $lineage);
+						if ($lineage =~ /taxid not found in our database./){
+							next;
+						} else {
+							unshift (@lineage, "Root");
+							$map_txid{"txids"}{$txid}{"rankTaxSimple"} = \@ranks;
+							$map_txid{"txids"}{$txid}{"lineageTaxSimple"} = \@lineage;
+							push(@retrieveTN, $txid);
+						}
 					}
 				}
+				
 			} while ($n < $#txid_list2);
 			
 			$n = -1;
 			$m = -50;
+			
 			do {
 				$n = $n + 50;
 				$m = $m + 50;
@@ -4143,23 +4146,27 @@ sub pair2pairLCA {
 					$fetch_lineage = $response->{content};
 					$errorCount++;
 					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
+				} while ($fetch_lineage =~ m/<p>The server encountered an internal error or|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
 				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
-				}
-				my @fetch_lineage = split(/\n/, $fetch_lineage);
-				for(my $o = 2; $o < scalar @fetch_lineage; $o++){
-					my $lineage = $fetch_lineage[$o];
-					chomp $lineage;
-					next if ($lineage =~ /^$/);
-					my ($txid, @lineage) = split(/\t/, $lineage);
-					if ($lineage =~ /taxid not found in our database./){
-						next;
-					} else {
-						unshift (@lineage, "1.000");
-						$map_txid{"txids"}{$txid}{"lineageTaxSimpleN"} = \@lineage;
+					print "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.\n";
+					
+				} else {
+					my @fetch_lineage = split(/\n/, $fetch_lineage);
+					for(my $o = 2; $o < scalar @fetch_lineage; $o++){
+						my $lineage = $fetch_lineage[$o];
+						chomp $lineage;
+						next if ($lineage =~ /^$/);
+						my ($txid, @lineage) = split(/\t/, $lineage);
+						if ($lineage =~ /taxid not found in our database./){
+							next;
+						} else {
+							unshift (@lineage, "1.000");
+							$map_txid{"txids"}{$txid}{"lineageTaxSimpleN"} = \@lineage;
+							delete $missingTaxTN{$txid};
+						}
 					}
 				}
+				
 			} while ($n < $#retrieveTN);
 			print "  OK!\n";
 		} 	
@@ -4187,6 +4194,7 @@ sub pair2pairLCA {
 		my @rank1 = @{$map_txid{"txids"}{$txid_list[$i]}{"rank"}};
 		my @rankTS1 = @{$map_txid{"txids"}{$txid_list[$i]}{"rankTaxSimple"}};
 		for (my $j = $i; $j < scalar @txid_list; $j++){
+			print $txid_list[$j] if (!$map_txid{"txids"}{$txid_list[$j]}{"lineage"});
 			my @lineage2 = @{$map_txid{"txids"}{$txid_list[$j]}{"lineage"}};
 			my @lineage2name = @{$map_txid{"txids"}{$txid_list[$j]}{"lineageName"}};
 			my @lineageTS2 = @{$map_txid{"txids"}{$txid_list[$j]}{"lineageTaxSimple"}};
