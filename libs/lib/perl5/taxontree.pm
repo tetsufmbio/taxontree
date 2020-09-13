@@ -3345,17 +3345,18 @@ sub retrieveEFetch {
 	my $url_fetch_id = $_[0];
 	my $fetch_lineage2;
 	my $errorCount2 = -1;
+	my $resonse;
 	do {
-		my $response = HTTP::Tiny->new->get($url_fetch_id);
-		$fetch_lineage2 = $response->{content};
+		$response = HTTP::Tiny->new->get($url_fetch_id);
 		$errorCount2++;
 		sleep 1;
-	} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+	#} while ($fetch_lineage2 =~ m/<p>The server encountered an internal error or|<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+	} while (!$response->{success} and $errorCount2 < 5);
 	if ($errorCount2 > 4){
-		die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
+		die "\nERROR: Sorry, access to the following URL retrieved error 4 times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
 	}
 	
-	return $fetch_lineage2;
+	return $response->{content};
 }
 
 sub retrieveGeneNCBI {
@@ -3377,20 +3378,10 @@ sub retrieveGeneNCBI {
 			$n = $#gilist if ($n > $#gilist);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=taxontree&email=$email&dbfrom=protein&db=gene&id=".join("&id=",@gilist[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
+			my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+			
 			my $xs1 = XML::Simple->new();
-			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["LinkSet"]);
+			my $doc_link = $xs1->XMLin($fetch_lineage, ForceArray => ["LinkSet"]);
 			
 			my @linkSet = @{$doc_link->{"LinkSet"}};
 					
@@ -3436,18 +3427,7 @@ sub retrieveGeneNCBI {
 			$n = $#giObsolete if ($n > $#giObsolete);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=gp&id=".join("&id=",@giObsolete[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
+			my $link_xml = retrieveEFetch($url_fetch_seq);;
 			my @eachXML = split("</GBSeq>", $link_xml);
 			foreach my $eachXML(@eachXML){
 				if ($eachXML =~ m/<GBQualifier_value>GeneID:/){
@@ -3519,19 +3499,8 @@ sub retrieveGeneName {
 			$n = $#geneIDlist if ($n > $#geneIDlist);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id=".join(",",@geneIDlist[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
+			my $link_xml = retrieveEFetch($url_fetch_seq);
 			
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
 			my $xs1 = XML::Simple->new();
 			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["DocumentSummary"]);
 			#if (ref $doc_link->{"DocumentSummarySet"}->{"DocumentSummary"} eq 'ARRAY') {
@@ -3907,17 +3876,8 @@ sub pair2pairLCA {
 				$m = $m + 50;
 				$n = $#txidRetrieve if ($n > $#txidRetrieve);
 				my $url_fetch_lineage = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=".join(",",@txidRetrieve[$m .. $n]);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-				}
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
 				my $xs2 = XML::Simple->new();
 				my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["Taxon"], KeepRoot => 1);
 				my @taxaSet = @{$doc_lineage->{"TaxaSet"}->{"Taxon"}};
@@ -4098,33 +4058,23 @@ sub pair2pairLCA {
 				$m = $m + 50;
 				$n = $#txid_list2 if ($n > $#txid_list2);
 				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<p>The server encountered an internal error or|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					print "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
-				} else {
-					my @fetch_lineage = split(/\n/, $fetch_lineage);
-					my @ranks = @taxSimple_ranks;
-					unshift (@ranks, "Root");
-					for(my $o = 2; $o < scalar @fetch_lineage; $o++){
-						my $lineage = $fetch_lineage[$o];
-						chomp $lineage;
-						next if ($lineage =~ /^$/);
-						my ($txid, @lineage) = split(/\t/, $lineage);
-						if ($lineage =~ /taxid not found in our database./){
-							next;
-						} else {
-							unshift (@lineage, "Root");
-							$map_txid{"txids"}{$txid}{"rankTaxSimple"} = \@ranks;
-							$map_txid{"txids"}{$txid}{"lineageTaxSimple"} = \@lineage;
-							push(@retrieveTN, $txid);
-						}
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
+				my @fetch_lineage = split(/\n/, $fetch_lineage);
+				my @ranks = @taxSimple_ranks;
+				unshift (@ranks, "Root");
+				for(my $o = 2; $o < scalar @fetch_lineage; $o++){
+					my $lineage = $fetch_lineage[$o];
+					chomp $lineage;
+					next if ($lineage =~ /^$/);
+					my ($txid, @lineage) = split(/\t/, $lineage);
+					if ($lineage =~ /taxid not found in our database./){
+						next;
+					} else {
+						unshift (@lineage, "Root");
+						$map_txid{"txids"}{$txid}{"rankTaxSimple"} = \@ranks;
+						$map_txid{"txids"}{$txid}{"lineageTaxSimple"} = \@lineage;
+						push(@retrieveTN, $txid);
 					}
 				}
 				
@@ -4138,31 +4088,20 @@ sub pair2pairLCA {
 				$m = $m + 50;
 				$n = $#retrieveTN if ($n > $#retrieveTN);
 				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<p>The server encountered an internal error or|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					print "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.\n";
-					
-				} else {
-					my @fetch_lineage = split(/\n/, $fetch_lineage);
-					for(my $o = 2; $o < scalar @fetch_lineage; $o++){
-						my $lineage = $fetch_lineage[$o];
-						chomp $lineage;
-						next if ($lineage =~ /^$/);
-						my ($txid, @lineage) = split(/\t/, $lineage);
-						if ($lineage =~ /taxid not found in our database./){
-							next;
-						} else {
-							unshift (@lineage, "1.000");
-							$map_txid{"txids"}{$txid}{"lineageTaxSimpleN"} = \@lineage;
-							delete $missingTaxTN{$txid};
-						}
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
+				my @fetch_lineage = split(/\n/, $fetch_lineage);
+				for(my $o = 2; $o < scalar @fetch_lineage; $o++){
+					my $lineage = $fetch_lineage[$o];
+					chomp $lineage;
+					next if ($lineage =~ /^$/);
+					my ($txid, @lineage) = split(/\t/, $lineage);
+					if ($lineage =~ /taxid not found in our database./){
+						next;
+					} else {
+						unshift (@lineage, "1.000");
+						$map_txid{"txids"}{$txid}{"lineageTaxSimpleN"} = \@lineage;
+						delete $missingTaxTN{$txid};
 					}
 				}
 				
