@@ -3345,7 +3345,7 @@ sub retrieveEFetch {
 	my $url_fetch_id = $_[0];
 	my $fetch_lineage2;
 	my $errorCount2 = -1;
-	my $resonse;
+	my $response;
 	do {
 		$response = HTTP::Tiny->new->get($url_fetch_id);
 		$errorCount2++;
@@ -3875,7 +3875,7 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#txidRetrieve if ($n > $#txidRetrieve);
-				my $url_fetch_lineage = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=".join(",",@txidRetrieve[$m .. $n]);
+				my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=".join(",",@txidRetrieve[$m .. $n]);
 				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
 				
 				my $xs2 = XML::Simple->new();
@@ -4057,7 +4057,7 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#txid_list2 if ($n > $#txid_list2);
-				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $url_fetch_seq = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
 				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
 				
 				my @fetch_lineage = split(/\n/, $fetch_lineage);
@@ -4087,7 +4087,7 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#retrieveTN if ($n > $#retrieveTN);
-				my $url_fetch_lineage = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $url_fetch_seq = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
 				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
 				
 				my @fetch_lineage = split(/\n/, $fetch_lineage);
