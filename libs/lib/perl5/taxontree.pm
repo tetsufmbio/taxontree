@@ -3345,15 +3345,19 @@ sub retrieveEFetch {
 	my $url_fetch_id = $_[0];
 	my $fetch_lineage2;
 	my $errorCount2 = -1;
+	my $maxErrorCount = 20;
+	my $maxSleep = 30;
 	my $response;
 	do {
 		$response = HTTP::Tiny->new->get($url_fetch_id);
 		$errorCount2++;
-		sleep 1;
+		my $sleepTime = 2 ** $errorCount2;
+		$sleepTime = $maxSleep if ($sleepTime > $maxSleep);
+		sleep $sleepTime;
 	#} while ($fetch_lineage2 =~ m/<p>The server encountered an internal error or|<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
-	} while (!$response->{success} and $errorCount2 < 5);
+	} while (!$response->{success} and $errorCount2 < $maxErrorCount);
 	if ($errorCount2 > 4){
-		die "\nERROR: Sorry, access to the following URL retrieved error 4 times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
+		die "\nERROR: Sorry, access to the following URL retrieved error $maxErrorCount times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
 	}
 	
 	return $response->{content};
