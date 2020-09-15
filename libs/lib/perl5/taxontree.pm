@@ -3507,7 +3507,7 @@ sub retrieveGeneName {
 			
 			my $xs1 = XML::Simple->new();
 			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["DocumentSummary"]);
-			#if (ref $doc_link->{"DocumentSummarySet"}->{"DocumentSummary"} eq 'ARRAY') {
+			if (ref $doc_link->{"DocumentSummarySet"}->{"DocumentSummary"} eq 'ARRAY') {
 				my @DocumentSummary = @{$doc_link->{"DocumentSummarySet"}->{"DocumentSummary"}};
 				foreach my $link(@DocumentSummary){
 					my $geneName = $link->{"Name"};
@@ -3515,6 +3515,9 @@ sub retrieveGeneName {
 					$gene2name{$geneID} = $geneName;
 					delete $allGene{$geneID};
 				}
+			} else {
+				print Dumper($doc_link);
+			}
 			sleep 1;
 			
 		} while ($n < $#geneIDlist);
