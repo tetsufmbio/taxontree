@@ -3356,7 +3356,7 @@ sub retrieveEFetch {
 		sleep $sleepTime;
 	#} while ($fetch_lineage2 =~ m/<p>The server encountered an internal error or|<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
 	} while (!$response->{success} and $errorCount2 < $maxErrorCount);
-	if ($errorCount2 > 4){
+	if (!$response->{success}){
 		die "\nERROR: Sorry, access to the following URL retrieved error $maxErrorCount times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
 	}
 	
