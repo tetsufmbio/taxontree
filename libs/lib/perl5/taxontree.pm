@@ -3345,7 +3345,7 @@ sub retrieveEFetch {
 	my $url_fetch_id = $_[0];
 	my $fetch_lineage2;
 	my $errorCount2 = -1;
-	my $maxErrorCount = 20;
+	my $maxErrorCount = 100;
 	my $maxSleep = 30;
 	my $response;
 	do {
