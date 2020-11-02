@@ -3972,6 +3972,7 @@ sub pair2pairLCA {
 	if ($mysqlInfo{"connection"}){
 		if (exists $mysqlInfo{"tables"}{"taxallnomy_rank"} and exists $mysqlInfo{"tables"}{"taxallnomy_lin"} and exists $mysqlInfo{"tables"}{"taxonomy"}){
 			my $taxallnomyLinTable = $mysqlInfo{"tables"}{"taxallnomy_lin"};
+			my $taxonomyTable = $mysqlInfo{"tables"}{"taxonomy"};
 			print "  Retrieving taxallnomy info from local database...\n";
 			$n = -1;
 			$m = -100;
