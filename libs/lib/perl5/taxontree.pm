@@ -4007,7 +4007,7 @@ sub pair2pairLCA {
 				$n = $n + 100;
 				$m = $m + 100;
 				$n = $#names2recover if ($n > $#names2recover);
-				my $results = $wire->query("SELECT txid,sciname FROM ".$taxallnomyLinTable." where txid in (".join(",",@names2recover[$m .. $n]).");");
+				my $results = $wire->query("SELECT txid,sciname FROM ".$taxonomyTable." where txid in (".join(",",@names2recover[$m .. $n]).");");
 				
 				while (my $row = $results->next_hash) {
 					my $txid = $row->{txid};
