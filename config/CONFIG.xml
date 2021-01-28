@@ -94,7 +94,7 @@
 			<program>
 				<name>blastdbcmd</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
 				<path></path>
-				<command>-entry_batch #INPUT -db #DB -out #OUTPUT -get_dups -outfmt "%g|%a|%s"</command>
+				<command>-entry_batch #INPUT -db #DB2 -out #OUTPUT -get_dups -outfmt "%g|%a|%s"</command>
 				<outName>#OUTPUT</outName>
 			</program>
 			

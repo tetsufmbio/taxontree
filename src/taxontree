@@ -1,10 +1,10 @@
 #!/usr/bin/perl -w
 
-#	TaxOnTree Version: 1.10.1
+#	TaxOnTree Version: 1.10.3
 
 #############################################################################
 #                                                                           #
-#   Copyright (C) 2015-2020  Tetsu Sakamoto                                 #
+#   Copyright (C) 2015-2021  Tetsu Sakamoto                                 #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -61,7 +61,7 @@ use Pod::Usage;
 #use Data::Dumper;
 use strict;
 
-my $TaxOnTreeVersion = "TaxOnTree v.1.10.1";
+my $TaxOnTreeVersion = "TaxOnTree v.1.10.3";
 
 $| = (@ARGV > 0); 
 
@@ -93,6 +93,7 @@ $inputs{"pid"} = undef;
 $inputs{"showIsoform"} = undef;
 $inputs{"noTrimal"} = undef;
 $inputs{"database"} 	= "refseq_protein";
+$inputs{"databasecmd"} 	= undef;
 $inputs{"blastProgram"} 	= "blastp";
 $inputs{"aligner"} 	= "muscle";
 $inputs{"leafNameFormat"} 	= "lcaN;id;geneName;species";
@@ -133,6 +134,7 @@ GetOptions(
     'queryTax=s'    => \$inputs{"queryTax"},
     'txidMap=s'    => \$inputs{"txidMap"},
     'db=s' 			=> \$inputs{"database"},
+    'dbcmd=s' 			=> \$inputs{"databasecmd"},
 	'blastProg=s' 	=> \$inputs{"blastProgram"},
 	'aligner=s' 	=> \$inputs{"aligner"},
 	'trimming=s' 	=> \$inputs{"trimProg"},
@@ -232,7 +234,7 @@ TaxOnTree - Including taxonomic information in your phylogenetic tree
 
 =item B<Blast options>:
 
-[-db database_name] [-evalue evalue] [-threshold int_value] [-maxTarget int_value] [-maxTargetBlast int_value]
+[-db database_name] [-evalue evalue] [-threshold int_value] [-maxTarget int_value] [-maxTargetBlast int_value] [-dbcmd database_name]
 
 =item B<Alignment options>:
 
@@ -349,6 +351,10 @@ Max target sequence to be used for phylogenetic analysis. It works on -seqFile, 
 item B<-maxTargetBlast> <int_value>
 
 Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID.
+
+item B<-dbcmd> <database_name>
+
+Blast database name to retrieve sequences using blastdbcmd. Default: same database name provided in -db parameter.
 
 =back
 

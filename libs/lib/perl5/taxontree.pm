@@ -19,7 +19,7 @@ use Bio::Tree::TreeFunctionsI;
 use Bio::Tree::TreeI;
 use Bio::Tree::NodeI;
 	
-$VERSION     = "1.10.2";
+$VERSION     = "1.10.3";
 @ISA         = qw(Exporter);
 @EXPORT      = qw(inputs check main);
 #@EXPORT_OK   = qw(input);
@@ -51,6 +51,7 @@ my $pid;
 my $showIsoform;
 my $noTrimal;
 my $database;
+my $databasecmd;
 my $blastProgram;
 my $aligner;
 my $leafNameFormat;
@@ -104,6 +105,7 @@ sub inputs {
 	$showIsoform = $inputs->{"showIsoform"};
 	$noTrimal = $inputs->{"noTrimal"};
 	$database = $inputs->{"database"};
+	$databasecmd = $inputs->{"databasecmd"};
 	$blastProgram = $inputs->{"blastProgram"};
 	$aligner = $inputs->{"aligner"};
 	$leafNameFormat = $inputs->{"leafNameFormat"};
@@ -127,6 +129,10 @@ sub inputs {
 	$forceNoTxid = $inputs->{"forceNoTxid"};
 	$forceNoInternet = $inputs->{"forceNoInternet"};
 	$TaxOnTreeVersion = $_[1];
+	
+	if(!$databasecmd){
+		$databasecmd = $database;
+	}
 	return 1;
 }
 
@@ -267,6 +273,23 @@ sub check {
 					if (!($commandResult =~ m/$database /)){
 						die "\nERROR: $database was not found...\n";
 					}
+					
+					if($database ne $databasecmd){
+						$databasePath = $databasecmd;
+						if ($databasePath =~ /\//){
+							$databasePath = substr($databasePath, 0, rindex($databasePath, "/"));
+						} else {
+							$databasePath = "./"
+						}
+						
+						$command = $blastdbcmdPath." -list ".$databasePath;
+						$commandResult = `$command`;
+						if (!($commandResult =~ m/$database /)){
+							die "\nERROR: $database was not found...\n";
+						}
+						
+					}
+
 				}
 			}
 		}
@@ -3585,7 +3608,7 @@ sub retrieveSubjectInfo {
 		my $blastdbcmdCommand = $programs{"blastSearch"}{"blastdbcmd"}{"path"}." ".$programs{"blastSearch"}{"blastdbcmd"}{"command"};
 		$blastdbcmdCommand =~ s/#INPUT/$inputblastdbcmd/g;
 		$blastdbcmdCommand =~ s/#OUTPUT/$outputblastdbcmd/g;
-		$blastdbcmdCommand =~ s/#DB/$database/g;
+		$blastdbcmdCommand =~ s/#DB2/$databasecmd/g;
 		$defOutputblastdbcmd =~ s/#OUTPUT/$outputblastdbcmd/g;
 		
 		system($blastdbcmdCommand);
