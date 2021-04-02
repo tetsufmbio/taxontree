@@ -2,39 +2,84 @@
 # set -x
 
 echo
-echo "        TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto"
+echo "        TaxOnTree  Copyright (C) 2015-2021  Tetsu Sakamoto"
 echo "        This program comes with ABSOLUTELY NO WARRANTY."
 echo "        This is free software, and you are welcome to redistribute it under"
 echo "        certain conditions. See GNU general public license v.3 for details."
 echo
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WGET="wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 20"
 
 cd $DIR
 TOT=$HOME/.taxontree
-
 # preparing folder .taxontree
+read -p "# Set the path where TaxOnTree will be installed [$TOT]:" USERDIR
+
+if [ ! -z $USERDIR ]
+then
+	TOT=$USERDIR
+fi
+
 if [ ! -d $TOT ]
 then
 	mkdir $TOT
+	if [ $? -ne 0 ]
+	then
+		echo
+		echo "# ERROR: can't create the folder $TOT."
+		echo "# Script interrupted."
+		echo
+		exit
+	fi
+else
+	echo "# WARNING: the folder $TOT already exists. The script may overwrite some files."
+	answer="no answer"
+	
+	while [[ ! -z $answer && ${answer,,} != "y" && ${answer,,} != "n" ]]
+	do 
+		read -p "# Continue? [y/N]:" answer
+		if [ -z $answer ] || [ ${answer,,} == "n" ]
+		then
+			echo "# Script interrupted"
+			exit
+		elif [ ${answer,,} == "y" ]
+		then
+			break
+		else
+			echo '# ERROR: invalid answer. Answer with "y" or "n".'
+		fi
+	done
+
 fi
+
+# get absolute path
+TOT=$(cd "$(dirname "$TOT")"; pwd)/$(basename "$TOT")
+echo
 
 # pick email address
+validemail=1
 echo "# TaxOnTree requires your email address to retrieve information from NCBI or Uniprot Server."
-read -p "# Please provide a valid email address: " email
-export TAXONTREEMAIL=$email
-perl -e 'use lib "./libs/lib/perl5";use Mail::RFC822::Address qw(valid); if (!valid($ENV{TAXONTREEMAIL})){exit 1}'
-validemail=$?
-if [ $validemail -ne 0 ]
-then
-	echo
-	echo "ERROR: invalid email address provided."
-	echo "Script interrupted."
-	echo
-	exit;
-fi
+while [ $validemail -ne 0 ]
+do
+	read -p "# Please provide a valid email address: " email
+	export TAXONTREEMAIL=$email
+	perl -e 'use lib "./libs/lib/perl5";use Mail::RFC822::Address qw(valid); if (!valid($ENV{TAXONTREEMAIL})){exit 1}'
+	validemail=$?
+	if [ $validemail -ne 0 ]
+	then
+		echo "# ERROR: invalid email address provided."
+		echo
+	fi
+done
 
 echo
+
+cp -f ./config/CONFIG.xml ./config/CONFIG.xml.tmp
+sed -i.bak "s%<email>.*</email>%<email>$TAXONTREEMAIL</email>%" ./config/CONFIG.xml.tmp
+sed -i.bak "s%<generalPath></generalPath>%<generalPath>$TOT/bin</generalPath>%" ./config/CONFIG.xml.tmp
+export TAXONTREEMAIL=
+
 #echo "# Do you want to configure TaxOnTree to access your MySQL database?"
 #echo "# This is optional and is only needed if you intend to load TaxOnTree tables on MySQL."
 #read -p "# [y/N]:" answer
@@ -43,11 +88,6 @@ echo
 #	echo # ERROR: invalid answer. Answer with "y" or "n".
 #	read -p "# [y/N]:" answer
 #done
-
-cp -f ./config/CONFIG.xml ./config/CONFIG.xml.tmp
-sed -i.bak "s/<email>.*<\/email>/<email>$TAXONTREEMAIL<\/email>/" ./config/CONFIG.xml.tmp
-sed -i.bak "s/<generalPath></generalPath>/<generalPath>$TOT/bin</generalPath>/" ./config/CONFIG.xml.tmp
-export TAXONTREEMAIL=
 
 #if [ ! -z $answer ] && [ $answer = "y" ]
 #then
@@ -78,7 +118,7 @@ fi
 declare -a MISSING=()
 
 mkdir bin
-BIN=$DIR/bin 
+BIN=$DIR/bin
 SRC=$DIR/src
 LIBS=$DIR/libs
 
@@ -86,7 +126,13 @@ LIBS=$DIR/libs
 function compile_trimal {
 	
 	software=trimAl
-	cd $SRC/trimAl/source;
+	cd $SRC
+	$WGET https://github.com/scapella/trimal/archive/trimAl.zip
+	unzip trimAl.zip
+	rm trimAl.zip
+	cd trimal-trimAl/source
+	
+	#cd $SRC/trimAl/source;
 	echo "# compiling $software..." | tee -a $LOG
 
 	make clean > /dev/null;
@@ -105,14 +151,43 @@ function compile_trimal {
 	then
 		MISSING[${#MISSING[@]}]=$software
 	fi
-
+	
+	cd $SRC
+	rm -rf trimal-trimAl
+	
 	return $makeval
 }
 
 # compiling muscle
 function compile_muscle {
-	cd $SRC/muscle3.8.31/src;
+
 	software=muscle
+	cd $SRC	
+	
+	echo "# downloading $software executable..." | tee -a $LOG
+	$WGET https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+	tar -zxf muscle3.8.31_i86linux64.tar.gz
+	rm muscle3.8.31_i86linux64.tar.gz
+	mv muscle3.8.31_i86linux64 muscle
+	./muscle -version
+	makeval=$?
+	
+	if [ $makeval -eq 0 ]
+	then
+		mv muscle $BIN
+		echo "#  $software executable successfully tested." | tee -a $LOG
+		return $makeval
+	fi
+	
+	echo "# $software executable not working..." | tee -a $LOG
+	echo "# downloading $software source code..." | tee -a $LOG
+	rm muscle;
+	$WGET https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_src.tar.gz
+	tar -zxf muscle3.8.31_src.tar.gz
+	rm muscle3.8.31_src.tar.gz
+	cd muscle3.8.31/src
+	
+	#cd $SRC/muscle3.8.31/src;
 	echo "# compiling $software..." | tee -a $LOG
 
 	if [ -e muscle ]
@@ -135,14 +210,40 @@ function compile_muscle {
 	then
 		MISSING[${#MISSING[@]}]=$software
 	fi
-
+	
+	cd $SRC
+	rm -rf muscle3.8.31
+	
 	return $makeval
 }
 
 # compiling FastTree
 function compile_fasttree {
-	cd $SRC/FastTree;
+
 	software=FastTree
+	cd $SRC
+	
+	$WGET http://www.microbesonline.org/fasttree/FastTree
+	chmod +x FastTree
+	./FastTree -expert
+	makeval=$?
+	
+	if [ $makeval -eq 0 ]
+	then
+		mv FastTree $BIN
+		echo "#  $software executable successfully tested." | tee -a $LOG
+		return $makeval
+	fi
+	
+	echo "# $software executable not working..." | tee -a $LOG
+	echo "# downloading $software source code..." | tee -a $LOG
+	rm FastTree;
+	
+	mkdir $SRC/FastTree
+	cd $SRC/FastTree
+	$WGET http://www.microbesonline.org/fasttree/FastTree.c
+	
+	#cd $SRC/FastTree;
 	echo "# compiling $software..." | tee -a $LOG
 
 	if [ -e FastTree ]
@@ -181,13 +282,24 @@ function compile_fasttree {
 	then
 		MISSING[${#MISSING[@]}]=$software
 	fi
-
+	
+	cd $SRC
+	rm -rf FastTree
+	
 	return $makeval
 }
 
 # compiling argtable2 (required by clustalo)
 function compile_argtable2 {
-	cd $SRC/argtable2-13;
+	
+	cd $SRC
+	
+	$WGET http://prdownloads.sourceforge.net/argtable/argtable2-13.tar.gz
+	tar -zxf argtable2-13.tar.gz
+	rm argtable2-13.tar.gz
+	cd argtable2-13
+	#cd $SRC/argtable2-13;
+	
 	software=argtable2
 	echo "# compiling $software..." | tee -a $LOG
 	make clean > /dev/null 2>&1;
@@ -203,16 +315,46 @@ function compile_argtable2 {
 		echo "  ERROR: Could not compile $software." | tee -a $LOG
 		MISSING[${#MISSING[@]}]=clustalo
 	fi
-
+	
+	cd $SRC
+	rm -rf argtable2-13
+	
 	return $makeval
 }
 
 # compiling clustal omega
 function compile_clustalo {
-	cd $SRC
-	tar -zxf clustal-omega-1.2.4.tar.gz
-	cd $SRC/clustal-omega-1.2.4;
+
 	software=clustalo
+	cd $SRC
+	
+	$WGET http://www.clustal.org/omega/clustalo-1.2.4-Ubuntu-x86_64
+	mv clustalo-1.2.4-Ubuntu-x86_64 clustalo
+	chmod +x clustalo
+	./clustalo --version
+	makeval=$?
+	
+	if [ $makeval -eq 0 ]
+	then
+		mv clustalo $BIN
+		
+		echo "#  $software executable successfully tested." | tee -a $LOG
+		return $makeval
+	fi
+	
+	echo "# $software executable not working..." | tee -a $LOG
+	echo "# downloading $software source code..." | tee -a $LOG
+	rm clustalo;
+	
+	if [ ! -d "clustal-omega-1.2.4" ]
+	then
+		$WGET http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz
+		tar -zxf clustal-omega-1.2.4.tar.gz
+		rm clustal-omega-1.2.4.tar.gz
+	fi
+	
+	cd clustal-omega-1.2.4;
+	
 	echo "# compiling $software..." | tee -a $LOG
 	make clean > /dev/null 2>&1;
 	if [ $# -eq 0 ]
@@ -223,6 +365,7 @@ function compile_clustalo {
 	fi
 	make >> $LOG 2>&1;
 	makeval=$?
+	
 	if [ $makeval -eq 0 ]
 	then
 		cp src/clustalo $BIN
@@ -238,13 +381,23 @@ function compile_clustalo {
 			MISSING[${#MISSING[@]}]=$software
 		fi
 	fi
-
+	
+	cd $SRC
+	rm -rf clustal-omega-1.2.4
+	
 	return $makeval
 }
 
 # compiling kalign
 function compile_kalign {
-	cd $SRC/kalign;
+
+	mkdir $SRC/kalign
+	cd $SRC/kalign
+	$WGET http://msa.sbc.su.se/downloads/kalign/current.tar.gz
+	tar -zxf current.tar.gz
+	rm current.tar.gz
+	
+	#cd $SRC/kalign;
 	software=kalign
 	echo "# compiling $software..." | tee -a $LOG
 
@@ -265,22 +418,51 @@ function compile_kalign {
 		MISSING[${#MISSING[@]}]=$software
 	fi
 
+	cd $SRC
+	rm -rf kalign
+	
 	return $makeval
 }
 
 # compiling perl module Net::SSLeay
 function compile_netssleay {
+	
 	software="Net::SSLeay"
-	echo "# installing $software..." | tee -a $LOG
-	echo "  testing $software..." | tee -a $LOG
+	echo "#  Verifying $software..." | tee -a $LOG
 	perl -e 'use Net::SSLeay' >> $LOG 2>&1;
 	makeval=$?
 	if [ $makeval -eq 0 ]
 	then
-		echo "  Perl module $software is already installed. Nothing to do."  | tee -a $LOG
+		echo "#  Perl module $software is already installed. Nothing to do."  | tee -a $LOG
 	else
-		echo "  Perl module $software not installed. Trying to install it."  | tee -a $LOG
-		cd $SRC/perl_module/Net-SSLeay-1.82
+		echo "# installing $software..." | tee -a $LOG
+		
+		echo "#  Perl module $software not installed."  | tee -a $LOG
+		answer="no answer"
+		while [[ ! -z $answer && ${answer,,} != "y" && ${answer,,} != "n" ]]
+		do 
+			read -p "# Should this script download its source code and install it? [Y/n]" answer
+			if [ ${answer,,} == "n" ]
+			then
+				echo "# OK, this script should be installed manually."
+				MISSING[${#MISSING[@]}]=$software
+				return 1
+			elif [ -z $answer ] || [ ${answer,,} == "y" ]
+			then
+				echo "# OK, downloading and installing $software."
+				break
+			else
+				echo '# ERROR: invalid answer. Answer with "y" or "n".'
+			fi
+		done
+		
+		cd $SRC
+		$WGET https://cpan.metacpan.org/authors/id/C/CH/CHRISN/Net-SSLeay-1.90.tar.gz
+		tar -zxf Net-SSLeay-1.90.tar.gz
+		rm Net-SSLeay-1.90.tar.gz
+		cd Net-SSLeay-1.90
+		
+		#cd $SRC/perl_module/Net-SSLeay-1.82
 		printf 'n\n' | make realclean >> /dev/null 2>&1;
 		printf 'n\n' | perl Makefile.PL PREFIX=$TOT/libs >> $LOG 2>&1;
 		make >> $LOG 2>&1;
@@ -301,21 +483,40 @@ function compile_netssleay {
 	then
 		MISSING[${#MISSING[@]}]=$software
 	fi
-
+	
+	cd $SRC
+	rm -rf Net-SSLeay-1.90
+	
 	return $makeval
 }
 
 # compiling third-party software
-compile_trimal
-echo | tee -a $LOG
-compile_muscle
-echo | tee -a $LOG
-compile_fasttree
-echo | tee -a $LOG
-compile_clustalo
-echo | tee -a $LOG
-compile_kalign
-echo | tee -a $LOG
+answer="no answer"
+echo "# To use the phylogenetic pipeline on TaxOnTree, some third-party software are necessary."
+echo "# Software that'll be installed: trimal, muscle, clustalo, kalign, fasttree."
+while [[ ! -z $answer && ${answer,,} != "y" && ${answer,,} != "n" ]]
+do 
+	read -p "# Should this script download their source code and install them? [Y/n]" answer
+	if [ ${answer,,} == "n" ]
+	then
+		echo "# OK, skiping this step."
+	elif [ -z $answer ] || [ ${answer,,} == "y" ]
+	then
+		echo "# OK, downloading and installing them."
+		compile_trimal
+		echo | tee -a $LOG
+		compile_muscle
+		echo | tee -a $LOG
+		compile_fasttree
+		echo | tee -a $LOG
+		compile_clustalo
+		echo | tee -a $LOG
+		compile_kalign
+		echo | tee -a $LOG
+	else
+		echo '# ERROR: invalid answer. Answer with "y" or "n".'
+	fi
+done
 
 cp -rf $BIN $TOT
 rm -rf $BIN
@@ -326,6 +527,10 @@ then
 	rm -rf $TOT/libs/lib64
 fi
 ln -s $TOT/libs/lib $TOT/libs/lib64
+
+# change path of perl libraries in taxontree.pm
+sed -i.bak "8s%.*%BEGIN { \$installFolder  = \"$TOT\"; }%" $TOT/libs/lib/perl5/taxontree.pm
+rm $TOT/libs/lib/perl5/taxontree.pm.bak
 
 # installing 
 compile_netssleay
@@ -347,6 +552,9 @@ else
 fi
 
 cp -f $SRC/taxontree $DIR
+sed -i.bak "57s%.*%use lib '$TOT/libs/lib/perl5';%" $DIR/taxontree
+rm $DIR/taxontree.bak
+
 echo | tee -a $LOG
 echo "# taxontree executable created in $DIR"
 echo "# Try executing ./taxontree -version"

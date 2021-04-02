@@ -4,8 +4,9 @@ package taxontree;
 use strict;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-
-use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+my $installFolder;
+BEGIN { $installFolder  = $ENV{'HOME'}."/.taxontree"; }
+use lib $installFolder."/libs/lib/perl5";
 use Mail::RFC822::Address qw(valid);
 use URI::Escape;
 use HTTP::Tiny;
@@ -159,7 +160,7 @@ sub check {
 		$internetConnection = 0;
 	}
 	
-	my $configFile = $ENV{'HOME'}."/.taxontree/CONFIG.xml";
+	my $configFile = $installFolder."/CONFIG.xml";
 	if (!(-e $configFile)){
 		if (!$treeFile or $localMySQL or $internetConnection){
 			die "\nERROR: Could not locate $configFile.\n";
