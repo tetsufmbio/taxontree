@@ -52,9 +52,9 @@ other servers like NCBI and UniProt. The email address is requested by those ser
 to contact you when necessary. This could happen if you are using TaxOnTree excessively.
 To run TaxOnTree without internet connection, refer to the manual in docs folder.
 
-This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
-an executable named taxontree. The installation process will also attempt to install 
-some third-party software that is in src folder. This includes:
+This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder, by default, and create 
+an executable named *taxontree*. The installation process will also attempt to download and install 
+some third-party software. This includes:
 
 * [MUSCLE](https://www.drive5.com/muscle/);
 * [Clustal Omega](http://www.clustal.org/omega/);
@@ -75,7 +75,7 @@ the following message after the command `./taxontree -version`.
 ```
 > ./taxontree -version
 
-        TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
+        TaxOnTree  Copyright (C) 2015-2020  Tetsu Sakamoto
         This program comes with ABSOLUTELY NO WARRANTY.
         This is free software, and you are welcome to redistribute it under
         certain conditions. See GNU general public license v.3 for details.
