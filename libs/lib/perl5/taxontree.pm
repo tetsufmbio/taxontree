@@ -713,7 +713,7 @@ sub querySingleID {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -820,7 +820,7 @@ sub queryList {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -902,7 +902,7 @@ sub querySeqFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 		
 	my %subjectList;
 	my $queryCode = shift @subjects;
@@ -1064,7 +1064,7 @@ sub queryMFastaFile {
 	print "  checking sequence...\n";
 	@subjects = checkSeq(@subjects);
 	
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my $alignmentFile;
 	if ($queryMFastaFile){
@@ -1187,7 +1187,7 @@ sub queryBlastFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -1490,47 +1490,66 @@ sub generateCode {
 sub checkSeq {
 	my @list = @_;
 	my @newList;
-	print "  Checking sequence data:\n";
+	print "  Checking sequence data...";
+	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"id"};
 		if (!exists $generalInfo{$subject}{"seq"}){
-			print "    NOTE: Could not retrieve sequence from $key. This entry will be discarded.\n";
+			print "\n    NOTE: Could not retrieve sequence from $key. This entry will be discarded.";
+			$note = 1;
 		} else {
 			push (@newList, $key);
 		}
 	}
 	if (scalar @newList < 3){
-		die "ERROR: less than 3 proteins had their sequence retrieved.\n"
+		die "\nERROR: less than 3 proteins had their sequence retrieved.";
 	}
+	
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return @newList;
 }
 
 sub checkTaxLin {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy lineage data...\n";
+	print "  Checking taxonomy lineage data...";
+	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"txid"};
 		if (!exists $map_txid{"txids"}{$subject}){
 			if ($forceNoTxid){
-				print "    NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.\n";
+				print "\n    NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.";
+				$note = 1;
 				push(@newList, $key);
 				$generalInfo{$subject}{"txid"} = 1;
 				$hashCode{"code"}{$key}{"txid"} = 1
 			} else {
-				print "    NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.\n";
+				print "\n    NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.";
+				$note = 1;
 			}
 		} else {
 			push (@newList, $key);
 		}
 	}
+	if($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return @newList;
 }
 
 sub checkInfoTxid {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy data:\n";
+	print "  Checking taxonomy data...";
+	my $note = 0;
 	foreach my $key(@list){
 		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"name"} && exists $treeTableHash{$generalInfo{$key}{"name"}}){
 			# Incorporate treeTableHash data
@@ -1549,14 +1568,21 @@ sub checkInfoTxid {
 					$name = $key;
 				}
 				if ($forceNoTxid){
-					print "    NOTE: Could not retrieve txid from ".$name.". It was set to 1.\n";
+					print "\n    NOTE: Could not retrieve txid from ".$name.". It was set to 1.";
 					push(@newList, $key);
 					$generalInfo{$key}{"txid"} = 1;
+					$note = 1;
 				} else {
-					print "    NOTE: Could not retrieve txid from ".$name.". This entry will be discarded.\n";
+					print "\n    NOTE: Could not retrieve txid from ".$name.". This entry will be discarded.";
+					$note = 1;
 				}
 			}
 		}		
+	}
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
 	}
 	return @newList;
 }
@@ -1990,7 +2016,7 @@ sub filterTree {
 	}
 	
 	$tree->contract_linear_paths(1);
-	print "  total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
+	print "Total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
 	
 	my $tmpTree = $pid."_tmp_seq_tree.nwk";
 	my $output = Bio::TreeIO -> new(-format => "newick",
@@ -2332,7 +2358,7 @@ sub webBLAST {
 	
 	my ($program, $database, $defMaxTarget, $encoded_query, $evalue) = @_;
 
-	print "  BLAST max target sequences set to: $defMaxTarget\n";
+	print "  BLAST max target sequences: $defMaxTarget\n";
 	my $ua = HTTP::Tiny->new;
 	
 	# build the request
@@ -2947,7 +2973,8 @@ sub defineIdSubject {
 	
 	if ($internetConnection == 1){
 		if ($retrieveWeb == 1){
-			print "  Retrieving info from the web...\n";
+			print "  Retrieving info from the web...";
+			my $note = 0;
 			#my %geneID2geneName;
 			if (scalar (keys %hashJoinIDUniprot) > 0){
 				my @uniprotAC = keys %{$listAccessions{"uniprot_ac"}};
@@ -2987,7 +3014,8 @@ sub defineIdSubject {
 							foreach my $gi (keys %{$version2accession{$gi2}}){
 								if (exists $hashJoinIDUniprot{$gi}){
 									if (!$txid){
-										print "  NOTE: Accession $gi was discarded. Could not retrieve its txid.\n";
+										print "\n  NOTE: Accession $gi was discarded. Could not retrieve its txid.";
+										$note = 1;
 										delete $definedID{$gi};
 									} else {
 										$definedID{$gi}{"accession"} = $accession;
@@ -3056,7 +3084,8 @@ sub defineIdSubject {
 				
 				if (scalar keys %hashJoinIDUniprot > 0){
 					foreach my $missingID(keys %hashJoinIDUniprot){
-						print "  NOTE: Could not retrieve data of $missingID. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $missingID. This entry was discarded.";
+						$note = 1;
 						delete $definedID{$missingID} if (exists $definedID{$missingID});
 					}
 					
@@ -3282,12 +3311,14 @@ sub defineIdSubject {
 								$definedID{$identifier2}{"geneName"} = "NULL";
 								
 							} else {
-								print "  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.\n";
+								print "\n  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.";
+								$note = 1;
 								delete $definedID{$refseqAC} if (exists $definedID{$refseqAC});
 							}
 						}
 					} else {
-						print "  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.";
+						$note = 1;
 						delete $definedID{$refseqAC} if (exists $definedID{$refseqAC});
 					}
 					
@@ -3305,11 +3336,12 @@ sub defineIdSubject {
 							#$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
 							push (@gene2retrieve, $refseqGI) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 						} else {
-							print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
+							print "\n  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.";
+							$note = 1;
 							delete $definedID{$refseqGI};
 						}
 					} else {
-						print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.";
 						delete $definedID{$refseqGI};
 					}
 				}
@@ -3360,6 +3392,12 @@ sub defineIdSubject {
 				$definedID{$id}{"geneName"} = "NULL";
 			}
 		}
+	}
+	
+	if($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
 	}
 	
 	return \%definedID;
@@ -3582,7 +3620,8 @@ sub discardIsoform {
 sub retrieveSubjectInfo {
 	
 	my @subjectList = @_;
-	#print "Retrieving subject sequences...  ";
+	print "Retrieving subject sequences...  ";
+	my $note = 0;
 	my %definedID;
 	my %missingID;
 	my %seqData;
@@ -3682,7 +3721,8 @@ sub retrieveSubjectInfo {
 			next if ($id =~ m/^$/);
 			my $subjectType = verifyID($id);
 			if (!$subjectType){
-				print "NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.\n";
+				print "\n  NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.";
+				$note = 1;
 			} elsif ($subjectType eq "uniprot_id"){
 				push(@uniprotID, $id);
 			} elsif ($subjectType eq "uniprot_ac"){
@@ -3709,7 +3749,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3721,7 +3762,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3733,7 +3775,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3745,7 +3788,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refNCBIData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 			foreach my $id(@refseqAC){
@@ -3759,16 +3803,23 @@ sub retrieveSubjectInfo {
 					if (exists $refNCBIData->{$id}->{"v"}->{$version}->{"seq"}){
 						$definedID{$id.".".$version}{"seq"} = $refNCBIData->{$id}->{"v"}->{$version}->{"seq"};
 					} else {
-						print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+						print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+						$note = 1;
 					}
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
 	}
 	
-	print "OK!\n";
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return \%definedID;
 }
 
@@ -3777,7 +3828,7 @@ sub pair2pairLCA {
 	# Retrive lineage of each txid and determine the LCA in each pair of txid.
 	# input: an array containing txid.
 	# return: a hash having txid as key, with information about the name, lineage, lca and lcaN of each txid.
-	print "Determining LCA...\n";
+	print "  Determining LCA...\n";
 	my @txid_list = @_;
 	my @txidRetrieve = @txid_list;
 	my %map_info;
@@ -3814,7 +3865,7 @@ sub pair2pairLCA {
 	
 	if ($mysqlInfo{"connection"}){
 		if (exists $mysqlInfo{"tables"}{"taxallnomy_rank"} and exists $mysqlInfo{"tables"}{"taxonomy"}){
-			print "  Retrieving taxonomy info from local database...";
+			print "    Retrieving taxonomy info from local database...";
 
 			my $rankTable = $mysqlInfo{"tables"}{"taxallnomy_rank"};
 			my $taxonomyTable = $mysqlInfo{"tables"}{"taxonomy"};
@@ -3887,7 +3938,7 @@ sub pair2pairLCA {
 			}
 			
 			if (scalar keys %missingTax > 0){
-				print "\n  Some txids  (".scalar (keys %missingTax).") was not found in local database.\n  Retrieving from the web.";
+				print "\n    Some txids  (".scalar (keys %missingTax).") was not found in local database.\n  Retrieving from the web.";
 			} else {
 				print "  OK!\n";
 			}
@@ -3898,7 +3949,7 @@ sub pair2pairLCA {
 	
 	if (scalar @txidRetrieve > 0){
 		if ($internetConnection){
-			print "  Retrieving taxonomy info from web...";
+			print "    Retrieving taxonomy info from web...";
 			$n = -1;
 			$m = -50;
 			do {
@@ -3976,7 +4027,7 @@ sub pair2pairLCA {
 			} while ($n < $#txidRetrieve);
 			print "  OK!\n";
 		} else {
-			print "\nNOTE: no internet connection. Txid with missing info will be discarded from the analysis.\n";
+			print "\n    NOTE: no internet connection. Txid with missing info will be discarded from the analysis.\n";
 		}
 	}
 	# verify if all txid information was retrieved
@@ -3997,7 +4048,7 @@ sub pair2pairLCA {
 		if (exists $mysqlInfo{"tables"}{"taxallnomy_rank"} and exists $mysqlInfo{"tables"}{"taxallnomy_lin"} and exists $mysqlInfo{"tables"}{"taxonomy"}){
 			my $taxallnomyLinTable = $mysqlInfo{"tables"}{"taxallnomy_lin"};
 			my $taxonomyTable = $mysqlInfo{"tables"}{"taxonomy"};
-			print "  Retrieving taxallnomy info from local database...\n";
+			print "    Retrieving taxallnomy info from local database...\n";
 			$n = -1;
 			$m = -100;
 			my %names2recover;
@@ -4082,7 +4133,7 @@ sub pair2pairLCA {
 		$n = -1;
 		$m = -50;
 		if ($internetConnection){
-			print "  Retrieving taxallnomy info from web...";
+			print "    Retrieving taxallnomy info from web...";
 			my @retrieveTN;
 			do {
 					
@@ -4144,7 +4195,7 @@ sub pair2pairLCA {
 	
 	if(scalar(keys %missingTaxTN) > 0){
 		foreach my $txid(keys %missingTaxTN){
-			print "\nNOTE: Could not retrieve info from taxallnomy of this txid: $txid.\n";
+			print "\n    NOTE: Could not retrieve info from taxallnomy of this txid: $txid.\n";
 			delete $map_txid{"txids"}{$txid};
 			$missingTxid{$txid} = 1;
 		}
@@ -4253,7 +4304,7 @@ sub align{
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	
 	return $defOutputAlignment;
 }
