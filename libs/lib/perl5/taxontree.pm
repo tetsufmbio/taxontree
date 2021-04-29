@@ -713,7 +713,7 @@ sub querySingleID {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -820,7 +820,7 @@ sub queryList {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -2446,7 +2446,7 @@ sub localBlast {
 sub formatBlastResult {
 
 	# Format BLAST result. Returns an array containing all BLAST hits gi numbers.
-	print "Formatting Blast result...\n  Identity threshold: $tpident_cut\n  Max sequences to analyse:  $maxTarget\n";
+	print "Formatting Blast result...\n  Identity threshold: $tpident_cut\n  Max sequences to analyze:  $maxTarget\n";
 	my $blast_result = $_[0];
 	open(BLAST, "< ".$blast_result) or die;
 	my @blast_result = <BLAST>;
@@ -4393,10 +4393,10 @@ sub treeMidpointRoot {
 		$maxDistance = sprintf "%.5f", $maxDistance;
 		$int++;
 	}
-	print "  iteration count: ".$int."; Max distance: ".$maxDistance."\n";
+	#print "  iteration count: ".$int."; Max distance: ".$maxDistance."\n";
 	my $midDistance = $maxDistance/2;
 	
-	print "  Leaves with maximum length: ".$leaves2[$maxNode1] -> id()." ".$leaves2[$maxNode0] -> id()."\n";
+	#print "  Leaves with maximum length: ".$leaves2[$maxNode1] -> id()." ".$leaves2[$maxNode0] -> id()."\n";
 	
 	my @maxNode1 = $midtree -> find_node(-id => $leaves2[$maxNode1] -> id());
 	my @maxNode0 = $midtree -> find_node(-id => $leaves2[$maxNode0] -> id());
