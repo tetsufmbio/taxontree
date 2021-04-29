@@ -347,9 +347,9 @@ sub check {
 				);
 				eval {$wire->connect;};
 				if ($@) {
-					die "\nERROR: Could not connect to mysql database. Please check mysql parameters in CONFIG.xml\n";
+					die "\nERROR: Could not connect to MySQL database. Please check mysql parameters in CONFIG.xml\n";
 				} else {
-					print "Connected to mysql database.\n";
+					print "Connected to MySQL database.\n";
 					$mysqlInfo{"connection"} = 1;
 					
 					my %configuredTables;
@@ -837,6 +837,7 @@ sub queryList {
 	}
 	my $treeFile = &generateTree($alignmentFile);
 	&formatTree($treeFile);
+	print "All Done!\n";
 	return 1;
 	
 }
@@ -924,7 +925,7 @@ sub querySeqFile {
 	my $treeFile = &generateTree($alignmentFile);
 	
 	&formatTree($treeFile);
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 }
 
@@ -1061,7 +1062,7 @@ sub queryMFastaFile {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "  checking sequence...\n";
+	#print "  Checking sequence...\n";
 	@subjects = checkSeq(@subjects);
 	
 	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
@@ -1085,7 +1086,7 @@ sub queryMFastaFile {
 	
 	&formatTree($treeFile);
 	
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -1205,7 +1206,7 @@ sub queryBlastFile {
 	my $treeFile = &generateTree($alignmentFile);
 	&formatTree($treeFile);
 
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -1304,7 +1305,7 @@ sub treeFile {
 	
 	&formatTree($treeFileTmp);
 	system("rm $treeFileTmp");
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -4410,7 +4411,7 @@ sub formatTree{
 	@leaves = $tree -> get_leaf_nodes();
 	treeConvertNexus(\@leaves);	
 	
-	print "\n  Done!\nAll Done!\n";
+	print "\n  Done!\n";
 	return 1;
 }
 
