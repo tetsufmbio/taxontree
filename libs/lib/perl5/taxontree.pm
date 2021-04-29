@@ -2337,7 +2337,7 @@ sub executeBlast {
 		my $encoded_query = uri_escape(">".$queryInfo{"name"}."\n".$queryInfo{"seq"});
 		print "Executing BLAST search on NCBI server...\n  Database: $database\n  BLAST evalue: $evalue\n";
 		$blast_result = webBLAST($blastProgram, $database, $maxTargetBlast, $encoded_query, $evalue);
-		print "  OK!\n";
+		print "  Done!\n";
 	} else {
 		open(OUT, "> ".$pid."_seq.fasta") or die "\nERROR: Can't create a query file.\n";
 		print OUT ">".$queryInfo{"name"}."\n".$queryInfo{"seq"};
@@ -2345,7 +2345,7 @@ sub executeBlast {
 		my $queryBlastInput = $pid."_seq.fasta";
 		print "Executing local BLAST search...\n  Database: $database\n  BLAST evalue: $evalue\n";
 		$blast_result = localBlast($blastProgram, $database, $maxTargetBlast, $queryBlastInput, $evalue);
-		print "  OK!\n";
+		print "  Done!\n";
 	}
 	return $blast_result;
 }
