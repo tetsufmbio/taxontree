@@ -1490,7 +1490,7 @@ sub generateCode {
 sub checkSeq {
 	my @list = @_;
 	my @newList;
-	print "  Checking sequence data...";
+	print "  Checking sequence data...  ";
 	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"id"};
@@ -1517,19 +1517,19 @@ sub checkSeq {
 sub checkTaxLin {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy lineage data...";
+	print "    Checking taxonomy lineage data...  ";
 	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"txid"};
 		if (!exists $map_txid{"txids"}{$subject}){
 			if ($forceNoTxid){
-				print "\n    NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.";
+				print "\n      NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.";
 				$note = 1;
 				push(@newList, $key);
 				$generalInfo{$subject}{"txid"} = 1;
 				$hashCode{"code"}{$key}{"txid"} = 1
 			} else {
-				print "\n    NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.";
+				print "\n      NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.";
 				$note = 1;
 			}
 		} else {
@@ -1548,7 +1548,7 @@ sub checkTaxLin {
 sub checkInfoTxid {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy data...";
+	print "  Checking taxonomy data...  ";
 	my $note = 0;
 	foreach my $key(@list){
 		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"name"} && exists $treeTableHash{$generalInfo{$key}{"name"}}){
@@ -2973,7 +2973,7 @@ sub defineIdSubject {
 	
 	if ($internetConnection == 1){
 		if ($retrieveWeb == 1){
-			print "  Retrieving info from the web...";
+			print "  Retrieving info from the web...  ";
 			my $note = 0;
 			#my %geneID2geneName;
 			if (scalar (keys %hashJoinIDUniprot) > 0){
@@ -3620,7 +3620,7 @@ sub discardIsoform {
 sub retrieveSubjectInfo {
 	
 	my @subjectList = @_;
-	print "Retrieving subject sequences...  ";
+	print "  Retrieving sequences...  ";
 	my $note = 0;
 	my %definedID;
 	my %missingID;
@@ -3721,7 +3721,7 @@ sub retrieveSubjectInfo {
 			next if ($id =~ m/^$/);
 			my $subjectType = verifyID($id);
 			if (!$subjectType){
-				print "\n  NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.";
+				print "\n    NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.";
 				$note = 1;
 			} elsif ($subjectType eq "uniprot_id"){
 				push(@uniprotID, $id);
@@ -3749,7 +3749,7 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;
 				}
 			}
@@ -3762,7 +3762,7 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;
 				}
 			}
@@ -3775,7 +3775,7 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;
 				}
 			}
@@ -3788,7 +3788,7 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refNCBIData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;
 				}
 			}
@@ -3803,11 +3803,11 @@ sub retrieveSubjectInfo {
 					if (exists $refNCBIData->{$id}->{"v"}->{$version}->{"seq"}){
 						$definedID{$id.".".$version}{"seq"} = $refNCBIData->{$id}->{"v"}->{$version}->{"seq"};
 					} else {
-						print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+						print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 						$note = 1;
 					}
 				} else {
-					print "\n  NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;
 				}
 			}
