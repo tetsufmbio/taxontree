@@ -693,7 +693,7 @@ sub querySingleID {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -713,7 +713,7 @@ sub querySingleID {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -803,7 +803,7 @@ sub queryList {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -820,7 +820,7 @@ sub queryList {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -882,7 +882,7 @@ sub querySeqFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -902,7 +902,7 @@ sub querySeqFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 		
 	my %subjectList;
 	my $queryCode = shift @subjects;
@@ -1044,7 +1044,7 @@ sub queryMFastaFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -1064,7 +1064,7 @@ sub queryMFastaFile {
 	print "  checking sequence...\n";
 	@subjects = checkSeq(@subjects);
 	
-	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my $alignmentFile;
 	if ($queryMFastaFile){
@@ -1167,7 +1167,7 @@ sub queryBlastFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -1187,7 +1187,7 @@ sub queryBlastFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -1280,7 +1280,7 @@ sub treeFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -2016,7 +2016,7 @@ sub filterTree {
 	}
 	
 	$tree->contract_linear_paths(1);
-	print "Total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
 	
 	my $tmpTree = $pid."_tmp_seq_tree.nwk";
 	my $output = Bio::TreeIO -> new(-format => "newick",
