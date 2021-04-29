@@ -4329,7 +4329,7 @@ sub trimal{
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	return $defOutputAlignment;
 	
 }
@@ -4356,7 +4356,7 @@ sub generateTree {
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	return $defOutputAlignment;
 }
 
@@ -4410,7 +4410,7 @@ sub formatTree{
 	@leaves = $tree -> get_leaf_nodes();
 	treeConvertNexus(\@leaves);	
 	
-	print "OK!\nAll Done!\n";
+	print "  Done!\nAll Done!\n";
 	return 1;
 }
 
@@ -4473,7 +4473,7 @@ sub treeMidpointRoot {
 	}
 	$midtree->reroot($midpt);
 	$midtree->contract_linear_paths();
-	print "  OK!\n";
+	print "  Done!\n";
 	return ($midtree);
 }
 
