@@ -4410,7 +4410,7 @@ sub formatTree{
 	@leaves = $tree -> get_leaf_nodes();
 	treeConvertNexus(\@leaves);	
 	
-	print "  Done!\nAll Done!\n";
+	print "\n  Done!\nAll Done!\n";
 	return 1;
 }
 
