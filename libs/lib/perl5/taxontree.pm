@@ -2724,7 +2724,7 @@ sub verifyID{
 sub defineIdSubject {
 
 	my @subjectList = @_;
-	
+	my $note = 0;
 	my %definedID;
 	#my (@uniprotAC, @uniprotACIso, @uniprotID, @refseqGI, @refseqAC);
 	my %hashJoinIDUniprot;
