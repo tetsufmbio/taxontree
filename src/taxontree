@@ -515,7 +515,7 @@ Prefix for output files.
 
 Use a local MySQL database to retrieve required TaxOnTree data (See README for details).
 
-=item B<-numThreads> Defalut: 1
+=item B<-numThreads> Default: 1
 
 The number of processors to be used for programs that can handle multi-threading.
 
