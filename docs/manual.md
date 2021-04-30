@@ -1,4 +1,4 @@
-# TaxOnTree: Including taxonomic information in phylogenetic trees
+# TaxOnTree: a tool that generates trees annotated with taxonomic information
 
 *Sakamoto T.* and *J. M. Ortega*
 
