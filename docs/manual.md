@@ -81,6 +81,7 @@ To determine it, TaxOnTree takes advantage of the hierarchical structure from NC
  * Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa are referred to as *no rank*, e.g. Theria, Eutheria, Boroeutheria, and others are taxa without rank in the human lineage (**Figure 4A**).  
   
  To handle these issues, we use [Taxallnomy](http://biodados.icb.ufmg.br/taxallnomy), a taxonomic database that provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy. Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy in which its hierarchical levels are correspondent to the taxonomic ranks. **Figure 4B** shows the human taxonomic lineage retrieved from the Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data.  
+ 
 <img src="/img/taxontree_taxsimple.png" width=650px/>
   
 **Figure 4**: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
