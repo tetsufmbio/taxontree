@@ -2766,7 +2766,7 @@ sub defineIdSubject {
 			} elsif ($subjectType eq "uniprot_ac"){
 				$definedID{$id}{"id"} = $id;
 				$definedID{$id}{"type"} = "uniprot_ac";
-				$idNoVersion =~ s/-\d+$//;
+				$idNoVersion =~ s/[-\.]\d+$//;
 				$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
 				$hashJoinIDUniprot{$id} = "uniprot_ac";			
 			} elsif ($subjectType eq "ncbi_gi"){
