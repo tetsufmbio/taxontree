@@ -2710,7 +2710,7 @@ sub verifyID{
 		return "uniprot_ac";
 	} elsif ($id =~ m/^[0-9]+$/){
 		return "ncbi_gi";
-	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || 
+	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_([A-Z]+)?\d+(\.\d+)?$/ || 
 				$id =~ m/^[^\d\W]{3}\d{5}(\.\d+)?$/ || 
 				$id =~ m/^[^\d\W]{2}\d{6}(\.\d+)?$/ || 
 				$id =~ m/^[^\d\W]{1}\d{5}(\.\d+)?$/ || 
@@ -3150,7 +3150,7 @@ sub defineIdSubject {
 						$n = $#refseqNucl if ($n > $#refseqNucl);
 						
 						my @ac2retrieve = @refseqNucl[$m .. $n];
-						my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
+						my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
 						my $fetch_lineage2 = retrieveEFetch($url_fetch_id);
 						
 						my @ids = split(/\n\n/, $fetch_lineage2);
