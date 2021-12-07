@@ -90,6 +90,13 @@
 				<outName>#OUTPUT</outName>
 			</program>
 			
+			<program>
+				<name>diamond</name> <!--https://github.com/bbuchfink/diamond/releases/tag/v2.0.13-->
+				<path></path>
+				<command>blastp -q #INPUT -o #OUTPUT -d #DB -f 6 --max_target_seqs #MAXTARGET --evalue #EVALUE --threads #NUMTHREADS</command>
+				<outName>#OUTPUT</outName>
+			</program>
+			
 			<!-- Please, do not modify the blastdbcmd command or outName tags -->
 			<program>
 				<name>blastdbcmd</name> <!--ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/-->
