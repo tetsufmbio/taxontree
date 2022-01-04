@@ -4,14 +4,15 @@ package taxontree;
 use strict;
 use Exporter;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-
-use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+my $installFolder;
+BEGIN { $installFolder  = $ENV{'HOME'}."/.taxontree"; }
+use lib $installFolder."/libs/lib/perl5";
 use Mail::RFC822::Address qw(valid);
 use URI::Escape;
 use HTTP::Tiny;
 use XML::Simple qw(XMLin);
 use File::Which;
-use Data::Dumper;
+#use Data::Dumper;
 use Net::Wire10;
 
 use Bio::TreeIO;
@@ -19,7 +20,7 @@ use Bio::Tree::TreeFunctionsI;
 use Bio::Tree::TreeI;
 use Bio::Tree::NodeI;
 	
-$VERSION     = "1.10.1";
+$VERSION     = "1.10.3";
 @ISA         = qw(Exporter);
 @EXPORT      = qw(inputs check main);
 #@EXPORT_OK   = qw(input);
@@ -51,6 +52,7 @@ my $pid;
 my $showIsoform;
 my $noTrimal;
 my $database;
+my $databasecmd;
 my $blastProgram;
 my $aligner;
 my $leafNameFormat;
@@ -104,6 +106,7 @@ sub inputs {
 	$showIsoform = $inputs->{"showIsoform"};
 	$noTrimal = $inputs->{"noTrimal"};
 	$database = $inputs->{"database"};
+	$databasecmd = $inputs->{"databasecmd"};
 	$blastProgram = $inputs->{"blastProgram"};
 	$aligner = $inputs->{"aligner"};
 	$leafNameFormat = $inputs->{"leafNameFormat"};
@@ -128,6 +131,10 @@ sub inputs {
 	$forceNoInternet = $inputs->{"forceNoInternet"};
 	$noIPG = $inputs->{"noIPG"};
 	$TaxOnTreeVersion = $_[1];
+	
+	if(!$databasecmd){
+		$databasecmd = $database;
+	}
 	return 1;
 }
 
@@ -154,7 +161,7 @@ sub check {
 		$internetConnection = 0;
 	}
 	
-	my $configFile = $ENV{'HOME'}."/.taxontree/CONFIG.xml";
+	my $configFile = $installFolder."/CONFIG.xml";
 	if (!(-e $configFile)){
 		if (!$treeFile or $localMySQL or $internetConnection){
 			die "\nERROR: Could not locate $configFile.\n";
@@ -268,6 +275,23 @@ sub check {
 					if (!($commandResult =~ m/$database /)){
 						die "\nERROR: $database was not found...\n";
 					}
+					
+					if($database ne $databasecmd){
+						$databasePath = $databasecmd;
+						if ($databasePath =~ /\//){
+							$databasePath = substr($databasePath, 0, rindex($databasePath, "/"));
+						} else {
+							$databasePath = "./"
+						}
+						
+						$command = $blastdbcmdPath." -list ".$databasePath;
+						$commandResult = `$command`;
+						if (!($commandResult =~ m/$database /)){
+							die "\nERROR: $database was not found...\n";
+						}
+						
+					}
+
 				}
 			}
 		}
@@ -324,9 +348,9 @@ sub check {
 				);
 				eval {$wire->connect;};
 				if ($@) {
-					die "\nERROR: Could not connect to mysql database. Please check mysql parameters in CONFIG.xml\n";
+					die "\nERROR: Could not connect to MySQL database. Please check mysql parameters in CONFIG.xml\n";
 				} else {
-					print "Connected to mysql database.\n";
+					print "Connected to MySQL database.\n";
 					$mysqlInfo{"connection"} = 1;
 					
 					my %configuredTables;
@@ -538,10 +562,17 @@ sub check {
 			chomp $line;
 			$line =~ s/\n|\r//g;
 			next if ($line =~ /^$/);
+			my $restrictTaxCode = "lin"; # by default, samples that contain some of the txid in their lineage
+										 # will be maintened in the tree.
+			if($line =~ /\*$/){
+				$restrictTaxCode = "sample"; # if txid in the file is followed by *, it will filter only 
+											 # those samples with this txid.
+				$line =~ s/\*$//;
+			}
 			if ($line =~ /[^\d]/){
 				print "\nNOTE: $line is not a valid taxonomy ID. This information was disconsidered.\n";
 			} else {
-				$restrictTax{$line} = 1;
+				$restrictTax{$restrictTaxCode}{$line} = 1;
 			}
 		}
 		if (scalar(keys %restrictTax) == 0){
@@ -670,7 +701,7 @@ sub querySingleID {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -690,7 +721,7 @@ sub querySingleID {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -780,7 +811,7 @@ sub queryList {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -797,7 +828,7 @@ sub queryList {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -814,6 +845,7 @@ sub queryList {
 	}
 	my $treeFile = &generateTree($alignmentFile);
 	&formatTree($treeFile);
+	print "All Done!\n";
 	return 1;
 	
 }
@@ -859,7 +891,7 @@ sub querySeqFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -879,7 +911,7 @@ sub querySeqFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 		
 	my %subjectList;
 	my $queryCode = shift @subjects;
@@ -901,7 +933,7 @@ sub querySeqFile {
 	my $treeFile = &generateTree($alignmentFile);
 	
 	&formatTree($treeFile);
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 }
 
@@ -1021,7 +1053,7 @@ sub queryMFastaFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -1038,10 +1070,10 @@ sub queryMFastaFile {
 	# tax filter
 	@subjects = taxonomicFilters(@subjects);
 	
-	print "  checking sequence...\n";
+	#print "  Checking sequence...\n";
 	@subjects = checkSeq(@subjects);
 	
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my $alignmentFile;
 	if ($queryMFastaFile){
@@ -1062,7 +1094,7 @@ sub queryMFastaFile {
 	
 	&formatTree($treeFile);
 	
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -1144,7 +1176,7 @@ sub queryBlastFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -1164,7 +1196,7 @@ sub queryBlastFile {
 	if (scalar @subjects > $maxTarget){
 		@subjects = splice(@subjects, 0, $maxTarget);
 	}
-	print "  total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @subjects."\n";
 	
 	my %subjectList;
 	foreach my $key(@subjects){
@@ -1182,7 +1214,7 @@ sub queryBlastFile {
 	my $treeFile = &generateTree($alignmentFile);
 	&formatTree($treeFile);
 
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -1257,7 +1289,7 @@ sub treeFile {
 	if (!($showIsoform)){
 		@subjects = discardIsoform(@subjects);
 		#@new_subjects = @$newGiList;
-		print "  number of proteins after discarding isoforms: ".scalar @subjects."\n";
+		print "  Number of proteins after discarding isoforms: ".scalar @subjects."\n";
 		if (scalar @subjects < 3){
 			die "\nERROR: Less than 3 proteins with distinct geneID was retrieved.\n";
 		}
@@ -1281,7 +1313,7 @@ sub treeFile {
 	
 	&formatTree($treeFileTmp);
 	system("rm $treeFileTmp");
-	print "OK!\n";
+	print "All Done!\n";
 	return 1;
 
 }
@@ -1398,12 +1430,11 @@ sub popOtherTableHash {
 	foreach my $line (@otherTable){
 		my $error2 = 0;
 		chomp $line;
+		$line =~ s/\r//g;
 		next if ($line eq "");
 		my @line = split(/\t/, $line);
 		my $leafID = shift @line;
-		#if (exists $leavesTree{$leafID}){
-		#	print "NOTE: your tree does not contain $leafID\n";
-		#} else {
+		
 		my $count = 1;
 		foreach my $line2 (@line){
 			my $label;
@@ -1415,7 +1446,7 @@ sub popOtherTableHash {
 			$otherTableHash{$label}{$leafID} = $line2;
 			$count++;
 		}
-		#}
+		
 	}
 	close TABLE;
 	return 1;
@@ -1429,6 +1460,7 @@ sub popTreeTableHash {
 	while (my $line = <TABLE>){
 		my $error2 = 0;
 		chomp $line;
+		$line =~ s/\r//g;
 		next if ($line eq "");
 		my @line = split(/\t/, $line);
 		
@@ -1551,47 +1583,66 @@ sub generateCode {
 sub checkSeq {
 	my @list = @_;
 	my @newList;
-	print "  Checking sequence data:\n";
+	print "  Checking sequence data...  ";
+	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"id"};
 		if (!exists $generalInfo{$subject}{"seq"}){
-			print "    NOTE: Could not retrieve sequence from $key. This entry will be discarded.\n";
+			print "\n    NOTE: Could not retrieve sequence from $key. This entry will be discarded.";
+			$note = 1;
 		} else {
 			push (@newList, $key);
 		}
 	}
 	if (scalar @newList < 3){
-		die "ERROR: less than 3 proteins had their sequence retrieved.\n"
+		die "\nERROR: less than 3 proteins had their sequence retrieved.";
 	}
+	
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return @newList;
 }
 
 sub checkTaxLin {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy lineage data...\n";
+	print "    Checking taxonomy lineage data...  ";
+	my $note = 0;
 	foreach my $key(@list){
 		my $subject = $hashCode{"code"}{$key}{"txid"};
 		if (!exists $map_txid{"txids"}{$subject}){
 			if ($forceNoTxid){
-				print "    NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.\n";
+				print "\n      NOTE: Could not retrieve txid lineage from $key. It was set to root lineage.";
+				$note = 1;
 				push(@newList, $key);
 				$generalInfo{$subject}{"txid"} = 1;
 				$hashCode{"code"}{$key}{"txid"} = 1
 			} else {
-				print "    NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.\n";
+				print "\n      NOTE: Could not retrieve txid lineage from $key. This entry will be discarded.";
+				$note = 1;
 			}
 		} else {
 			push (@newList, $key);
 		}
 	}
+	if($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return @newList;
 }
 
 sub checkInfoTxid {
 	my @list = @_;
 	my @newList;
-	print "  Checking taxonomy data:\n";
+	print "  Checking taxonomy data...  ";
+	my $note = 0;
 	foreach my $key(@list){
 		if (exists $generalInfo{$key} && exists $generalInfo{$key}{"name"} && exists $treeTableHash{$generalInfo{$key}{"name"}}){
 			# Incorporate treeTableHash data
@@ -1610,14 +1661,21 @@ sub checkInfoTxid {
 					$name = $key;
 				}
 				if ($forceNoTxid){
-					print "    NOTE: Could not retrieve txid from ".$name.". It was set to 1.\n";
+					print "\n    NOTE: Could not retrieve txid from ".$name.". It was set to 1.";
 					push(@newList, $key);
 					$generalInfo{$key}{"txid"} = 1;
+					$note = 1;
 				} else {
-					print "    NOTE: Could not retrieve txid from ".$name.". This entry will be discarded.\n";
+					print "\n    NOTE: Could not retrieve txid from ".$name.". This entry will be discarded.";
+					$note = 1;
 				}
 			}
 		}		
+	}
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
 	}
 	return @newList;
 }
@@ -1668,10 +1726,16 @@ sub restrictTax {
 	foreach my $gi (@giList){
 		my $subject = $hashCode{"code"}{$gi}{"id"};
 		my $subjectTxid2 = $generalInfo{$subject}{"txid"};
-		if (exists $restrictTax2{$subjectTxid2}){
+		if (exists $restrictTax2{"sample"}{$subjectTxid2}){
 			push(@newGiList, $gi);
 		} else {
-			next;
+			my @subjectLin2 = @{$map_txid{"txids"}{$subjectTxid2}{"lineage"}};
+			foreach my $subjectLin2(@subjectLin2){
+				if (exists $restrictTax2{"lin"}{$subjectLin2}){
+					push(@newGiList, $gi);
+					last;
+				}
+			}
 		}
 	}
 	return @newGiList;
@@ -1750,64 +1814,135 @@ sub taxFilter {
 			}
 		}
 		
-		my @queryLineage = @{$map_txid{"txids"}{$queryTxid2}{"lineageTaxSimpleN"}};
-		my $queryClade = $queryLineage[$taxonCode];
-		$filterTax{"clade"}{$queryClade} = 1;
+		#my @queryLineage = @{$map_txid{"txids"}{$queryTxid2}{"lineageTaxSimpleN"}};
+		#my $queryClade = $queryLineage[$taxonCode];
+		#$filterTax{"clade"}{$queryClade} = 1;
 		
+		for (my $i = 0; $i < scalar @giList; $i++){
+			
+			my $subject = $hashCode{"code"}{$giList[$i]}{"id"};
+			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
+			my @subjectLineage = @{$map_txid{"txids"}{$subjectTxid2}{"lineageTaxSimpleN"}};
+			my $subjectClade = $subjectLineage[$taxonCode];
+			
+			$filterTax{"clade"}{$subjectClade}{"count"} += 1 if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2} = $i if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"txid"}{$subjectTxid2} = 1;
+		
+		}
+		
+		foreach my $clade(keys %{$filterTax{"clade"}}){
+			while ($filterTax{"clade"}{$clade}{"count"} > $taxFilter2){
+				
+				# search for the closest pair of txid considering the lca of taxallnomy
+				my $maxLCA = 0;
+				my $maxLCA2 = 0;
+				my $txid2eliminate;
+				my @txids = keys %{$filterTax{"clade"}{$clade}{"txid"}};
+				for(my $j = 0; $j < scalar @txids - 1; $j++){
+					for(my $k = $j + 1; $k < scalar @txids; $k++){
+						if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} > $maxLCA){
+							$maxLCA = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]};
+							$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+							if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+								$txid2eliminate = $txids[$k];
+							} else {
+								$txid2eliminate = $txids[$j];
+							}
+							
+						} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} == $maxLCA){
+							if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} > $maxLCA){
+								$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+								if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+									$txid2eliminate = $txids[$k];
+								} else {
+									$txid2eliminate = $txids[$j];
+								}
+							} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} == $maxLCA){
+								$txid2eliminate = $txids[$j] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+								$txid2eliminate = $txids[$k] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$k]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+							}
+						}
+					}
+				}
+				delete $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate};
+				delete $filterTax{"txid"}{$txid2eliminate};
+				$filterTax{"clade"}{$clade}{"count"} -= 1;
+			}
+		}
 		foreach my $gi (@giList){
 			my $subject = $hashCode{"code"}{$gi}{"id"};
 			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
 			if (exists $filterTax{"txid"}{$subjectTxid2}){
 				push(@newGiList, $gi);
-				next;
-			} else {
-				my @subjectLineage = @{$map_txid{"txids"}{$subjectTxid2}{"lineageTaxSimpleN"}};
-				my $subjectClade = $subjectLineage[$taxonCode];
-				
-				if (!exists $filterTax{"clade"}{$subjectClade}){
-					$filterTax{"clade"}{$subjectClade} = 1;
-					$filterTax{"txid"}{$subjectTxid2} = 1;
-					push(@newGiList, $gi);
-				} else {
-					if ($filterTax{"clade"}{$subjectClade} < $taxFilter2){
-						$filterTax{"clade"}{$subjectClade} += 1;
-						$filterTax{"txid"}{$subjectTxid2} = 1;
-						push(@newGiList, $gi);
-					} else {
-						next;
-					}
-				}
-			}
+			} 
 		}
+		
 	} else {
 	
-		my $lca = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$queryTxid2};
-		$filterTax{"clade"}{$lca} = 1;
+		#my $lca = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$queryTxid2};
+		#$filterTax{"clade"}{$lca} = 1;
 		
+		for (my $i = 0; $i < scalar @giList; $i++){
+			
+			my $subject = $hashCode{"code"}{$giList[$i]}{"id"};
+			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
+			my $subjectClade = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$subjectTxid2};
+			
+			$filterTax{"clade"}{$subjectClade}{"count"} += 1 if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2} = $i if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"txid"}{$subjectTxid2} = 1;
+		
+		}
+		
+		foreach my $clade(keys %{$filterTax{"clade"}}){
+			while ($filterTax{"clade"}{$clade}{"count"} > $taxFilter2){
+				
+				# search for the closest pair of txid considering the lca of taxallnomy
+				my $maxLCA = 0;
+				my $maxLCA2 = 0;
+				my $txid2eliminate;
+				my @txids = keys %{$filterTax{"clade"}{$clade}{"txid"}};
+				for(my $j = 0; $j < scalar @txids - 1; $j++){
+					for(my $k = $j + 1; $k < scalar @txids; $k++){
+						if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} > $maxLCA){
+							$maxLCA = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]};
+							$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+							if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+								$txid2eliminate = $txids[$k];
+							} else {
+								$txid2eliminate = $txids[$j];
+							}
+							
+						} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} == $maxLCA){
+							if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} > $maxLCA){
+								$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+								if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+									$txid2eliminate = $txids[$k];
+								} else {
+									$txid2eliminate = $txids[$j];
+								}
+							} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} == $maxLCA){
+								$txid2eliminate = $txids[$j] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+								$txid2eliminate = $txids[$k] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$k]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+							}
+						}
+					}
+				}
+				# filter the selected txid;
+				delete $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate};
+				delete $filterTax{"txid"}{$txid2eliminate};
+				$filterTax{"clade"}{$clade}{"count"} -= 1;
+			}
+		}
 		foreach my $gi (@giList){
 			my $subject = $hashCode{"code"}{$gi}{"id"};
 			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
 			if (exists $filterTax{"txid"}{$subjectTxid2}){
 				push(@newGiList, $gi);
-				next;
-			} else {
-				my $subjectClade = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$subjectTxid2};
-				
-				if (!exists $filterTax{"clade"}{$subjectClade}){
-					$filterTax{"clade"}{$subjectClade} = 1;
-					$filterTax{"txid"}{$subjectTxid2} = 1;
-					push(@newGiList, $gi);
-				} else {
-					if ($filterTax{"clade"}{$subjectClade} < $taxFilter2){
-						$filterTax{"clade"}{$subjectClade} += 1;
-						$filterTax{"txid"}{$subjectTxid2} = 1;
-						push(@newGiList, $gi);
-					} else {
-						next;
-					}
-				}
-			}
+			} 
 		}
+		
 	}
 	
 
@@ -2051,7 +2186,7 @@ sub filterTree {
 	}
 	
 	$tree->contract_linear_paths(1);
-	print "  total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
+	print "  Total number of proteins for phylogenetic analysis: ".scalar @new_subjects."\n";
 	
 	my $tmpTree = $pid."_tmp_seq_tree.nwk";
 	my $output = Bio::TreeIO -> new(-format => "newick",
@@ -2372,7 +2507,7 @@ sub executeBlast {
 		my $encoded_query = uri_escape(">".$queryInfo{"name"}."\n".$queryInfo{"seq"});
 		print "Executing BLAST search on NCBI server...\n  Database: $database\n  BLAST evalue: $evalue\n";
 		$blast_result = webBLAST($blastProgram, $database, $maxTargetBlast, $encoded_query, $evalue);
-		print "  OK!\n";
+		print "  Done!\n";
 	} else {
 		open(OUT, "> ".$pid."_seq.fasta") or die "\nERROR: Can't create a query file.\n";
 		print OUT ">".$queryInfo{"name"}."\n".$queryInfo{"seq"};
@@ -2380,7 +2515,7 @@ sub executeBlast {
 		my $queryBlastInput = $pid."_seq.fasta";
 		print "Executing local BLAST search...\n  Database: $database\n  BLAST evalue: $evalue\n";
 		$blast_result = localBlast($blastProgram, $database, $maxTargetBlast, $queryBlastInput, $evalue);
-		print "  OK!\n";
+		print "  Done!\n";
 	}
 	return $blast_result;
 }
@@ -2393,7 +2528,7 @@ sub webBLAST {
 	
 	my ($program, $database, $defMaxTarget, $encoded_query, $evalue) = @_;
 
-	print "  BLAST max target sequences set to: $defMaxTarget\n";
+	print "  BLAST max target sequences: $defMaxTarget\n";
 	my $ua = HTTP::Tiny->new;
 	
 	# build the request
@@ -2507,7 +2642,7 @@ sub localBlast {
 sub formatBlastResult {
 
 	# Format BLAST result. Returns an array containing all BLAST hits gi numbers.
-	print "Formatting Blast result...\n  Identity threshold: $tpident_cut\n  Max sequences to analyse:  $maxTarget\n";
+	print "Formatting Blast result...\n  Identity threshold: $tpident_cut\n  Max sequences to analyze:  $maxTarget\n";
 	my $blast_result = $_[0];
 	open(BLAST, "< ".$blast_result) or die;
 	my @blast_result = <BLAST>;
@@ -2738,13 +2873,18 @@ sub verifyID{
 	
 	my $id = $_[0];
 	
-	if ($id =~ m/^[A-Z0-9]{3,5}_[A-Z0-9]{3,5}$|^[OPQ][0-9][A-Z0-9]{3}[0-9]_[A-Z0-9]{3,5}$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}_[A-Z0-9]{3,5}$/){
+	if ($id =~ m/^[A-Z0-9]{3,5}_[A-Z0-9]{3,5}([-\.]\d+)?$|^[OPQ][0-9][A-Z0-9]{3}[0-9]_[A-Z0-9]{3,5}([-\.]\d+)?$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}_[A-Z0-9]{3,5}([-\.]\d+)?$/){
 		return "uniprot_id";
-	} elsif ($id =~ m/^[OPQ][0-9][A-Z0-9]{3}[0-9](-\d+)?$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}(-\d+)?$/){
+	} elsif ($id =~ m/^[OPQ][0-9][A-Z0-9]{3}[0-9]([-\.]\d+)?$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}([-\.]\d+)?$/){
 		return "uniprot_ac";
 	} elsif ($id =~ m/^[0-9]+$/){
 		return "ncbi_gi";
-	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_\d+(\.\d+)?$/ || $id =~ m/^\w{3}\d{5}(\.\d+)?$/ || $id =~ m/^\w{2}\d{6}(\.\d+)?$/ || $id =~ m/^\w{1}\d{5}(\.\d+)?$/){
+	} elsif ($id =~ m/^(NC|AC|NG|NT|NW|NZ|NM|NR|XM|XR|NP|AP|XP|YP|WP|ZP)_([A-Z]+)?\d+(\.\d+)?$/ || 
+				$id =~ m/^[^\d\W]{3}\d{5}(\.\d+)?$/ || 
+				$id =~ m/^[^\d\W]{2}\d{6}(\.\d+)?$/ || 
+				$id =~ m/^[^\d\W]{1}\d{5}(\.\d+)?$/ || 
+				$id =~ m/^[^\d\W]{2}\d{8}(\.\d+)?$/ || 
+				$id =~ m/^[^\d\W]{3}\d{7}(\.\d+)?$/){
 		return "ncbi_ac";
 	} else {
 		return 0;
@@ -2754,7 +2894,7 @@ sub verifyID{
 sub defineIdSubject {
 
 	my @subjectList = @_;
-	
+	my $note = 0;
 	my %definedID;
 	#my (@uniprotAC, @uniprotACIso, @uniprotID, @refseqGI, @refseqAC);
 	my %hashJoinIDUniprot;
@@ -2777,38 +2917,41 @@ sub defineIdSubject {
 		$definedID{$id}{"name"} = $id;
 		
 		my $subjectType = verifyID($id);
-		if (!$subjectType){
-			if(!exists $treeTableHash{$id}){
-				print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
-			} else {
-				$definedID{$id}{"type"} = "other";
+		
+		if(exists $treeTableHash{$id}){
+			$definedID{$id}{"type"} = "other";
+			$definedID{$id}{"id"} = $id;
+			$definedID{$id}{"accession"} = $id;
+			$definedID{$id}{"geneID"} = "NULL";
+			$definedID{$id}{"geneName"} = "NULL";
+			$definedID{$id}{"txid"} = $treeTableHash{$id};
+		} else {
+			if (!$subjectType){
+			
+			print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
+			
+			} elsif ($subjectType eq "uniprot_id"){
+				$definedID{$id}{"type"} = "uniprot_id";
+				$hashJoinIDUniprot{$id} = "uniprot_id";
+			} elsif ($subjectType eq "uniprot_ac"){
 				$definedID{$id}{"id"} = $id;
-				$definedID{$id}{"accession"} = $id;
-				$definedID{$id}{"geneID"} = "NULL";
-				$definedID{$id}{"geneName"} = "NULL";
-				$definedID{$id}{"txid"} = $treeTableHash{$id};
-			}
-		} elsif ($subjectType eq "uniprot_id"){
-			$definedID{$id}{"type"} = "uniprot_id";
-			$hashJoinIDUniprot{$id} = "uniprot_id";
-		} elsif ($subjectType eq "uniprot_ac"){
-			$definedID{$id}{"id"} = $id;
-			$definedID{$id}{"type"} = "uniprot_ac";
-			$idNoVersion =~ s/-\d+$//;
-			$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
-			$hashJoinIDUniprot{$id} = "uniprot_ac";			
-		} elsif ($subjectType eq "ncbi_gi"){
-			
-			$definedID{$id}{"type"} = "ncbi_gi";
-			$hashJoinIDNCBI{$id} = "ncbi_gi";
-		} elsif ($subjectType eq "ncbi_ac"){
-			
-			$definedID{$id}{"id"} = $id;
-			$definedID{$id}{"type"} = "ncbi_ac";
+				$definedID{$id}{"type"} = "uniprot_ac";
+				$idNoVersion =~ s/[-\.]\d+$//;
+				$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
+				$hashJoinIDUniprot{$id} = "uniprot_ac";			
+			} elsif ($subjectType eq "ncbi_gi"){
+				
+				$definedID{$id}{"type"} = "ncbi_gi";
+				$hashJoinIDNCBI{$id} = "ncbi_gi";
+			} elsif ($subjectType eq "ncbi_ac"){
+				
+				$definedID{$id}{"id"} = $id;
+				$definedID{$id}{"type"} = "ncbi_ac";
 
-			$hashJoinIDNCBI{$id} = "ncbi_ac";
-			$idNoVersion =~ s/\.\d+$//;
-		}
+				$hashJoinIDNCBI{$id} = "ncbi_ac";
+				$idNoVersion =~ s/\.\d+$//;
+			}
+		}		
 		
 		$version2accession{$idNoVersion}{$id} = 1;
 		$accession2version{$id} = $idNoVersion;
@@ -2925,7 +3068,7 @@ sub defineIdSubject {
 							} else {
 								$definedID{$id}{"geneID"} = "NULL";
 								$definedID{$id}{"geneName"} = "NULL";
-								push (@gene2retrieve, $id);
+								#push (@gene2retrieve, $id);
 							}
 							$definedID{$id}{"txid"} = $txid;
 							delete $hashJoinIDNCBI{$id};
@@ -2963,7 +3106,7 @@ sub defineIdSubject {
 								} else {
 									$definedID{$ac}{"geneID"} = "NULL";
 									$definedID{$ac}{"geneName"} = "NULL";
-									push (@gene2retrieve, $id);
+									#push (@gene2retrieve, $id);
 									$accession2gi{$id} = $ac;
 									
 								}
@@ -3001,7 +3144,8 @@ sub defineIdSubject {
 	
 	if ($internetConnection == 1){
 		if ($retrieveWeb == 1){
-			print "  Retrieving info from the web...\n";
+			print "  Retrieving info from the web...  ";
+			my $note = 0;
 			#my %geneID2geneName;
 			if (scalar (keys %hashJoinIDUniprot) > 0){
 				my @uniprotAC = keys %{$listAccessions{"uniprot_ac"}};
@@ -3041,7 +3185,8 @@ sub defineIdSubject {
 							foreach my $gi (keys %{$version2accession{$gi2}}){
 								if (exists $hashJoinIDUniprot{$gi}){
 									if (!$txid){
-										print "  NOTE: Accession $gi was discarded. Could not retrieve its txid.\n";
+										print "\n  NOTE: Accession $gi was discarded. Could not retrieve its txid.";
+										$note = 1;
 										delete $definedID{$gi};
 									} else {
 										$definedID{$gi}{"accession"} = $accession;
@@ -3110,7 +3255,8 @@ sub defineIdSubject {
 				
 				if (scalar keys %hashJoinIDUniprot > 0){
 					foreach my $missingID(keys %hashJoinIDUniprot){
-						print "  NOTE: Could not retrieve data of $missingID. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $missingID. This entry was discarded.";
+						$note = 1;
 						delete $definedID{$missingID} if (exists $definedID{$missingID});
 					}
 					
@@ -3121,6 +3267,8 @@ sub defineIdSubject {
 			my $m = -50;
 			my @refseqGI = keys %{$listAccessions{"ncbi_gi"}};
 			my @refseqAC = keys %{$listAccessions{"ncbi_ac"}};
+			my (@refseqProt, @refseqNucl);
+			
 			if (scalar @refseqGI + scalar @refseqAC > 0){
 				my %refseqData;
 				my @allRefseqAccession = (@refseqGI, @refseqAC);
@@ -3129,20 +3277,12 @@ sub defineIdSubject {
 					$m = $m + 50;
 					$n = $#allRefseqAccession if ($n > $#allRefseqAccession);
 					
-					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@allRefseqAccession[$m .. $n]);
-					my $fetch_lineage2;
-					my $errorCount2 = -1;
-					do {
-						my $response = HTTP::Tiny->new->get($url_fetch_id);
-						$fetch_lineage2 = $response->{content};
-						$errorCount2++;
-						sleep 1;
-					} while ($fetch_lineage2 =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
-					if ($errorCount2 > 4){
-						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-					}
+					my @ac2retrieve = @allRefseqAccession[$m .. $n];
+					my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
+					my $fetch_lineage2 = retrieveEFetch($url_fetch_id);
 					
 					my @ids = split(/\n\n/, $fetch_lineage2);
+					my %accessionRetrieved;
 					foreach my $ids (@ids){
 						$ids =~ /accession \"([^\" ]+)\" ,/;
 						my $acc = $1;
@@ -3150,6 +3290,8 @@ sub defineIdSubject {
 						my $ver = $1;
 						$ids =~  /Seq-id ::= gi (\d+)/;
 						my $gi = $1;
+						$accessionRetrieved{$gi} = 1;
+						$accessionRetrieved{$acc} = 1;
 						if ($gi && $acc){
 							$accession2gi{$gi} = $acc.".".$ver;
 							$gi2accession{$acc.".".$ver} = $gi;
@@ -3157,58 +3299,152 @@ sub defineIdSubject {
 						
 					}
 					
-					my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&id=".join(",",@allRefseqAccession[$m .. $n]);
-					my $fetch_lineage;
-					my $errorCount = -1;
-					do {
-						my $response = HTTP::Tiny->new->get($url_fetch_seq);
-						$fetch_lineage = $response->{content};
-						$errorCount++;
-						sleep 1;
-					} while ($fetch_lineage =~ m/<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-					if ($errorCount > 4){
-						die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-					}
-					my $xs2 = XML::Simple->new();
-					my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
-					my @linkSet = @{$doc_lineage->{"TSeq"}};
-					
-					foreach my $link(@linkSet){
-					
-						my $type = $link->{"TSeq_seqtype"}->{"value"};
-						#my $gi = $link->{"TSeq_gi"};
-						my $accession = $link->{"TSeq_accver"};
-						$accession =~ /\.(\d+)$/;
-						my $version = $1;
-						$accession =~ s/\.\d+//;
-						my $txid = $link->{"TSeq_taxid"};
-						my $seq = $link->{"TSeq_sequence"};
-
-						$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
-						$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
-						$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
-						if (exists $gi2accession{$accession.".".$version}){
-							my $gi = $gi2accession{$accession.".".$version};
-							$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
-							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+					foreach my $ac(@ac2retrieve){
+						my $ac2 = $ac;
+						$ac2 =~ s/\.\d+$//;
+						if(!exists $accessionRetrieved{$ac2}){
+							push (@refseqNucl, $ac);
 						} else {
-							$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							push (@refseqProt, $ac);
 						}
-						$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
-						
-						if (exists $refseqData{$accession}{"vmax"}){
-							$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
-						} else {
-							$refseqData{$accession}{"vmax"} = $version;
-						}
-						#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
 					}
-					
-					sleep 1;
-					
 				} while ($n < $#allRefseqAccession);
 				$n = -1;
 				$m = -50;
+				
+				if (scalar @refseqNucl > 0){
+					
+					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqNucl if ($n > $#refseqNucl);
+						
+						my @ac2retrieve = @refseqNucl[$m .. $n];
+						my $url_fetch_id = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=text&rettype=seqid&id=".join(",",@ac2retrieve);
+						my $fetch_lineage2 = retrieveEFetch($url_fetch_id);
+						
+						my @ids = split(/\n\n/, $fetch_lineage2);
+						my %accessionRetrieved;
+						foreach my $ids (@ids){
+							$ids =~ /accession \"([^\" ]+)\" ,/;
+							my $acc = $1;
+							$ids =~  /version (\d+) /;
+							my $ver = $1;
+							$ids =~  /Seq-id ::= gi (\d+)/;
+							my $gi = $1;
+							$accessionRetrieved{$gi} = 1;
+							$accessionRetrieved{$acc} = 1;
+							if ($gi && $acc){
+								$accession2gi{$gi} = $acc.".".$ver;
+								$gi2accession{$acc.".".$ver} = $gi;
+							}
+							
+						}
+						
+					} while ($n < $#refseqNucl);
+				}
+				$n = -1;
+				$m = -50;
+				
+				if (scalar @refseqProt > 0){
+					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqProt if ($n > $#refseqProt);
+						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqProt[$m .. $n]);
+						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+						
+						my $xs2 = XML::Simple->new();
+						my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
+						my @linkSet = @{$doc_lineage->{"TSeq"}};
+						
+						foreach my $link(@linkSet){
+						
+							my $type = $link->{"TSeq_seqtype"}->{"value"};
+							#my $gi = $link->{"TSeq_gi"};
+							my $accession = $link->{"TSeq_accver"};
+							$accession =~ /\.(\d+)$/;
+							my $version = $1;
+							$accession =~ s/\.\d+//;
+							my $txid = $link->{"TSeq_taxid"};
+							#my $seq = $link->{"TSeq_sequence"};
+
+							$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
+							$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
+							#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+							if (exists $gi2accession{$accession.".".$version}){
+								my $gi = $gi2accession{$accession.".".$version};
+								$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+							} else {
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							}
+							$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
+							
+							if (exists $refseqData{$accession}{"vmax"}){
+								$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
+							} else {
+								$refseqData{$accession}{"vmax"} = $version;
+							}
+							#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
+						}
+						
+						sleep 1;
+						
+					} while ($n < $#refseqProt);
+					$n = -1;
+					$m = -50;
+				}
+				
+				if (scalar @refseqNucl > 0){
+					do {
+						$n = $n + 50;
+						$m = $m + 50;
+						$n = $#refseqNucl if ($n > $#refseqNucl);
+						my $url_fetch_seq = "https://www.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=nuccore&retmode=xml&rettype=fasta&seq_stop=1&id=".join(",",@refseqNucl[$m .. $n]);
+						my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+						
+						my $xs2 = XML::Simple->new();
+						my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["TSeq"]);
+						my @linkSet = @{$doc_lineage->{"TSeq"}};
+						
+						foreach my $link(@linkSet){
+						
+							my $type = $link->{"TSeq_seqtype"}->{"value"};
+							#my $gi = $link->{"TSeq_gi"};
+							my $accession = $link->{"TSeq_accver"};
+							$accession =~ /\.(\d+)$/;
+							my $version = $1;
+							$accession =~ s/\.\d+//;
+							my $txid = $link->{"TSeq_taxid"};
+							#my $seq = $link->{"TSeq_sequence"};
+
+							$refseqData{$accession}{"v"}{$version}{"txid"} = $txid;
+							$refseqData{$accession}{"v"}{$version}{"chemicalType"} = $type;
+							#$refseqData{$accession}{"v"}{$version}{"seq"} = $seq;
+							if (exists $gi2accession{$accession.".".$version}){
+								my $gi = $gi2accession{$accession.".".$version};
+								$refseqData{$accession}{"v"}{$version}{"accession"} = $gi;
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "gi\|".$gi."\|ref\|".$accession."\|";
+							} else {
+								$refseqData{$accession}{"v"}{$version}{"fastaHeader"} = "ref\|".$accession."\|";
+							}
+							$refseqData{$accession}{"v"}{$version}{"id"} = $accession.".".$version;
+							
+							if (exists $refseqData{$accession}{"vmax"}){
+								$refseqData{$accession}{"vmax"} = $version if ($version > $refseqData{$accession}{"vmax"});
+							} else {
+								$refseqData{$accession}{"vmax"} = $version;
+							}
+							#$accession2gi{$gi} = $refseqData{$accession}{"v"}{$version}{"id"};
+						}
+						
+						sleep 1;
+						
+					} while ($n < $#refseqNucl);
+					$n = -1;
+					$m = -50;
+				}
 				
 				foreach my $refseqAC (@refseqAC){
 					
@@ -3224,18 +3460,20 @@ sub defineIdSubject {
 							if (exists $refseqData{$identifier}{"v"}{$version}){
 								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
 									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
-									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 								$definedID{$identifier2}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
-								$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+								#$definedID{$identifier2}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+								$definedID{$identifier2}{"geneID"} = "NULL";
+								$definedID{$identifier2}{"geneName"} = "NULL";
 								
 							} elsif (exists $refseqData{$identifier}) {
 								$version = $refseqData{$identifier}{"vmax"};
 								if (exists $refseqData{$identifier}{"v"}{$version}{"accession"}){
 									$definedID{$identifier2}{"accession"} = $refseqData{$identifier}{"v"}{$version}{"accession"};
-									push (@gene2retrieve, $definedID{$identifier2}{"accession"}); # to retrieve geneID, GI is required
+									push (@gene2retrieve, $definedID{$identifier2}{"accession"}) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 								}
 								#$definedID{$identifier2}{"id"} = $identifier2;
 								$definedID{$identifier2}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
@@ -3244,12 +3482,14 @@ sub defineIdSubject {
 								$definedID{$identifier2}{"geneName"} = "NULL";
 								
 							} else {
-								print "  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.\n";
+								print "\n  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.";
+								$note = 1;
 								delete $definedID{$refseqAC} if (exists $definedID{$refseqAC});
 							}
 						}
 					} else {
-						print "  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $refseqAC. This entry was discarded.";
+						$note = 1;
 						delete $definedID{$refseqAC} if (exists $definedID{$refseqAC});
 					}
 					
@@ -3265,14 +3505,15 @@ sub defineIdSubject {
 							$definedID{$refseqGI}{"accession"} = $refseqGI;
 							$definedID{$refseqGI}{"txid"} = $refseqData{$identifier}{"v"}{$version}{"txid"};
 							$definedID{$refseqGI}{"chemicalType"} = $refseqData{$identifier}{"v"}{$version}{"chemicalType"};
-							$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
-							push (@gene2retrieve, $refseqGI); # to retrieve geneID, GI is required
+							#$definedID{$refseqGI}{"seq"} = $refseqData{$identifier}{"v"}{$version}{"seq"};
+							push (@gene2retrieve, $refseqGI) if ($refseqData{$identifier}{"v"}{$version}{"chemicalType"} eq "protein"); # to retrieve geneID, GI is required
 						} else {
-							print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
+							print "\n  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.";
+							$note = 1;
 							delete $definedID{$refseqGI};
 						}
 					} else {
-						print "  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.\n";
+						print "\n  NOTE: Could not retrieve data of $refseqGI. This entry was discarded.";
 						delete $definedID{$refseqGI};
 					}
 				}
@@ -3280,34 +3521,33 @@ sub defineIdSubject {
 			
 			# retrieve geneID of missing accession
 			if (scalar @gene2retrieve > 0){
-				#if (exists $leafNameOptions{"genename"} or $leafNameOptions{"geneid"}){
-					my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
-					my %linkGene = %$ref_linkGene;
-					foreach my $keySubject(@gene2retrieve){
-						
-						my $geneID = "NULL";
-						
-						if (exists $linkGene{$keySubject}){
-							$geneID = $linkGene{$keySubject}{"geneID"};
-							$geneID2geneName{$geneID} = "NULL";							
-						} 
-						
+				my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
+				my %linkGene = %$ref_linkGene;
+				foreach my $keySubject(@gene2retrieve){
+					
+					my $geneID = "NULL";
+					
+					if (exists $linkGene{$keySubject}){
+						$geneID = $linkGene{$keySubject}{"geneID"};
+						$geneID2geneName{$geneID} = "NULL";
+					} 
+					
+					if (exists $definedID{$keySubject}){
+						$definedID{$keySubject}{"geneID"} = $geneID;
+					}
+					
+					if (exists $accession2gi{$keySubject}){
+						$keySubject = $accession2gi{$keySubject};
 						if (exists $definedID{$keySubject}){
 							$definedID{$keySubject}{"geneID"} = $geneID;
 						}
-						
-						if (exists $accession2gi{$keySubject}){
-							$keySubject = $accession2gi{$keySubject};
-							if (exists $definedID{$keySubject}){
-								$definedID{$keySubject}{"geneID"} = $geneID;
-							}
-							$keySubject =~ s/\.\d+$//;
-							if (exists $definedID{$keySubject}){
-								$definedID{$keySubject}{"geneID"} = $geneID;
-							}
-						}						
-					}
-				#}
+						$keySubject =~ s/\.\d+$//;
+						if (exists $definedID{$keySubject}){
+							$definedID{$keySubject}{"geneID"} = $geneID;
+						}
+					}						
+				}
+				
 			}
 			
 			# retrieve IPG of missing accession
@@ -3360,7 +3600,35 @@ sub defineIdSubject {
 		}
 	}
 	
+	if($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return \%definedID;
+}
+
+sub retrieveEFetch {
+	my $url_fetch_id = $_[0];
+	my $fetch_lineage2;
+	my $errorCount2 = -1;
+	my $maxErrorCount = 100;
+	my $maxSleep = 30;
+	my $response;
+	do {
+		$response = HTTP::Tiny->new->get($url_fetch_id);
+		$errorCount2++;
+		my $sleepTime = 2 ** $errorCount2;
+		$sleepTime = $maxSleep if ($sleepTime > $maxSleep);
+		sleep $sleepTime;
+	#} while ($fetch_lineage2 =~ m/<p>The server encountered an internal error or|<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
+	} while (!$response->{success} and $errorCount2 < $maxErrorCount);
+	if (!$response->{success}){
+		die "\nERROR: Sorry, access to the following URL retrieved error $maxErrorCount times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
+	}
+	
+	return $response->{content};
 }
 
 sub retrieveGeneNCBI {
@@ -3382,21 +3650,11 @@ sub retrieveGeneNCBI {
 			$n = $#gilist if ($n > $#gilist);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?tool=taxontree&email=$email&dbfrom=protein&db=gene&id=".join("&id=",@gilist[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
+			my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+			
 			my $xs1 = XML::Simple->new();
-			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["LinkSet"]);
-					
+			my $doc_link = $xs1->XMLin($fetch_lineage, ForceArray => ["LinkSet"]);
+			
 			my @linkSet = @{$doc_link->{"LinkSet"}};
 					
 			foreach my $link(@linkSet){
@@ -3418,7 +3676,7 @@ sub retrieveGeneNCBI {
 					} else {
 						die "\nERROR: problem with this protein: $protID. Please contact me (tetsufmbio\@gmail.com)";
 					}
-					#
+					
 				} else {
 					$linkGene{$protID}{"geneID"} = "NULL";
 					$linkGene{$protID}{"geneName"} = "NULL";
@@ -3441,18 +3699,7 @@ sub retrieveGeneNCBI {
 			$n = $#giObsolete if ($n > $#giObsolete);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?tool=taxontree&email=$email&db=protein&retmode=xml&rettype=gp&id=".join("&id=",@giObsolete[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
+			my $link_xml = retrieveEFetch($url_fetch_seq);;
 			my @eachXML = split("</GBSeq>", $link_xml);
 			foreach my $eachXML(@eachXML){
 				if ($eachXML =~ m/<GBQualifier_value>GeneID:/){
@@ -3469,10 +3716,16 @@ sub retrieveGeneNCBI {
 			
 			sleep 1;
 			
-		} while ($n < $#giObsolete);	
+		} while ($n < $#giObsolete);
+
+		foreach my $giObsolete (@giObsolete){
+			if ($linkGene{$giObsolete}{"geneID"} eq "NULL"){
+				delete $linkGene{$giObsolete};
+			}
+		}
 	
 	}
-	
+
 	return \%linkGene;
 }
 
@@ -3518,21 +3771,11 @@ sub retrieveGeneName {
 			$n = $#geneIDlist if ($n > $#geneIDlist);
 			
 			my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gene&id=".join(",",@geneIDlist[$m .. $n]);
-			my $response = HTTP::Tiny->new->get($url_fetch_seq);
-			my $link_xml;
-			my $errorCount = -1;
-			do {
-				my $response = HTTP::Tiny->new->get($url_fetch_seq);
-				$link_xml = $response->{content};
-				$errorCount++;
-				sleep 1;
-			} while ($link_xml =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-			if ($errorCount > 4){
-				die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-			}
+			my $link_xml = retrieveEFetch($url_fetch_seq);
+			
 			my $xs1 = XML::Simple->new();
 			my $doc_link = $xs1->XMLin($link_xml, ForceArray => ["DocumentSummary"]);
-			#if (ref $doc_link->{"DocumentSummarySet"}->{"DocumentSummary"} eq 'ARRAY') {
+			if (ref $doc_link->{"DocumentSummarySet"}->{"DocumentSummary"} eq 'ARRAY') {
 				my @DocumentSummary = @{$doc_link->{"DocumentSummarySet"}->{"DocumentSummary"}};
 				foreach my $link(@DocumentSummary){
 					my $geneName = $link->{"Name"};
@@ -3540,6 +3783,9 @@ sub retrieveGeneName {
 					$gene2name{$geneID} = $geneName;
 					delete $allGene{$geneID};
 				}
+			} else {
+				print Dumper($doc_link);
+			}
 			sleep 1;
 			
 		} while ($n < $#geneIDlist);
@@ -3580,7 +3826,8 @@ sub discardIsoform {
 sub retrieveSubjectInfo {
 	
 	my @subjectList = @_;
-	#print "Retrieving subject sequences...  ";
+	print "  Retrieving sequences...  ";
+	my $note = 0;
 	my %definedID;
 	my %missingID;
 	my %seqData;
@@ -3607,7 +3854,7 @@ sub retrieveSubjectInfo {
 		my $blastdbcmdCommand = $programs{"blastSearch"}{"blastdbcmd"}{"path"}." ".$programs{"blastSearch"}{"blastdbcmd"}{"command"};
 		$blastdbcmdCommand =~ s/#INPUT/$inputblastdbcmd/g;
 		$blastdbcmdCommand =~ s/#OUTPUT/$outputblastdbcmd/g;
-		$blastdbcmdCommand =~ s/#DB/$database/g;
+		$blastdbcmdCommand =~ s/#DB2/$databasecmd/g;
 		$defOutputblastdbcmd =~ s/#OUTPUT/$outputblastdbcmd/g;
 		
 		system($blastdbcmdCommand);
@@ -3680,7 +3927,8 @@ sub retrieveSubjectInfo {
 			next if ($id =~ m/^$/);
 			my $subjectType = verifyID($id);
 			if (!$subjectType){
-				print "NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.\n";
+				print "\n    NOTE: Could not recognize $id as NCBI or Uniprot identifier... Identifier discarded.";
+				$note = 1;
 			} elsif ($subjectType eq "uniprot_id"){
 				push(@uniprotID, $id);
 			} elsif ($subjectType eq "uniprot_ac"){
@@ -3707,7 +3955,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3719,7 +3968,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3731,7 +3981,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refUniprotData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
@@ -3743,7 +3994,8 @@ sub retrieveSubjectInfo {
 					$definedID{$id}{"seq"} = $refNCBIData->{$id}->{"seq"};
 					delete ($missingID{$id});
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 			foreach my $id(@refseqAC){
@@ -3757,16 +4009,23 @@ sub retrieveSubjectInfo {
 					if (exists $refNCBIData->{$id}->{"v"}->{$version}->{"seq"}){
 						$definedID{$id.".".$version}{"seq"} = $refNCBIData->{$id}->{"v"}->{$version}->{"seq"};
 					} else {
-						print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+						print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+						$note = 1;
 					}
 				} else {
-					print "NOTE: Could not retrieve sequence of $id... This identifier will be discarded.\n";
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
 				}
 			}
 		}
 	}
 	
-	print "OK!\n";
+	if ($note == 0){
+		print "OK!\n";
+	} else {
+		print "\n";
+	}
+	
 	return \%definedID;
 }
 
@@ -3775,7 +4034,7 @@ sub pair2pairLCA {
 	# Retrive lineage of each txid and determine the LCA in each pair of txid.
 	# input: an array containing txid.
 	# return: a hash having txid as key, with information about the name, lineage, lca and lcaN of each txid.
-	print "Determining LCA...\n";
+	print "  Determining LCA...\n";
 	my @txid_list = @_;
 	my @txidRetrieve = @txid_list;
 	my %map_info;
@@ -3812,7 +4071,7 @@ sub pair2pairLCA {
 	
 	if ($mysqlInfo{"connection"}){
 		if (exists $mysqlInfo{"tables"}{"taxallnomy_rank"} and exists $mysqlInfo{"tables"}{"taxonomy"}){
-			print "  Retrieving taxonomy info from local database...";
+			print "    Retrieving taxonomy info from local database...";
 
 			my $rankTable = $mysqlInfo{"tables"}{"taxallnomy_rank"};
 			my $taxonomyTable = $mysqlInfo{"tables"}{"taxonomy"};
@@ -3885,7 +4144,7 @@ sub pair2pairLCA {
 			}
 			
 			if (scalar keys %missingTax > 0){
-				print "\n  Some txids  (".scalar (keys %missingTax).") was not found in local database.\n  Retrieving from the web.";
+				print "\n    Some txids  (".scalar (keys %missingTax).") was not found in local database.\n  Retrieving from the web.";
 			} else {
 				print "  OK!\n";
 			}
@@ -3896,7 +4155,7 @@ sub pair2pairLCA {
 	
 	if (scalar @txidRetrieve > 0){
 		if ($internetConnection){
-			print "  Retrieving taxonomy info from web...";
+			print "    Retrieving taxonomy info from web...";
 			$n = -1;
 			$m = -50;
 			do {
@@ -3904,18 +4163,9 @@ sub pair2pairLCA {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#txidRetrieve if ($n > $#txidRetrieve);
-				my $url_fetch_lineage = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=".join(",",@txidRetrieve[$m .. $n]);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to NCBI server retrieved error 4 times. Please, try to run TaxOnTree again later.";
-				}
+				my $url_fetch_seq = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=".join(",",@txidRetrieve[$m .. $n]);
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
 				my $xs2 = XML::Simple->new();
 				my $doc_lineage = $xs2->XMLin($fetch_lineage, ForceArray => ["Taxon"], KeepRoot => 1);
 				my @taxaSet = @{$doc_lineage->{"TaxaSet"}->{"Taxon"}};
@@ -3983,7 +4233,7 @@ sub pair2pairLCA {
 			} while ($n < $#txidRetrieve);
 			print "  OK!\n";
 		} else {
-			print "\nNOTE: no internet connection. Txid with missing info will be discarded from the analysis.\n";
+			print "\n    NOTE: no internet connection. Txid with missing info will be discarded from the analysis.\n";
 		}
 	}
 	# verify if all txid information was retrieved
@@ -4003,7 +4253,8 @@ sub pair2pairLCA {
 	if ($mysqlInfo{"connection"}){
 		if (exists $mysqlInfo{"tables"}{"taxallnomy_rank"} and exists $mysqlInfo{"tables"}{"taxallnomy_lin"} and exists $mysqlInfo{"tables"}{"taxonomy"}){
 			my $taxallnomyLinTable = $mysqlInfo{"tables"}{"taxallnomy_lin"};
-			print "  Retrieving taxallnomy info from local database...\n";
+			my $taxonomyTable = $mysqlInfo{"tables"}{"taxonomy"};
+			print "    Retrieving taxallnomy info from local database...\n";
 			$n = -1;
 			$m = -100;
 			my %names2recover;
@@ -4038,7 +4289,7 @@ sub pair2pairLCA {
 				$n = $n + 100;
 				$m = $m + 100;
 				$n = $#names2recover if ($n > $#names2recover);
-				my $results = $wire->query("SELECT txid,sciname FROM ".$taxallnomyLinTable." where txid in (".join(",",@names2recover[$m .. $n]).");");
+				my $results = $wire->query("SELECT txid,sciname FROM ".$taxonomyTable." where txid in (".join(",",@names2recover[$m .. $n]).");");
 				
 				while (my $row = $results->next_hash) {
 					my $txid = $row->{txid};
@@ -4088,25 +4339,16 @@ sub pair2pairLCA {
 		$n = -1;
 		$m = -50;
 		if ($internetConnection){
-			print "  Retrieving taxallnomy info from web...";
+			print "    Retrieving taxallnomy info from web...";
 			my @retrieveTN;
 			do {
 					
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#txid_list2 if ($n > $#txid_list2);
-				my $url_fetch_lineage = "http://biodados.icb.ufmg.br/taxallnomy/cgi-bin/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
-				}
+				my $url_fetch_seq = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@txid_list2[$m .. $n])."&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
 				my @fetch_lineage = split(/\n/, $fetch_lineage);
 				my @ranks = @taxSimple_ranks;
 				unshift (@ranks, "Root");
@@ -4121,30 +4363,22 @@ sub pair2pairLCA {
 						unshift (@lineage, "Root");
 						$map_txid{"txids"}{$txid}{"rankTaxSimple"} = \@ranks;
 						$map_txid{"txids"}{$txid}{"lineageTaxSimple"} = \@lineage;
-						delete $missingTaxTN{$txid};
 						push(@retrieveTN, $txid);
 					}
 				}
+				
 			} while ($n < $#txid_list2);
 			
 			$n = -1;
 			$m = -50;
+			
 			do {
 				$n = $n + 50;
 				$m = $m + 50;
 				$n = $#retrieveTN if ($n > $#retrieveTN);
-				my $url_fetch_lineage = "http://biodados.icb.ufmg.br/taxallnomy/cgi-bin/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
-				my $fetch_lineage;
-				my $errorCount = -1;
-				do {
-					my $response = HTTP::Tiny->new->get($url_fetch_lineage);
-					$fetch_lineage = $response->{content};
-					$errorCount++;
-					sleep 1;
-				} while ($fetch_lineage =~ m/<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount < 5);
-				if ($errorCount > 4){
-					die "\nERROR: Sorry, access to Taxallnomy server retrieved error 4 times. Please, try to run TaxOnTree later.";
-				}
+				my $url_fetch_seq = "http://bioinfo.icb.ufmg.br/cgi-bin/taxallnomy/taxallnomy_multi.pl?txid=".join(",",@retrieveTN[$m .. $n])."&type=number&rank=custom&srank=".join(",", @taxSimple_ranks);
+				my $fetch_lineage = retrieveEFetch($url_fetch_seq);
+				
 				my @fetch_lineage = split(/\n/, $fetch_lineage);
 				for(my $o = 2; $o < scalar @fetch_lineage; $o++){
 					my $lineage = $fetch_lineage[$o];
@@ -4156,8 +4390,10 @@ sub pair2pairLCA {
 					} else {
 						unshift (@lineage, "1.000");
 						$map_txid{"txids"}{$txid}{"lineageTaxSimpleN"} = \@lineage;
+						delete $missingTaxTN{$txid};
 					}
 				}
+				
 			} while ($n < $#retrieveTN);
 			print "  OK!\n";
 		} 	
@@ -4165,7 +4401,7 @@ sub pair2pairLCA {
 	
 	if(scalar(keys %missingTaxTN) > 0){
 		foreach my $txid(keys %missingTaxTN){
-			print "\nNOTE: Could not retrieve info from taxallnomy of this txid: $txid.\n";
+			print "\n    NOTE: Could not retrieve info from taxallnomy of this txid: $txid.\n";
 			delete $map_txid{"txids"}{$txid};
 			$missingTxid{$txid} = 1;
 		}
@@ -4185,6 +4421,7 @@ sub pair2pairLCA {
 		my @rank1 = @{$map_txid{"txids"}{$txid_list[$i]}{"rank"}};
 		my @rankTS1 = @{$map_txid{"txids"}{$txid_list[$i]}{"rankTaxSimple"}};
 		for (my $j = $i; $j < scalar @txid_list; $j++){
+			print $txid_list[$j] if (!$map_txid{"txids"}{$txid_list[$j]}{"lineage"});
 			my @lineage2 = @{$map_txid{"txids"}{$txid_list[$j]}{"lineage"}};
 			my @lineage2name = @{$map_txid{"txids"}{$txid_list[$j]}{"lineageName"}};
 			my @lineageTS2 = @{$map_txid{"txids"}{$txid_list[$j]}{"lineageTaxSimple"}};
@@ -4273,7 +4510,7 @@ sub align{
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	
 	return $defOutputAlignment;
 }
@@ -4298,7 +4535,7 @@ sub trimal{
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	return $defOutputAlignment;
 	
 }
@@ -4325,7 +4562,7 @@ sub generateTree {
 	
 	translateFastaFile($inputAlignment);
 	
-	print "  OK!\n";
+	print "  Done!\n";
 	return $defOutputAlignment;
 }
 
@@ -4379,7 +4616,7 @@ sub formatTree{
 	@leaves = $tree -> get_leaf_nodes();
 	treeConvertNexus(\@leaves);	
 	
-	print "OK!\nAll Done!\n";
+	print "\n  Done!\n";
 	return 1;
 }
 
@@ -4413,10 +4650,10 @@ sub treeMidpointRoot {
 		$maxDistance = sprintf "%.5f", $maxDistance;
 		$int++;
 	}
-	print "  iteration count: ".$int."; Max distance: ".$maxDistance."\n";
+	#print "  iteration count: ".$int."; Max distance: ".$maxDistance."\n";
 	my $midDistance = $maxDistance/2;
 	
-	print "  Leaves with maximum length: ".$leaves2[$maxNode1] -> id()." ".$leaves2[$maxNode0] -> id()."\n";
+	#print "  Leaves with maximum length: ".$leaves2[$maxNode1] -> id()." ".$leaves2[$maxNode0] -> id()."\n";
 	
 	my @maxNode1 = $midtree -> find_node(-id => $leaves2[$maxNode1] -> id());
 	my @maxNode0 = $midtree -> find_node(-id => $leaves2[$maxNode0] -> id());
@@ -4442,7 +4679,7 @@ sub treeMidpointRoot {
 	}
 	$midtree->reroot($midpt);
 	$midtree->contract_linear_paths();
-	print "  OK!\n";
+	print "  Done!\n";
 	return ($midtree);
 }
 

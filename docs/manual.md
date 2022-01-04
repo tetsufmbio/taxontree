@@ -1,4 +1,4 @@
-# TaxOnTree: Including taxonomic information in phylogenetic trees
+# TaxOnTree: a tool that generates trees annotated with taxonomic information
 
 *Sakamoto T.* and *J. M. Ortega*
 
@@ -48,7 +48,7 @@
 
 **Figure 1**: Phylogenetic tree of Angiogenin processed by TaxOnTree. Branches are colored according to the taxonomic classes (left) in the tree and according to the LCA (right).
 
-This document is a guide to understand all TaxOnTree features and resources to make you an expert in taxonomy. 
+This document is a guide to understanding all TaxOnTree features and resources to make you an expert in taxonomy. 
 
 ## 2. TaxOnTree features
 
@@ -56,11 +56,11 @@ This section describes some features and concepts that you should know to work w
 
 ### 2.1. TaxOnTree workflow
 
-TaxOnTree workflow is schematized in **Figure 2**. TaxOnTree has a phylogenetic pipeline implemented on it that allows several input format.
+TaxOnTree workflow is schematized in **Figure 2**. TaxOnTree has a phylogenetic pipeline implemented on it that allows several input formats.
 
 <img src="/img/taxontree_MM5.png" width=650px/>
 
-**Figure 2**: TaxOnTree workflow. Dashed boxes in phylogenetic pipeline are optional steps.
+**Figure 2**: TaxOnTree workflow. Dashed boxes in the phylogenetic pipeline are optional steps.
 
 ### 2.2. Lowest Common Ancestor (LCA)
 
@@ -68,26 +68,27 @@ TaxOnTree uses the concept of LCA to determine the taxonomic relationship betwee
 and the other organisms in the tree. LCA of two or more organisms represents the most recent ancestor
 that all organisms in a set have in common. 
 
-To determine it, TaxOnTree takes advantage of the hierarchical structure from NCBI Taxonomy. As illustration, a short taxonomic lineages of human, dog and frog from NCBI Taxonomy are represented in the **Figure 3**. Walking through the human taxonomic lineage, beginning from the root (level 0), we could observe that several taxa comprising the human lineage are shared with the other two species. However, in different point of the human lineage, frog and dog lineages take different route. The frog lineage diverge from the human lineage after the level 17 (Amniota), while, in dog lineage, this occur at level 21 (Boreoeutheria). The last taxa shared between the pairs of lineages human X frog or human X dog are what we denominate as LCA. The higher the LCA level, the more recent the first divergence between the species in comparison and, thus, the more closer they are. So, for instance, by comparing the LCA level of human x frog and human x dog, we could claim that human is more closely related to dog than to frog.  
+To determine it, TaxOnTree takes advantage of the hierarchical structure from NCBI Taxonomy. As an illustration, short taxonomic lineages of human, dog, and frog from NCBI Taxonomy are represented in **Figure 3**. Walking through the human taxonomic lineage, beginning from the root (level 0), we could observe that several taxa comprising the human lineage are shared with the other two species. However, frog and dog lineages take different routes at different points of the human lineage. The frog lineage diverges from the human lineage after level 17 (Amniota), while, in dog lineage, this occurs at level 21 (Boreoeutheria). The last taxa shared between the pairs of lineages human X frog or human X dog is what we denominate as LCA. The higher the LCA level, the more recent the first divergence between the species in comparison and, thus, the closer they are. So, for instance, by comparing the LCA level of human X frog and human X dog, we could claim that human is more closely related to the dog than to frog.  
 
 <img src="/img/lca_frog.png" width=650px/>
 
-**Figure 3**: Determining LCA. Taxonomic lineage of human, dog and frog are shown. LCA between human and dog is Boreoeutheria, while LCA between human and frog is Amniota.
+**Figure 3**: Determining LCA. The taxonomic lineage of human, dog and frog are shown. LCA between human and dog is Boreoeutheria, while LCA between human and frog is Amniota.
 
 ### 2.3. Missing ranks and Taxallnomy database
 
  Whenever we are querying for a taxonomic rank from NCBI Taxonomy, two issues have to be considered :
  * Some taxonomic ranks are absent in a taxonomic lineage, e.g. there is no taxon for subclass, superclass, and subphylum in the human lineage (**Figure 4A**);
- * Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa are referred as *no rank*, e.g. Theria, Eutheria, Boroeutheria and others are taxa without rank in the human lineage (**Figure 4A**).  
+ * Some taxa found in a taxonomic lineage do not have a taxonomic rank. These taxa are referred to as *no rank*, e.g. Theria, Eutheria, Boroeutheria, and others are taxa without rank in the human lineage (**Figure 4A**).  
   
- To handle these issues, we use [Taxallnomy](http://biodados.icb.ufmg.br/taxallnomy), a taxonomic database which provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy. Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy which its hierarchical levels are correspondent to the taxonomic ranks. **Figure 4B** shows the human taxonomic lineage retrieved from Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data.  
+ To handle these issues, we use [Taxallnomy](http://biodados.icb.ufmg.br/taxallnomy), a taxonomic database that provides a taxonomic lineage with all ranks for all taxa comprising the NCBI Taxonomy. Taxallnomy provides a balanced version of the taxonomic tree from NCBI Taxonomy in which its hierarchical levels are correspondent to the taxonomic ranks. **Figure 4B** shows the human taxonomic lineage retrieved from the Taxallnomy database. Ranks that are originally missing in the human taxonomic lineage are filled by this data.  
+ 
 <img src="/img/taxontree_taxsimple.png" width=650px/>
   
 **Figure 4**: Human taxonomic lineage from (A) NCBI Taxonomy and from (B) Taxallnomy. Taxa with a taxonomic rank assigned are in blue and taxa exclusive from Taxallnomy are in red.
 
 ## 3. Installation
 
-TaxOnTree source code can be dowloaded at its [GitHub page](https://github.com/tetsufmbio/taxontree/). Here we describe how to install it in a local machine.
+TaxOnTree source code can be downloaded at its [GitHub page](https://github.com/tetsufmbio/taxontree/). Here we describe how to install it in a local machine.
 
 ### 3.1. Prerequisites
 
@@ -95,8 +96,8 @@ Some prerequisites are required to run TaxOnTree. They are:
 
 * Unix Platform;
 
-  TaxOnTree was tested on Ubuntu, CentOS and MacOS, but it should work on
-  any Unix platforms.
+  TaxOnTree was tested on Ubuntu, CentOS, and macOS, but it should work on
+  any Unix platform.
 
 * Perl;
 
@@ -115,12 +116,12 @@ Some prerequisites are required to run TaxOnTree. They are:
   with NCBI server which uses HTTPS communication protocol. Run the command `openssl version`
   to verify if it is installed in your system. If not, use the installation 
   tool of your Unix distribution for its installation (`sudo apt-get install libssl-dev` for Debian or 
-  `sudo yum install openssl-dev` for RPM based distribution).
+  `sudo yum install openssl-dev` for RPM-based distribution).
 
 * [FigTree](http://tree.bio.ed.ac.uk/software/figtree/).
 
   A free graphical phylogenetic trees viewer developed in Java by Andrew Rambaut group. 
-  TaxOnTree output is made to be visualized in this software. There are versions for MacOS, 
+  TaxOnTree output is made to be visualized in this software. There are versions for macOS, 
   Linux and Windows. Pick the one that is more convenient for you.
 
 ### 3.2. Downloading and installing
@@ -139,11 +140,11 @@ to contact you when necessary. This could happen if you are using TaxOnTree exce
 To run TaxOnTree without internet connection, refer to the Section [6.1]
 (61-running-taxontree-without-internet-connection) of this manual.
 
-This will install all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
+This will install 	all TaxOnTree dependencies at $HOME/.taxontree/ folder and create 
 an executable named taxontree. The installation process will also attempt to install 
-some third-party software that is in src folder (**Table 1**).
+some third-party software that is in the *src* folder (**Table 1**).
 
-**Table 1**: Third-party software compiled durint TaxOnTree installation.
+**Table 1**: Third-party software compiled during TaxOnTree installation.
 
 | third-party software | phylogenetic pipeline step |                    link                 |
 |----------------------|----------------------------|-----------------------------------------|
@@ -166,7 +167,7 @@ the following message after the command `./taxontree -version`.
 ```
 > ./taxontree -version
 
-        TaxOnTree  Copyright (C) 2015-2017  Tetsu Sakamoto
+        TaxOnTree  Copyright (C) 2015-2021  Tetsu Sakamoto
         This program comes with ABSOLUTELY NO WARRANTY.
         This is free software, and you are welcome to redistribute it under
         certain conditions. See GNU general public license v.3 for details.
@@ -174,13 +175,13 @@ the following message after the command `./taxontree -version`.
 TaxOnTree v.1.10.1
 ```
 
-In *sample* folder, there is a Newick file to test if TaxOnTree is working. Try the following command:
+In the *sample* folder, there is a Newick file to test if TaxOnTree is working. Try the following command:
 
 ```bash
 > ./taxontree -treefile sample/test.nwk -queryid 544509544
 ```
 
-This should generate a file called *test_seq_tree.nex*. Try openning this file on **FigTree**.
+This should generate a file called *test_seq_tree.nex*. Try opening this file on **FigTree**.
 
 ### 4. Command-line parameters
 
@@ -211,37 +212,36 @@ ILLISFLIFLIVG
 
 Blast result of a single protein generated by Standalone BLAST+ in tabular format (-outfmt 6). You may provide a protein accession 
 from the result to be considered as query using `-queryID`, or else, TaxOnTree will consider the protein 
-in the first column or, if it is not an identifier from NCBI or Uniprot, the best hit subject as query.
+in the first column or, if it is not an identifier from NCBI or Uniprot, the best hit subject as the query.
 
 #### 4.1.4. List file (-listFile <list_file>) 
 
 A file containing a list of protein identifiers from NCBI (GI or accession number) or UniprotKB 
-(accession number or entry name) separated by new line. You may provide a protein accession from 
-the list to be considered as query using `-queryID`, or else, TaxOnTree will consider the first entry 
-in the list as query. 
+(accession number or entry name) separated by a new line. You may provide a protein accession from 
+the list to be considered as a query using `-queryID`, or else, TaxOnTree will consider the first entry 
+in the list as the query. 
 
 #### 4.1.5. Multi-FASTA file (-mfastaFile <mfasta_file>)
 
 A Multi-FASTA file containing ortholog sequences. You may provide a protein accession from the file to be 
-considered as query using `-queryID`, or else, TaxOnTree will consider the first entry in the file as query.
+considered as query using `-queryID`, or else, TaxOnTree will consider the first entry in the file as the query.
 
 #### 4.1.6. Aligned multi-FASTA file (-alignFile <align_file>)
 
 An Aligned Multi-FASTA file. You may provide a protein accession from the list to be considered as 
-query using `-queryID`, or else, TaxOnTree will consider the first entry in the file as query.
+query using `-queryID`, or else, TaxOnTree will consider the first entry in the file as the query.
 
 #### 4.1.7. Tree file (-treeFile <tree_file>)
 
-A tree file in NEWICK format. You must provide the protein in the tree to be considered as query by
-using `-queryID`. If the leaves of the tree are not exactly an accession number from NCBI or UniprotKB, but it contains the accessions in their names, you can use `-delimiter` and `-position` parameters to allow TaxOnTree to extract the accession and retrieve the taxonomy ID of each proteins. Alternatively, you can provide a table containing the leaves (first column) and their
-corresponding taxonomy id (second column) using the option `-treetable`. To generate a file with all leaves
-name in your tree, use the option `-printLeaves`. 
+A tree file in NEWICK format. You must provide the protein in the tree to be considered as the query by
+using `-queryID`. If the leaves of the tree are not exactly an accession number from NCBI or UniprotKB, but it contains the accessions in their names, you can use `-delimiter` and `-position` parameters to allow TaxOnTree to extract the accession and retrieve the taxonomy ID of each protein. Alternatively, you can provide a table containing the leaves (first column) and their corresponding taxonomy ID (second column) using the option `-treetable`. To generate a file with all leaf
+names in your tree, use the option `-printSamples`. 
 
 ### 4.2. Other parameters that follow the input
 
-Parameters described here can be used to customize the phylogenetic pipeline, the tree output or 
-even provide additional information to be embeded in the tree. To facilitate the comprehension
-we subdivided these parameters according to the phylogenetic steps that they are related. 
+Parameters described here can be used to customize the phylogenetic pipeline, the tree output, or 
+even provide additional information to be embedded in the tree. To facilitate the comprehension
+we subdivided these parameters according to the phylogenetic steps that they are related to. 
 
 #### 4.2.1. Blast option
 
@@ -254,7 +254,7 @@ Example: /home/user/taxontree/db, where db is the name of BLAST-formatted databa
 only work if the database was generated using sequences from GenBank or Uniprot (using its 
 FASTA-header pattern) and the option -parse_seqids on makeblastdb command (See details on Section [6.1](61-running-taxontree-without-internet-connection)).
 
-To request the BLAST search from NCBI server, you may choose one of these databases: 
+To request the BLAST search from the NCBI server, you may choose one of these databases: 
 nr or refseq_protein. 
 
 * **-evalue <real_value> Default: 10e-5**
@@ -264,7 +264,7 @@ Expect value threshold for BLAST search. It works on -seqFile and -singleID.
 * **-threshold <int_value> Default: 50**
 
 Protein identity threshold. For each subject, TaxOnTree calculates its identity with the query sequence after
-removing overlapping HSPs and considering the length of the query sequence. Threshold may vary between 0-100.
+removing overlapping HSPs and considering the length of the query sequence. The threshold may vary between 0-100.
 It works on -seqFile, -blastFile and -singleID.
 
 * **-maxTarget <int_value> Default: 200**
@@ -274,6 +274,10 @@ Max target sequences to be used for phylogenetic analysis. It works on -seqFile,
 * **-maxTargetBlast <int_value>**
 
 Max target sequence to be retrieved by BLAST. It works on -seqFile and -singleID.
+
+* **-dbcmd <database_name>**
+
+The Blast-formatted database name to retrieve sequences using blastdbcmd. Default: same database name provided in -db parameter.
 
 #### 4.2.2 Alignment option
 
@@ -299,27 +303,27 @@ reconstruction software, see CONFIG.xml.
 
 A table containing the leaf names of the input tree file in the first column and the correspondent taxonomy
 ID in the second. Use this option if the input tree does not contain an accession from NCBI or Uniprot
-in its leaves. To obtain a list of leaf names in your tree, use the option -printLeaves. It works on -treeFile.
+in its leaves. To obtain a list of leaf names in your tree, use the option -printSamples. It works on -treeFile.
 
-Example: For a newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
+Example: For a Newick tree "(gorilla,(human,chimp))", you could provide a tab-delimited table like this:
 
 	human	9606
 	chimp	9598
 	gorilla	9595
 
-* **-printLeaves**
+* **-printSamples**
 
-Print the leaf names comprising your tree and exit. Use this to help you making the tree table file. It works on -treeFile.
+Print the leaf/sample names comprising your input and exit. Use this to help you to make the tax- or feature-table file. It works on -mfastaFile, -alignFile and -treeFile.
 
 * **-treeRoot <int_value> Default: 1**
 
-Define tree rooting mode. Use 0 to skip this step, 1 to root at midpoint or 2 to use taxonomic information do define a root. It works on all input.
+Define tree rooting mode. Use 0 to skip this step, or 1 to root at midpoint. It works on all input.
 
 * **-leafFmt <string_value> Default: "lcaN;id;geneName;species"**
 
-Leaf name format displayed in the tree. It works on all input. Data available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName, rankcode, rankname. Use semicolons to separate the different data type. 
+Leaf name format displayed in the tree. It works on all input. Data available to display in the leaf are: lcaN, lca, id, accession, species, geneID, geneName, rankcode, rankname. Use semicolons to separate the different data types. 
 
-For "rankcode" and "rankname", include the taxonomic ranks that you want to display separated with comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
+For "rankcode" and "rankname", include the taxonomic ranks that you want to display separated with a comma and delimited by parenthesis. Taxonomic rank options: superkingdom, kingdom, phylum, subphylum, superclass, class, subclass, superorder, order, suborder, superfamily, family, subfamily, genus, subgenus, species, subspecies. 
 
 #### 4.2.4 Filter option
 
@@ -330,12 +334,12 @@ from further analysis. Use this option to allow isoforms in the tree. It works o
 
 * **-lcaLimit <int_value>**
 
-Exclude all sequences from organisms which the LCA with the query organism is below the provided level. 
+Exclude all sequences from organisms in which the LCA with the query organism is below the provided level. 
 It works on all inputs.
 
 * **-lcaLimitDown <int_value>**
 
-Exclude all sequences from organisms which the LCA with the query organism is above the provided level 
+Exclude all sequences from organisms in which the LCA with the query organism is above the provided level 
 (except for the query sequence). It works on all inputs.
 
 * **-taxFilterCat <category_name>**
@@ -354,7 +358,7 @@ It works on all inputs.
 
 * **-restrictTax <list_file>**
 
-Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms which 
+Provide a list of taxonomy ID (separated by newline) to show only sequences belonging to organisms that 
 have their taxonomy ID listed in the file. It works on all inputs.
 
 #### 4.2.5. Other parameters
@@ -370,13 +374,13 @@ NCBI taxonomy ID assigned to the query protein. Example: "9606" for human. It wo
 
 * **-queryID <query_id>**
 
-Protein accession or name in the list or tree to be considered as query. It works on -blastFile, -listFile, -mfastaFile
+Protein accession or name in the list or tree to be considered as the query. It works on -blastFile, -listFile, -mfastaFile
 -alignFile and -treeFile. 
 
 * **-taxRepFormat <string_value> Default: 1..12** 
 
 Taxonomic ranks to be displayed in the taxonomic report table. The number corresponds to the rank level, in which 1 is 
-for superkingdom and 17 for subspecies. Rank level that should be in taxonomic report should be separated by comma
+for superkingdom and 17 for subspecies. Rank level that should be in the taxonomic report should be separated by comma
 (i.e. 1;2;12;16). You can use ".." to provide a rank level range (i.e. 1..12).
 
 * **-forceNoTxid**
@@ -386,7 +390,7 @@ be assigned with the taxonomy ID of root (txid:1). It works on all inputs.
 
 * **-forceNoInternet**
 
-Force TaxOnTree to not retrieve data from internet. It works on all inputs.
+Force TaxOnTree to not retrieve data from the internet. It works on all inputs.
 
 * **-out <file_name> Default: Input name**
 
@@ -396,9 +400,9 @@ Prefix for output files. It works on all inputs.
 
 Use a local MySQL database to retrieve required TaxOnTree data (See details on Section [6.1](61-running-taxontree-without-internet-connection)). It works on all inputs.
 
-* **-numThreads Defalut: 1**
+* **-numThreads Default: 1**
 
-Number of processors to be used for programs that can handle multi-threading. It works on all inputs.
+The number of processors to be used for programs that can handle multi-threading. It works on all inputs.
 
 * **-version**
 
@@ -406,9 +410,9 @@ Print TaxOnTree version.
 
 ### 4.3. Outputs
 
-Besides the tree file in Nexus format, other type of files are also generated during a TaxOnTree run. Most of them are
-inputs and outputs of each phylogenetic pipeline steps. The list of those files are summarized below (consider the file
-prefix as *query*):
+Besides the tree file in Nexus format, other types of files are also generated during a TaxOnTree run. Most of them are
+inputs and outputs of each phylogenetic pipeline step. The list of those files are summarized below (consider the file
+prefix as "*query*"):
 
 * **query_blast.txt** - Blast result;
 * **query_all_seq.fasta** - Sequences in FASTA format that were submitted to the phylogenetic pipeline.
@@ -420,11 +424,11 @@ prefix as *query*):
 
 ## 5. Exploring the Nexus file on FigTree
 
-After running TaxOnTree from [web interface](http://biodados.icb.ufmg.br/taxontree/) or from [command line](https://sourceforge.net/projects/taxontree/), TaxOnTree will generate a **Nexus file** structured to be opened on [FigTree](http://tree.bio.ed.ac.uk/software/figtree/) software. 
+After running TaxOnTree from the [web interface](http://biodados.icb.ufmg.br/taxontree/) or from the [command line](https://sourceforge.net/projects/taxontree/), TaxOnTree will generate a **Nexus file** structured to be opened on [FigTree](http://tree.bio.ed.ac.uk/software/figtree/) software. 
 
 ### 5.1. Exploring the taxonomic relationship by LCA
 
-Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure 5**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see Section [2.2](#22-lowest-common-ancestor-lca) for mor details). There will have also a legend for the colors used in the branches of the tree. 
+Right after opening the Nexus file in FigTree, you will see your phylogenetic tree with the branches colored according to the LCA (Lowest Common Ancestor) between the query species (in red) and the other species in the tree (**Figure 5**). LCA of two or more organisms represents the most recent ancestor that all organisms in the set have in common (see Section [2.2](#22-lowest-common-ancestor-lca) for more details). There will have also a legend for the colors used in the branches of the tree. 
 
 <img src="/img/taxontree_figtree1.png" width=650px/>
 
@@ -434,7 +438,7 @@ Right after opening the Nexus file in FigTree, you will see your phylogenetic tr
 
 ### 5.2. Exploring the taxonomic diversity by ranks
 
-Did you ever asked yourself how many distinct class, order or family are in your tree? This can be shortly answered with a tree generated by TaxOnTree in hand. TaxOnTree also embeds in the tree data of taxonomic lineage of all taxa comprising the tree, allowing the colorization of the tree according to a taxonomic rank. Take the following steps in the FigTree software:
+Did you ever ask yourself how many distinct classes, orders or families are in your tree? This can be shortly answered with a tree generated by TaxOnTree in hand. TaxOnTree also embeds in the tree data of taxonomic lineage of all taxa comprising the tree, allowing the colorization of the tree according to a taxonomic rank. Take the following steps in the FigTree software:
 
 1. In the FigTree side menu, go to *Appearance*;
 1. In *Colour by* parameter, and choose a taxonomic rank to be used to color the branches. By choosing *08-superorder*, for example, the tree will be colored according to the superorder rank. You can setup the branch colors by clicking in *Colours* button;
@@ -449,21 +453,21 @@ Did you ever asked yourself how many distinct class, order or family are in your
 
 ### 5.3. Adding or changing labels in the tree
 
-Taxonomic data can also be evidenced on the tips, nodes and/or branches in the tree. For instance, to change the tip label, go to *Tip labels*, on FigTree side menu; and, on *Display* parameter, select a taxonomic rank to be diplayed at the tip of the tree (**Figure 7**).
+Taxonomic data can also be evidenced on the tips, nodes, and/or branches in the tree. For instance, to change the tip label, go to *Tip labels*, on the FigTree side menu; and, on *Display* parameter, select a taxonomic rank to be displayed at the tip of the tree (**Figure 7**).
 
-To evidence the taxonomic data on the nodes and/or on branches of the tree, use the same procedures but at *Node label* and/or *Branch label*, respectively.
+To display the taxonomic data on the nodes and/or on branches of the tree, use the same procedures but at *Node label* and/or *Branch label*, respectively.
 
 <img src="/img/taxontree_figtree3.png" width=650px/>
 
-**Figure 7**: Steps on FigTree to to add or change labels in the tree.
+**Figure 7**: Steps on FigTree to add or change labels in the tree.
 
 ### 5.4. Checking branch statistic support value
 
-By default, nodes in the tree are sized proportionally to the statistic support of the branch. If you want to know their values go to *Node label* on FigTree side menu and choose *BOOT* on *Display* parameter.
+By default, nodes in the tree are sized proportionally to the statistic support of the branch. If you want to know their values go to *Node label* on the FigTree side menu and choose *BOOT* on *Display* parameter.
 
 ### 5.5. Evidencing duplication nodes
 
-TaxOnTree also annotates those nodes that represent duplication events. To evidence them, go to the *Node shapes*, on FigTree side menu, and choose *dup* on *Size by* parameter. Set also an appropriate value for *Max size* (i.e. 6) and *Min size* (i.e. 0) parameters.
+TaxOnTree also annotates those nodes that represent duplication events. To display them, go to the *Node shapes*, on FigTree side menu, and choose *dup* on *Size by* parameter. Set also an appropriate value for *Max size* (i.e. 6) and *Min size* (i.e. 0) parameters.
 
 <img src="/img/taxontree_figtree4.png" width=650px/>
 
@@ -473,8 +477,8 @@ TaxOnTree also annotates those nodes that represent duplication events. To evide
 
 ### 6.1. Running TaxOnTree without internet connection
 
-TaxOnTree depends on internet connection to retrieve taxonomic or sequence data from NCBI
-or UniProt servers. To make TaxOnTree independent from using internet connection, there 
+TaxOnTree depends on the internet connection to retrieve taxonomic or sequence data from NCBI
+or UniProt servers. To make TaxOnTree independent of using an internet connection, there 
 are additional prerequisites. They are:
 
 * Standalone Blast+
@@ -485,7 +489,7 @@ are additional prerequisites. They are:
 
 * Blast-formatted sequence database
 
-  A sequence database generated by `makeblastdb`, one of Blast executables. If you have a Multi-FASTA
+  A sequence database generated by `makeblastdb`, one of the Blast executables. If you have a Multi-FASTA
   file containing protein sequences from NCBI or UniProt, you can execute the following command to get a
   Blast-formatted sequence database:
   
@@ -494,14 +498,14 @@ are additional prerequisites. They are:
   ```
   
   Blast-formatted sequence databases used in [TaxOnTree web tool](http://bioinfo.icb.ufmg.br/taxontree) 
-  are also available at our [Sourceforge page](https://sourceforge.net/projects/taxontree/files/db/).
+  are also available on our [Sourceforge page](https://sourceforge.net/projects/taxontree/files/db/).
 
 * MySQL
 
   TaxOnTree can access taxonomic data from a MySQL database. If you don't have MySQL installed in your 
-  system, please refer to the installation instruction at [MySQL page](https://dev.mysql.com/doc/refman/5.7/en/general-installation-issues.html).
+  system, please refer to the installation instruction on [MySQL page](https://dev.mysql.com/doc/refman/5.7/en/general-installation-issues.html).
   
-  You'll also need an user account that have all privileges granted on database named `taxontree`. Access 
+  You'll also need a user account that has all privileges granted on the database named `taxontree`. Access 
   your MySQL using the MySQL root account (`mysql -u root -p`) and type the following commands on MySQL environment:
   
   ```
@@ -516,8 +520,8 @@ are additional prerequisites. They are:
   
   Now, you have to configure TaxOnTree to access MySQL using the username and password set previously.
   For this, open the file *~/.taxontree/CONFIG.xml* with your preferred text editor. In this XML file, you'll
-  find a *mysql* tag that range from line 14 to line 29. Set the MySQL username created previously and its
-  password at the *user* and *password* tags, respectively, like below and save the file.
+  find a *mysql* tag that ranges from line 14 to line 29. Set the MySQL username created previously and its
+  password at the *user* and *password* tags, respectively, like below, and save the file.
   
   ```xml
   ...
@@ -534,7 +538,7 @@ are additional prerequisites. They are:
   
 * TaxOnTree tables
   
-  The last step is to populate the taxontree database with TaxOnTree tables. The tables are available at our
+  The last step is to populate the taxontree database with TaxOnTree tables. The tables are available on our
   [SourceForge page](https://sourceforge.net/projects/taxontree/files/db/). Download the file taxontree.sql.tgz and type
   the following commands:
   
@@ -548,9 +552,9 @@ are additional prerequisites. They are:
   should take some time, so please be patient.
   
 > **Note**: TaxOnTree databases take up a lot of hard disk space (~30 GB). So, check your demand and evaluate
-if it is worth having a local databases installed or if only web requests should be enough for your analysis.
+if it is worth having local databases installed or if only web requests should be enough for your analysis.
 
-After fullfilling these requisites, you can now run TaxOnTree independently of internet connection. To tell TaxOnTree
+After fulfilling these requisites, you can now run TaxOnTree independently of an internet connection. To tell TaxOnTree
 to access the MySQL database, add the parameter `-mysql` on the command line as below:
 
 ```bash
@@ -565,22 +569,22 @@ the `-db` parameter as below:
 ```
 
 If some data are not available in the local database, TaxOnTree will try to retrieve them from NCBI or UniProt
-servers through internet. If your server has internet connection but you don't want TaxOnTree to retrieve data from 
+servers through the internet. If your server has internet connection, but you don't want TaxOnTree to retrieve data from 
 those servers, add the parameter `-forceNoInternet` in the command line 
 (e.g. `./taxontree -singleid 4757876 -db /path/to/seq_database -mysql -forceNoInternet`).
 
 ### 6.2. Adding other third-party software in the pipeline
 
-Third-party software that comprise the TaxOnTree phylogenetic pipeline are subdivided 
-in the following types:
+Third-party software that comprises the TaxOnTree phylogenetic pipeline are subdivided 
+into the following types:
 
 * *Blast search* - this is performed exclusively by [Blast+](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download);
 * *Sequence aligner* - software that performs sequence alignment. Must have Multi-FASTA file as input and as output;
-* *Sequence trimmer* - software that trim a sequence alignment according to its quality. Must have Multi-FASTA file as input and as output;
-* *Tree reconstructor* - software that reconstruct the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output.
+* *Sequence trimmer* - software that trims a sequence alignment according to its quality. Must have Multi-FASTA file as input and as output;
+* *Tree reconstructor* - software that reconstructs the phylogenetic history of a set of sequences. Must have an aligned Multi-FASTA as input and a tree in Newick format as output.
 
 Third-party software that met the conditions above can be incorporated in TaxOnTree phylogenetic pipeline. 
-To make these software viewable by TaxOnTree, they have to be installed in your system or, alternatively,
+To make this software viewable by TaxOnTree, they have to be installed in your system or, alternatively,
 you can compile them and move their executables to the `~/.taxontree/bin` folder. Furthermore, parameters and
 command lines that TaxOnTree executes for each third-party software have to be set in CONFIG.xml located 
 in `~/.taxontree` folder. Third-party software that is compiled during TaxOnTree installation is already 
@@ -588,10 +592,10 @@ configured in the original CONFIG.xml.
 
 Let consider that you want to add the software **MAFFT**, another largely used sequence aligner. 
 To do that, you have to first compile and install it in your system (for this
-check MAFFT installation insctruction) or move the compiled executables to the folder `~/.taxontree/bin`. Any one of these
+check MAFFT installation instruction) or move the compiled executables to the folder `~/.taxontree/bin`. Any one of these
 procedures will make **MAFFT** visible to TaxOnTree.
 
-After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command-line
+After that, you have to include MAFFT in the TaxOnTree phylogenetic pipeline and set the command line
 that you want to execute when TaxOnTree calls it. This is performed in the CONFIG.xml file that is located at
 `~/.taxontree/` folder. So, open the CONFIG.xml in the text editor of your preference.
 
@@ -632,8 +636,8 @@ Inside a *program* tag, we have four more other tags:
 </programs>
 ```
 
-So, to add a software to the phylogenetic pipeline, just add another *program* tag to the correspondent phylogenetic
-pipeline step tag. Since MAFFT is a software for sequence alignment, we will add a *program* tag inside the 
+So, to add software to the phylogenetic pipeline, just add another *program* tag to the correspondent phylogenetic
+pipeline step tag. Since MAFFT is software for sequence alignment, we will add a *program* tag inside the 
 *aligners* tag. 
 
 Let say that you want to run MAFFT in high-speed mode and using multi-threads as below:
@@ -689,7 +693,7 @@ If you added another third-party software for trimming or tree reconstruction st
 
 If you have any trouble or suggestion to improve our work, please contact us by the following email address:
 
-* tetsufmbio@gmail.com (Tetsu Sakamoto)
+* tetsu@imd.ufrn.br (Tetsu Sakamoto)
 * miguel@ufmg.br (J. Miguel Ortega)
 
 _**Laboratório de Biodados**  
