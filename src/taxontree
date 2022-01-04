@@ -4,7 +4,7 @@
 
 #############################################################################
 #                                                                           #
-#   Copyright (C) 2015-2021  Tetsu Sakamoto                                 #
+#   Copyright (C) 2015-2022  Tetsu Sakamoto                                 #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -31,7 +31,7 @@
 
 #############################################################################
 #                                                                           #
-#   Author contact: tetsufmbio@gmail.com or miguel@icb.ufmg.br              #
+#   Author contact: tetsu@imd.ufrn.br or miguel@icb.ufmg.br                 #
 #                                                                           #
 #############################################################################
 
@@ -39,7 +39,7 @@
 #                                                                           #
 #   Major update:                                                           #
 #   - TaxOnTree is using now the Taxallnomy database                        #
-#   	(biodados.icb.ufmg.br/taxallnomy);                                  #
+#   	(bioinfo.icb.ufmg.br/taxallnomy);                                   #
 #   - NCBI accession is now the primary identifier;                         #
 #   - TaxOnTree accept a table containing other info to embeded in the tree;#
 #   - Taxonomic filter added;                                               #
@@ -49,7 +49,7 @@
 #############################################################################
 
 print "
-	TaxOnTree  Copyright (C) 2015-2021  Tetsu Sakamoto
+	TaxOnTree  Copyright (C) 2015-2022  Tetsu Sakamoto
 	This program comes with ABSOLUTELY NO WARRANTY.
 	This is free software, and you are welcome to redistribute it under
 	certain conditions. See GNU general public license v.3 for details.\n\n";

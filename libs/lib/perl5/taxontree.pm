@@ -561,10 +561,17 @@ sub check {
 			chomp $line;
 			$line =~ s/\n|\r//g;
 			next if ($line =~ /^$/);
+			my $restrictTaxCode = "lin"; # by default, samples that contain some of the txid in their lineage
+										 # will be maintened in the tree.
+			if($line =~ /\*$/){
+				$restrictTaxCode = "sample"; # if txid in the file is followed by *, it will filter only 
+											 # those samples with this txid.
+				$line =~ s/\*$//;
+			}
 			if ($line =~ /[^\d]/){
 				print "\nNOTE: $line is not a valid taxonomy ID. This information was disconsidered.\n";
 			} else {
-				$restrictTax{$line} = 1;
+				$restrictTax{$restrictTaxCode}{$line} = 1;
 			}
 		}
 		if (scalar(keys %restrictTax) == 0){
@@ -1340,9 +1347,7 @@ sub popOtherTableHash {
 		next if ($line eq "");
 		my @line = split(/\t/, $line);
 		my $leafID = shift @line;
-		#if (exists $leavesTree{$leafID}){
-		#	print "NOTE: your tree does not contain $leafID\n";
-		#} else {
+		
 		my $count = 1;
 		foreach my $line2 (@line){
 			my $label;
@@ -1354,7 +1359,7 @@ sub popOtherTableHash {
 			$otherTableHash{$label}{$leafID} = $line2;
 			$count++;
 		}
-		#}
+		
 	}
 	close TABLE;
 	return 1;
@@ -1634,10 +1639,16 @@ sub restrictTax {
 	foreach my $gi (@giList){
 		my $subject = $hashCode{"code"}{$gi}{"id"};
 		my $subjectTxid2 = $generalInfo{$subject}{"txid"};
-		if (exists $restrictTax2{$subjectTxid2}){
+		if (exists $restrictTax2{"sample"}{$subjectTxid2}){
 			push(@newGiList, $gi);
 		} else {
-			next;
+			my @subjectLin2 = @{$map_txid{"txids"}{$subjectTxid2}{"lineage"}};
+			foreach my $subjectLin2(@subjectLin2){
+				if (exists $restrictTax2{"lin"}{$subjectLin2}){
+					push(@newGiList, $gi);
+					last;
+				}
+			}
 		}
 	}
 	return @newGiList;
@@ -1716,64 +1727,135 @@ sub taxFilter {
 			}
 		}
 		
-		my @queryLineage = @{$map_txid{"txids"}{$queryTxid2}{"lineageTaxSimpleN"}};
-		my $queryClade = $queryLineage[$taxonCode];
-		$filterTax{"clade"}{$queryClade} = 1;
+		#my @queryLineage = @{$map_txid{"txids"}{$queryTxid2}{"lineageTaxSimpleN"}};
+		#my $queryClade = $queryLineage[$taxonCode];
+		#$filterTax{"clade"}{$queryClade} = 1;
 		
+		for (my $i = 0; $i < scalar @giList; $i++){
+			
+			my $subject = $hashCode{"code"}{$giList[$i]}{"id"};
+			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
+			my @subjectLineage = @{$map_txid{"txids"}{$subjectTxid2}{"lineageTaxSimpleN"}};
+			my $subjectClade = $subjectLineage[$taxonCode];
+			
+			$filterTax{"clade"}{$subjectClade}{"count"} += 1 if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2} = $i if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"txid"}{$subjectTxid2} = 1;
+		
+		}
+		
+		foreach my $clade(keys %{$filterTax{"clade"}}){
+			while ($filterTax{"clade"}{$clade}{"count"} > $taxFilter2){
+				
+				# search for the closest pair of txid considering the lca of taxallnomy
+				my $maxLCA = 0;
+				my $maxLCA2 = 0;
+				my $txid2eliminate;
+				my @txids = keys %{$filterTax{"clade"}{$clade}{"txid"}};
+				for(my $j = 0; $j < scalar @txids - 1; $j++){
+					for(my $k = $j + 1; $k < scalar @txids; $k++){
+						if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} > $maxLCA){
+							$maxLCA = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]};
+							$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+							if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+								$txid2eliminate = $txids[$k];
+							} else {
+								$txid2eliminate = $txids[$j];
+							}
+							
+						} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} == $maxLCA){
+							if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} > $maxLCA){
+								$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+								if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+									$txid2eliminate = $txids[$k];
+								} else {
+									$txid2eliminate = $txids[$j];
+								}
+							} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} == $maxLCA){
+								$txid2eliminate = $txids[$j] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+								$txid2eliminate = $txids[$k] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$k]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+							}
+						}
+					}
+				}
+				delete $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate};
+				delete $filterTax{"txid"}{$txid2eliminate};
+				$filterTax{"clade"}{$clade}{"count"} -= 1;
+			}
+		}
 		foreach my $gi (@giList){
 			my $subject = $hashCode{"code"}{$gi}{"id"};
 			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
 			if (exists $filterTax{"txid"}{$subjectTxid2}){
 				push(@newGiList, $gi);
-				next;
-			} else {
-				my @subjectLineage = @{$map_txid{"txids"}{$subjectTxid2}{"lineageTaxSimpleN"}};
-				my $subjectClade = $subjectLineage[$taxonCode];
-				
-				if (!exists $filterTax{"clade"}{$subjectClade}){
-					$filterTax{"clade"}{$subjectClade} = 1;
-					$filterTax{"txid"}{$subjectTxid2} = 1;
-					push(@newGiList, $gi);
-				} else {
-					if ($filterTax{"clade"}{$subjectClade} < $taxFilter2){
-						$filterTax{"clade"}{$subjectClade} += 1;
-						$filterTax{"txid"}{$subjectTxid2} = 1;
-						push(@newGiList, $gi);
-					} else {
-						next;
-					}
-				}
-			}
+			} 
 		}
+		
 	} else {
 	
-		my $lca = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$queryTxid2};
-		$filterTax{"clade"}{$lca} = 1;
+		#my $lca = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$queryTxid2};
+		#$filterTax{"clade"}{$lca} = 1;
 		
+		for (my $i = 0; $i < scalar @giList; $i++){
+			
+			my $subject = $hashCode{"code"}{$giList[$i]}{"id"};
+			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
+			my $subjectClade = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$subjectTxid2};
+			
+			$filterTax{"clade"}{$subjectClade}{"count"} += 1 if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2} = $i if (!exists $filterTax{"clade"}{$subjectClade}{"txid"}{$subjectTxid2});
+			$filterTax{"txid"}{$subjectTxid2} = 1;
+		
+		}
+		
+		foreach my $clade(keys %{$filterTax{"clade"}}){
+			while ($filterTax{"clade"}{$clade}{"count"} > $taxFilter2){
+				
+				# search for the closest pair of txid considering the lca of taxallnomy
+				my $maxLCA = 0;
+				my $maxLCA2 = 0;
+				my $txid2eliminate;
+				my @txids = keys %{$filterTax{"clade"}{$clade}{"txid"}};
+				for(my $j = 0; $j < scalar @txids - 1; $j++){
+					for(my $k = $j + 1; $k < scalar @txids; $k++){
+						if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} > $maxLCA){
+							$maxLCA = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]};
+							$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+							if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+								$txid2eliminate = $txids[$k];
+							} else {
+								$txid2eliminate = $txids[$j];
+							}
+							
+						} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaNTaxSimple"}{$txids[$k]} == $maxLCA){
+							if($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} > $maxLCA){
+								$maxLCA2 = $map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]};
+								if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} < $filterTax{"clade"}{$clade}{"txid"}{$txids[$k]}){
+									$txid2eliminate = $txids[$k];
+								} else {
+									$txid2eliminate = $txids[$j];
+								}
+							} elsif ($map_txid{"pair2pairLCA"}{$txids[$j]}{"lcaN"}{$txids[$k]} == $maxLCA){
+								$txid2eliminate = $txids[$j] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$j]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+								$txid2eliminate = $txids[$k] if($filterTax{"clade"}{$clade}{"txid"}{$txids[$k]} > $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate});
+							}
+						}
+					}
+				}
+				# filter the selected txid;
+				delete $filterTax{"clade"}{$clade}{"txid"}{$txid2eliminate};
+				delete $filterTax{"txid"}{$txid2eliminate};
+				$filterTax{"clade"}{$clade}{"count"} -= 1;
+			}
+		}
 		foreach my $gi (@giList){
 			my $subject = $hashCode{"code"}{$gi}{"id"};
 			my $subjectTxid2 = $generalInfo{$subject}{"txid"};
 			if (exists $filterTax{"txid"}{$subjectTxid2}){
 				push(@newGiList, $gi);
-				next;
-			} else {
-				my $subjectClade = $map_txid{"pair2pairLCA"}{$queryTxid2}{"lcaN"}{$subjectTxid2};
-				
-				if (!exists $filterTax{"clade"}{$subjectClade}){
-					$filterTax{"clade"}{$subjectClade} = 1;
-					$filterTax{"txid"}{$subjectTxid2} = 1;
-					push(@newGiList, $gi);
-				} else {
-					if ($filterTax{"clade"}{$subjectClade} < $taxFilter2){
-						$filterTax{"clade"}{$subjectClade} += 1;
-						$filterTax{"txid"}{$subjectTxid2} = 1;
-						push(@newGiList, $gi);
-					} else {
-						next;
-					}
-				}
-			}
+			} 
 		}
+		
 	}
 	
 
@@ -3350,34 +3432,33 @@ sub defineIdSubject {
 			
 			# retrieve geneID of missing accession
 			if (scalar @gene2retrieve > 0){
-				#if (exists $leafNameOptions{"genename"} or $leafNameOptions{"geneid"}){
-					my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
-					my %linkGene = %$ref_linkGene;
-					foreach my $keySubject(@gene2retrieve){
-						
-						my $geneID = "NULL";
-						
-						if (exists $linkGene{$keySubject}){
-							$geneID = $linkGene{$keySubject}{"geneID"};
-							$geneID2geneName{$geneID} = "NULL";
-						} 
-						
+				my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
+				my %linkGene = %$ref_linkGene;
+				foreach my $keySubject(@gene2retrieve){
+					
+					my $geneID = "NULL";
+					
+					if (exists $linkGene{$keySubject}){
+						$geneID = $linkGene{$keySubject}{"geneID"};
+						$geneID2geneName{$geneID} = "NULL";
+					} 
+					
+					if (exists $definedID{$keySubject}){
+						$definedID{$keySubject}{"geneID"} = $geneID;
+					}
+					
+					if (exists $accession2gi{$keySubject}){
+						$keySubject = $accession2gi{$keySubject};
 						if (exists $definedID{$keySubject}){
 							$definedID{$keySubject}{"geneID"} = $geneID;
 						}
-						
-						if (exists $accession2gi{$keySubject}){
-							$keySubject = $accession2gi{$keySubject};
-							if (exists $definedID{$keySubject}){
-								$definedID{$keySubject}{"geneID"} = $geneID;
-							}
-							$keySubject =~ s/\.\d+$//;
-							if (exists $definedID{$keySubject}){
-								$definedID{$keySubject}{"geneID"} = $geneID;
-							}
-						}						
-					}
-				#}
+						$keySubject =~ s/\.\d+$//;
+						if (exists $definedID{$keySubject}){
+							$definedID{$keySubject}{"geneID"} = $geneID;
+						}
+					}						
+				}
+				
 			}
 		}
 	}
