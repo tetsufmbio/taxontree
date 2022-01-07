@@ -20,7 +20,7 @@ use Bio::Tree::TreeFunctionsI;
 use Bio::Tree::TreeI;
 use Bio::Tree::NodeI;
 	
-$VERSION     = "1.10.3";
+$VERSION     = "1.10.4";
 @ISA         = qw(Exporter);
 @EXPORT      = qw(inputs check main);
 #@EXPORT_OK   = qw(input);
@@ -1317,6 +1317,7 @@ sub treeFile {
 	return 1;
 
 }
+
 ###################### subroutine ######################
 
 sub retrieveIPG {
@@ -2399,6 +2400,111 @@ sub retrieveInfoUniprot {
 
 }
 
+sub retrieveInfoEnsembl {
+	my $reflist = $_[0];
+	my $type = $_[1];
+	my @idlist = @$reflist;
+	my %ensemblData;
+	
+	# identify ensembl id type
+	foreach my $id(@idlist){
+		$id =~ s/\.\d+$//;
+		if($id =~ m/G\d+$/){
+			# if gene, find the canonical transcript and download the protein sequence
+			#$ensemblType{"G"}{$id} = 1;
+			
+			my $url_fetch_seq = 'https://rest.ensembl.org/lookup/id/'.$id.'?content-type=text/xml';
+			my $fetch_lineage = restEnsembl($url_fetch_seq);
+			
+			my $xs2 = XML::Simple->new();
+			my $doc_lineage = $xs2->XMLin($fetch_lineage);
+			
+			if($doc_lineage->{data}->{error}){
+				next;
+			}
+			
+			if($doc_lineage->{data}->{canonical_transcript}){
+				my $canonical = $doc_lineage->{data}->{canonical_transcript};
+				$canonical =~ s/\.\d+$//;
+				my $url_fetch_seq2 = 'https://rest.ensembl.org/sequence/id/'.$canonical.'?type=protein;content-type=text/xml';
+				my $fetch_lineage2 = restEnsembl($url_fetch_seq2);
+				
+				my $xs3 = XML::Simple->new();
+				my $doc_lineage2 = $xs3->XMLin($fetch_lineage2);
+				if ($doc_lineage2->{data}->{error}){
+					next;
+				}
+				if($doc_lineage2->{data}->{seq}){
+					$ensemblData{$id}{"seq"} = $doc_lineage2->{data}->{seq};
+				}
+			}
+			
+		} elsif ($id =~ m/[TP]\d+$/){
+			# if transcript or protein id, download directly
+			my $url_fetch_seq2 = 'https://rest.ensembl.org/sequence/id/'.$id.'?type=protein;content-type=text/xml';
+			my $fetch_lineage2 = restEnsembl($url_fetch_seq2);
+			
+			my $xs3 = XML::Simple->new();
+			my $doc_lineage2 = $xs3->XMLin($fetch_lineage2);
+			
+			if($doc_lineage2->{data}->{error}){
+				next;
+			}
+			
+			if($doc_lineage2->{data}->{seq}){
+				$ensemblData{$id}{"seq"} = $doc_lineage2->{data}->{seq};
+			}
+		} else {
+			# exon, gene tree can't retrieve aa sequence...
+			next;
+		}
+	}
+	
+	return \%ensemblData;
+
+}
+
+my $request_count = 0;
+my $last_request_time = Time::HiRes::time();
+
+sub restEnsembl {
+	# adapted from https://github.com/Ensembl/ensembl-rest/wiki/Example-Perl-Client#httptiny
+	
+	my $url = $_[0];
+	if($request_count == 15) { # check every 15
+		my $current_time = Time::HiRes::time();
+		my $diff = $current_time - $last_request_time;
+		# if less than a second then sleep for the remainder of the second
+		if($diff < 1) {
+			Time::HiRes::sleep(1-$diff);
+		}
+		# reset
+		$last_request_time = Time::HiRes::time();
+		$request_count = 0;
+	}
+	
+	my $response = $http->get($url);
+	my $status = $response->{status};
+	if(!$response->{success}) {
+		# Quickly check for rate limit exceeded & Retry-After (lowercase due to our client)
+		if($status == 429 && exists $response->{headers}->{'retry-after'}) {
+			
+			my $retry = $response->{headers}->{'retry-after'};
+			Time::HiRes::sleep($retry);
+			
+			# After sleeping see that we re-request
+			return restEnsembl($link);
+		}
+	}
+	$request_count++;
+	
+	if(length $response->{content}) {
+		return $response->{content};
+	}
+	
+	return;
+}
+
 sub retrieveInfoNCBI {
 
 	my ($refrefseqlist) = @_;
@@ -2886,6 +2992,10 @@ sub verifyID{
 				$id =~ m/^[^\d\W]{2}\d{8}(\.\d+)?$/ || 
 				$id =~ m/^[^\d\W]{3}\d{7}(\.\d+)?$/){
 		return "ncbi_ac";
+	} elsif ($id =~ m/^ENS[_\w]*[GTPE]\d{11}(\.\d+)?$/ ||
+				$id =~ m/^MGP_[.]+_[GTPE]\d+(\.\d+)?$/){
+		# ensembl id
+		return "ensembl_id";
 	} else {
 		return 0;
 	}
@@ -2899,6 +3009,7 @@ sub defineIdSubject {
 	#my (@uniprotAC, @uniprotACIso, @uniprotID, @refseqGI, @refseqAC);
 	my %hashJoinIDUniprot;
 	my %hashJoinIDNCBI;
+	my %hashJoinIDEnsembl;
 	#my $i = 0;
 	my %undefinedIDType;
 	my %version2accession;
@@ -2928,7 +3039,7 @@ sub defineIdSubject {
 		} else {
 			if (!$subjectType){
 			
-			print "  NOTE: Could not recognize $id as NCBI or Uniprot accession...\n        Accession was discarded.\n";
+				print "  NOTE: Could not recognize $id as NCBI, Uniprot or Ensembl accession...\n        Accession was discarded.\n";
 			
 			} elsif ($subjectType eq "uniprot_id"){
 				$definedID{$id}{"type"} = "uniprot_id";
@@ -2937,7 +3048,7 @@ sub defineIdSubject {
 				$definedID{$id}{"id"} = $id;
 				$definedID{$id}{"type"} = "uniprot_ac";
 				$idNoVersion =~ s/[-\.]\d+$//;
-				$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
+				#$listAccessions{"uniprot_ac"}{$idNoVersion} = 1;
 				$hashJoinIDUniprot{$id} = "uniprot_ac";			
 			} elsif ($subjectType eq "ncbi_gi"){
 				
@@ -2949,6 +3060,12 @@ sub defineIdSubject {
 				$definedID{$id}{"type"} = "ncbi_ac";
 
 				$hashJoinIDNCBI{$id} = "ncbi_ac";
+				$idNoVersion =~ s/\.\d+$//;
+			} elsif ($subjectType eq "ensembl_id"){
+				$definedID{$id}{"id"} = $id;
+				$definedID{$id}{"type"} = "ensembl_id";
+
+				$hashJoinIDEnsembl{$id} = "ensembl_id";
 				$idNoVersion =~ s/\.\d+$//;
 			}
 		}		
@@ -3519,6 +3636,53 @@ sub defineIdSubject {
 				}
 			}
 			
+			# retrieve Ensembl data
+			if (scalar (keys %hashJoinIDEnsembl) > 0){
+				my @ensembl_id = keys %{$listAccessions{"ensembl_id"}};
+				my %hashSpecies;
+				foreach my $ensembl_id(@ensembl_id){
+					my $url_fetch_seq = 'https://rest.ensembl.org/lookup/id/'.$ensembl_id.'?content-type=text/xml';
+					my $fetch_lineage = restEnsembl($url_fetch_seq);
+					
+					my $xs2 = XML::Simple->new();
+					my $doc_lineage = $xs2->XMLin($fetch_lineage);
+					
+					if($doc_lineage->{data}->{error}){
+						print "\n  NOTE: Accession $ensembl_id was discarded. Could not retrieve its info.";
+						$note = 1;
+						delete $definedID{$ensembl_id};
+						next;
+					}
+					
+					my $species = $doc_lineage->{data}->{species};
+					$hashSpecies{$species} .= $ensembl_id.",";
+					my $geneName = $doc_lineage->{data}->{display_name};
+					my $biotype = $doc_lineage->{data}->{biotype};
+					
+					$definedID{$ensembl_id}{"accession"} = $ensembl_id;
+					$definedID{$ensembl_id}{"geneID"} = "NULL";
+					$definedID{$ensembl_id}{"geneName"} = $geneName;
+					$definedID{$ensembl_id}{"txid"} = $species;
+					
+				}
+				
+				foreach my $species(keys %hashSpecies){
+					my $url_fetch_seq = 'https://rest.ensembl.org/taxonomy/id/'.$species.'?content-type=text/xml&simple=1';
+					my $fetch_lineage = restEnsembl($url_fetch_seq);
+					
+					my $xs2 = XML::Simple->new();
+					my $doc_lineage = $xs2->XMLin($fetch_lineage);
+					
+					my $txid = $doc_lineage->{data}->{id};
+					my @ensembl2 = split(",",$hashSpecies{$species});
+					for(my $j = 0; $j < scalar @ensembl2; $j++){
+						$definedID{$ensembl2[$j]}{"txid"} = $txid;
+						delete $hashJoinIDEnsembl{$ensembl2[$j]};
+					}
+					
+				}
+			}
+			
 			# retrieve geneID of missing accession
 			if (scalar @gene2retrieve > 0){
 				my $ref_linkGene = retrieveGeneNCBI(\@gene2retrieve);
@@ -3622,7 +3786,6 @@ sub retrieveEFetch {
 		my $sleepTime = 2 ** $errorCount2;
 		$sleepTime = $maxSleep if ($sleepTime > $maxSleep);
 		sleep $sleepTime;
-	#} while ($fetch_lineage2 =~ m/<p>The server encountered an internal error or|<\/ERROR>|<\/Error>|<title>Bad Gateway!<\/title>|<title>Service unavailable!<\/title>|Error occurred:/ and $errorCount2 < 5);
 	} while (!$response->{success} and $errorCount2 < $maxErrorCount);
 	if (!$response->{success}){
 		die "\nERROR: Sorry, access to the following URL retrieved error $maxErrorCount times:\n       $url_fetch_id\n       ".$response->{reason}."\n       Please, try to run TaxOnTree again later.";
@@ -3918,7 +4081,7 @@ sub retrieveSubjectInfo {
 		system("rm ".$pid."_tmp_list.txt");
 	}
 	
-	my (@uniprotAC, @uniprotID, @refseqGI, @refseqAC, @uniprotACIso);
+	my (@uniprotAC, @uniprotID, @refseqGI, @refseqAC, @uniprotACIso, @ensembl);
 	if ($retrieveWeb == 1){
 		# determine if subject is from NCBI or Uniprot:
 		foreach my $id(@subjectList){
@@ -3943,7 +4106,9 @@ sub retrieveSubjectInfo {
 			} elsif ($subjectType eq "ncbi_ac"){
 				next if(exists $subjectInfo{$id}{"seq"});
 				push(@refseqAC, $id);
-			} 
+			} elsif ($subjectType eq "ensembl_id"){
+				push(@ensembl, $id);
+			}
 		}
 		
 		my $type;
@@ -4012,6 +4177,18 @@ sub retrieveSubjectInfo {
 						print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 						$note = 1;
 					}
+				} else {
+					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
+					$note = 1;
+				}
+			}
+		}
+		if(scalar @ensembl > 0){
+			my $refEnsemblData = retrieveInfoEnsembl(\@ensembl);
+			foreach my $id(@ensembl){
+				if (exists $refEnsemblData->{$id}){
+					$definedID{$id}{"seq"} = $refEnsemblData->{$id}->{"seq"};
+					delete ($missingID{$id});
 				} else {
 					print "\n    NOTE: Could not retrieve sequence of $id... This identifier will be discarded.";
 					$note = 1;

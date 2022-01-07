@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-#	TaxOnTree Version: 1.10.3
+#	TaxOnTree Version: 1.10.4
 
 #############################################################################
 #                                                                           #
@@ -40,11 +40,12 @@
 #   Major update:                                                           #
 #   - TaxOnTree is using now the Taxallnomy database                        #
 #   	(bioinfo.icb.ufmg.br/taxallnomy);                                   #
-#   - NCBI accession is now the primary identifier;                         #
+#   - NCBI accession is the primary identifier;                             #
 #   - TaxOnTree accept a table containing other info to embeded in the tree;#
 #   - Taxonomic filter added;                                               #
 #   - TaxOnTree deals with redundant leaf name;                             #
 #   - TaxOnTree deals with taxonomy updates;                                #
+#   - TaxOnTree deals with accession from Ensembl;                          #
 #                                                                           #
 #############################################################################
 
@@ -61,7 +62,7 @@ use Pod::Usage;
 #use Data::Dumper;
 use strict;
 
-my $TaxOnTreeVersion = "TaxOnTree v.1.10.3";
+my $TaxOnTreeVersion = "TaxOnTree v.1.10.4";
 
 $| = (@ARGV > 0); 
 
