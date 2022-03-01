@@ -3823,7 +3823,7 @@ sub retrieveGeneName {
 					delete $allGene{$geneID};
 				}
 			} else {
-				print Dumper($doc_link);
+			#	print Dumper($doc_link);
 			}
 			sleep 1;
 			
