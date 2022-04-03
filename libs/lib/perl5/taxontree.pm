@@ -2396,6 +2396,7 @@ sub restEnsembl {
 		$request_count = 0;
 	}
 	
+	my $http = HTTP::Tiny->new();
 	my $response = $http->get($url);
 	my $status = $response->{status};
 	if(!$response->{success}) {
@@ -2406,7 +2407,7 @@ sub restEnsembl {
 			Time::HiRes::sleep($retry);
 			
 			# After sleeping see that we re-request
-			return restEnsembl($link);
+			return restEnsembl($url);
 		}
 	}
 	$request_count++;
