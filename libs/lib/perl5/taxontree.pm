@@ -14,6 +14,7 @@ use XML::Simple qw(XMLin);
 use File::Which;
 #use Data::Dumper;
 use Net::Wire10;
+use Time::HiRes;
 
 use Bio::TreeIO;
 use Bio::Tree::TreeFunctionsI;
