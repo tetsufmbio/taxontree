@@ -21,7 +21,7 @@ use Bio::Tree::TreeFunctionsI;
 use Bio::Tree::TreeI;
 use Bio::Tree::NodeI;
 	
-$VERSION     = "1.10.4";
+$VERSION     = "1.10.5";
 @ISA         = qw(Exporter);
 @EXPORT      = qw(inputs check main);
 #@EXPORT_OK   = qw(input);
@@ -2258,7 +2258,7 @@ sub retrieveInfoUniprot {
 	my $delimiter2;
 	if ($type eq "accession"){
 		$posRetrieve = 1;
-	} elsif ($type eq "mnemonic") {
+	} elsif ($type eq "id") {
 		$posRetrieve = 2;
 	} elsif ($type eq "accessioniso") {
 		$posRetrieve = 1;
@@ -2271,7 +2271,7 @@ sub retrieveInfoUniprot {
 	my $retrieveWeb = 1;
 	my $fetch_fasta;
 	
-	if ($type eq "accession" or $type eq "mnemonic"){
+	if ($type eq "accession" or $type eq "id"){
 		my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
 		my $n = -1;
 		my $m = -50;
@@ -2279,7 +2279,8 @@ sub retrieveInfoUniprot {
 			$n = $n + 50;
 			$m = $m + 50;
 			$n = $#uniprotlist if ($n > $#uniprotlist);
-			my $url_fetch_seq = "http://www.uniprot.org/uniprot/?query=$type:".join("+OR+$type:",@uniprotlist[$m .. $n])."&force=yes&format=fasta";
+			my $url_fetch_seq = "https://rest.uniprot.org/uniprotkb/search?query=$type:".join("+OR+$type:",@uniprotlist[$m .. $n])."&force=yes&format=fasta";
+			#print $url_fetch_seq."\n";
 			my $response = $http->get($url_fetch_seq);
 			$fetch_fasta .= $response->{content};
 			sleep 1;
@@ -2288,7 +2289,7 @@ sub retrieveInfoUniprot {
 	} elsif ($type eq "accessioniso") {
 		my $http = HTTP::Tiny->new(agent => "libwww-perl $email");
 		foreach my $id (@uniprotlist){
-			my $url_fetch_seq = "http://www.uniprot.org/uniprot/$id".".fasta";
+			my $url_fetch_seq = "https://rest.uniprot.org/uniprotkb/$id".".fasta";
 			my $response = $http->get($url_fetch_seq);
 			$fetch_fasta .= $response->{content};
 			sleep 1;
@@ -3190,7 +3191,7 @@ sub defineIdSubject {
 						$m = $m + 50;
 									
 						$n = $#uniprotAC if ($n > $#uniprotAC);
-						my $url_fetch_seq = 'http://www.uniprot.org/uniprot/?query=accession:'.join("+OR+accession:",@uniprotAC[$m .. $n]).'&force=yes&format=tab&columns=id,entry%20name,genes(PREFERRED),database(GeneID),organism-id';
+						my $url_fetch_seq = 'https://rest.uniprot.org/uniprotkb/search?query=accession:'.join("+OR+accession:",@uniprotAC[$m .. $n]).'&force=yes&format=tsv&fields=accession,id,gene_primary,xref_geneid,organism_id';
 						my $response = HTTP::Tiny->new->get($url_fetch_seq);
 						my $link_txid = $response->{content};
 						my @link_txid = split("\n", $link_txid);
@@ -3243,7 +3244,7 @@ sub defineIdSubject {
 						$m = $m + 50;
 						$n = $#uniprotID if ($n > $#uniprotID);
 						
-						my $url_fetch_seq = 'http://www.uniprot.org/uniprot/?query=mnemonic:'.join("+OR+mnemonic:",@uniprotID[$m .. $n]).'&force=yes&format=tab&columns=id,entry%20name,genes(PREFERRED),database(GeneID),organism-id';
+						my $url_fetch_seq = 'https://rest.uniprot.org/uniprotkb/search?query=id:'.join("+OR+id:",@uniprotID[$m .. $n]).'&force=yes&format=tsv&fields=accession,id,gene_primary,xref_geneid,organism_id';
 						my $response = HTTP::Tiny->new->get($url_fetch_seq);
 						my $link_txid = $response->{content};
 						my @link_txid = split("\n", $link_txid);
@@ -4004,7 +4005,7 @@ sub retrieveSubjectInfo {
 			}
 		}
 		if (scalar @uniprotID > 0){
-			$type = "mnemonic";
+			$type = "id";
 			my $refUniprotData = retrieveInfoUniprot(\@uniprotID, $type);
 			foreach my $id(@uniprotID){
 				if (exists $refUniprotData->{$id}){
