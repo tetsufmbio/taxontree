@@ -552,7 +552,7 @@ else
 fi
 
 cp -f $SRC/taxontree $DIR
-sed -i.bak "57s%.*%use lib '$TOT/libs/lib/perl5';%" $DIR/taxontree
+sed -i.bak "5s%.*%use lib '$TOT/libs/lib/perl5';%" $DIR/taxontree
 rm $DIR/taxontree.bak
 
 echo | tee -a $LOG
