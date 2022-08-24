@@ -2,6 +2,8 @@
 
 #	TaxOnTree Version: 1.10.5
 
+use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+
 #############################################################################
 #                                                                           #
 #   Copyright (C) 2015-2022  Tetsu Sakamoto                                 #
@@ -46,7 +48,7 @@
 #   - TaxOnTree deals with redundant leaf name;                             #
 #   - TaxOnTree deals with taxonomy updates;                                #
 #   - TaxOnTree deals with accession from Ensembl;                          #
-#   - Uniprot REST API URL updated (1.10.5);
+#   - Uniprot REST API URL updated (1.10.5);                                #
 #                                                                           #
 #############################################################################
 
@@ -55,8 +57,7 @@ print "
 	This program comes with ABSOLUTELY NO WARRANTY.
 	This is free software, and you are welcome to redistribute it under
 	certain conditions. See GNU general public license v.3 for details.\n\n";
-	
-use lib $ENV{'HOME'}."/.taxontree/libs/lib/perl5";
+
 use taxontree;
 use Getopt::Long;
 use Pod::Usage;
